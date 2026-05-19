@@ -7,11 +7,12 @@ local:
   root: <%= Rails.root.join("storage") %>
 
 # Oracle Object Storage (S3-compatível) — produção
+# Secrets injetados pelo Kamal via ENV vars (não usar credentials aqui)
 oci:
   service: S3
-  endpoint: https://<%= Rails.application.credentials.dig(:oci, :namespace) %>.compat.objectstorage.sa-saopaulo-1.oraclecloud.com
-  access_key_id: <%= Rails.application.credentials.dig(:oci, :access_key_id) %>
-  secret_access_key: <%= Rails.application.credentials.dig(:oci, :secret_access_key) %>
+  endpoint: https://<%= ENV.fetch("OCI_NAMESPACE", "placeholder") %>.compat.objectstorage.sa-saopaulo-1.oraclecloud.com
+  access_key_id: <%= ENV.fetch("OCI_ACCESS_KEY_ID", "placeholder") %>
+  secret_access_key: <%= ENV.fetch("OCI_SECRET_ACCESS_KEY", "placeholder") %>
   region: sa-saopaulo-1
   bucket: tsuru-attachments
   force_path_style: true
