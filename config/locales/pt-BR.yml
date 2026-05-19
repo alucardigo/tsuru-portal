@@ -8,6 +8,14 @@ pt-BR:
     submitted: "Demanda submetida para triagem."
     cannot_submit: "Não foi possível submeter a demanda."
     cancelled: "Demanda cancelada."
+    triagem_iniciada: "Triagem N1 iniciada."
+    cannot_start_triagem: "Não foi possível iniciar a triagem."
+    n1_aprovada: "Demanda aprovada na triagem N1."
+    n1_reprovada: "Demanda reprovada na triagem N1."
+
+  comments:
+    created: "Comentário adicionado."
+    invalid: "Comentário inválido."
 
   date:
     formats:

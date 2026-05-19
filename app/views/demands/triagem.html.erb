@@ -1,0 +1,56 @@
+<div class="max-w-2xl mx-auto">
+  <%= link_to "← #{@demand.title}", demand_path(@demand), class: "text-sm text-gray-500 hover:text-primary-700" %>
+
+  <div class="tsuru-card mt-4">
+    <h1 class="text-xl font-bold text-primary-900 mb-2">Triagem N1 — Lei do Bem</h1>
+    <p class="text-sm text-gray-500 mb-6">
+      Critérios FI Group — responda SIM para cada questão que desqualifica o projeto.
+      <strong>Uma resposta SIM = projeto reprovado na triagem N1.</strong>
+    </p>
+
+    <%= form_with url: triagem_demand_path(@demand), method: :patch, data: { controller: "triagem" } do |f| %>
+      <div class="space-y-4">
+        <% n1_labels = {
+          "rotina_operacional"       => "O projeto trata predominantemente de atividades de rotina ou operacionais (manutenção, parametrização, rollout sem experimentação)?",
+          "adequacao_normativa"      => "O projeto visa apenas adequação normativa ou compliance sem desafio técnico relevante?",
+          "solucao_prateleira"       => "O projeto consiste em implantação de solução de prateleira (COTS) sem customização profunda com incerteza técnica?",
+          "trl_fora_janela"          => "O projeto está em maturidade fora da janela elegível (TRL < 3 ideação pura ou TRL > 7 já estabilizado em produção)?",
+          "escopo_nao_tecnologico"   => "O escopo é predominantemente não-tecnológico (marketing, comercial, financeiro, administrativo)?"
+        } %>
+
+        <% Demand::N1_FLAGS.each_with_index do |flag, i| %>
+          <div class="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors"
+               data-triagem-target="question">
+            <p class="text-sm font-medium text-gray-800 mb-3">
+              <span class="text-primary-700 font-bold mr-2"><%= i + 1 %>.</span>
+              <%= n1_labels[flag] %>
+            </p>
+            <div class="flex gap-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <%= f.fields_for :n1_flags do |nf| %>
+                  <input type="radio" name="demand[n1_flags][<%= flag %>]" value="1"
+                         class="text-danger-600" data-action="change->triagem#update">
+                <% end %>
+                <span class="text-danger-700 font-semibold text-sm">SIM — desqualifica</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="demand[n1_flags][<%= flag %>]" value="0"
+                       class="text-success-600" checked data-action="change->triagem#update">
+                <span class="text-success-700 font-semibold text-sm">NÃO — prosseguir</span>
+              </label>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="mt-6 p-4 bg-gray-50 rounded-lg" data-triagem-target="verdict">
+        <p class="text-sm text-gray-600">Responda todas as questões para ver o veredito.</p>
+      </div>
+
+      <div class="mt-4 flex gap-3">
+        <%= f.submit "Concluir triagem N1", class: "tsuru-btn-primary" %>
+        <%= link_to "Cancelar", demand_path(@demand), class: "tsuru-btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

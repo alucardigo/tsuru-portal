@@ -9,8 +9,15 @@ Rails.application.routes.draw do
   resources :demands do
     member do
       patch :submeter
+      patch :iniciar_triagem
+      get :triagem
+      patch :triagem, action: :update_triagem
     end
+
+    resources :comments, only: %i[create]
   end
+
+  get "dashboard", to: "dashboard#show", as: :dashboard
 
   get "up" => "rails/health#show", as: :rails_health_check
 

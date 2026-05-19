@@ -1,0 +1,12 @@
+<div id="<%= dom_id(comment) %>" class="tsuru-card py-3">
+  <div class="flex items-center justify-between mb-2">
+    <div class="flex items-center gap-2">
+      <span class="w-7 h-7 rounded-full bg-primary-700 text-white text-xs flex items-center justify-center font-semibold">
+        <%= comment.user.initials %>
+      </span>
+      <span class="text-sm font-medium text-gray-800"><%= comment.user.display_name %></span>
+    </div>
+    <span class="text-xs text-gray-400"><%= l comment.created_at, format: :short %></span>
+  </div>
+  <p class="text-sm text-gray-700 whitespace-pre-line"><%= comment.body %></p>
+</div>

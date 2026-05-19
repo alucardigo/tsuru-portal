@@ -1,0 +1,2 @@
+<%= turbo_stream.append "comments", partial: "comments/comment", locals: { comment: @comment } %>
+<%= turbo_stream.replace "comment_form", partial: "demands/comment_form", locals: { demand: @demand } %>

@@ -31,6 +31,14 @@ class DemandPolicy < ApplicationPolicy
     gestor_or_above?
   end
 
+  def triagem?
+    gestor_or_above?
+  end
+
+  def update_triagem?
+    gestor_or_above?
+  end
+
   def destroy?
     (record.rascunho? && owner?) || user.admin?
   end

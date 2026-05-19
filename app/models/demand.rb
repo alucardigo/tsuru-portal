@@ -2,6 +2,7 @@ class Demand < ApplicationRecord
   has_paper_trail
 
   belongs_to :user
+  has_many :comments, dependent: :destroy
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :description, presence: true

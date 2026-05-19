@@ -1,5 +1,5 @@
 class DemandsController < ApplicationController
-  before_action :set_demand, only: %i[show edit update destroy submeter]
+  before_action :set_demand, only: %i[show edit update destroy submeter iniciar_triagem triagem update_triagem]
 
   def index
     @demands = policy_scope(Demand).order(created_at: :desc)
@@ -49,6 +49,38 @@ class DemandsController < ApplicationController
     end
   end
 
+  def iniciar_triagem
+    authorize @demand, :iniciar_triagem?
+
+    if @demand.iniciar_triagem
+      redirect_to triagem_demand_path(@demand), notice: t("demands.triagem_iniciada")
+    else
+      redirect_to @demand, alert: t("demands.cannot_start_triagem")
+    end
+  end
+
+  def triagem
+    authorize @demand, :iniciar_triagem?
+  end
+
+  def update_triagem
+    authorize @demand, :aprovar_n1?
+
+    flags = triagem_params.transform_values { |v| v == "1" }
+    @demand.assign_attributes(n1_flags: flags)
+
+    if @demand.reprovado_n1?
+      @demand.reprovar_n1
+      @demand.save!
+      redirect_to @demand, notice: t("demands.n1_reprovada")
+    elsif @demand.aprovar_n1
+      @demand.save!
+      redirect_to @demand, notice: t("demands.n1_aprovada")
+    else
+      render :triagem, status: :unprocessable_entity
+    end
+  end
+
   def destroy
     authorize @demand
 
@@ -64,5 +96,10 @@ class DemandsController < ApplicationController
 
   def demand_params
     params.require(:demand).permit(:title, :description)
+  end
+
+  def triagem_params
+    params.require(:demand).require(:n1_flags)
+        .permit(Demand::N1_FLAGS)
   end
 end
