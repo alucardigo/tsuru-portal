@@ -39,6 +39,18 @@ class DemandPolicy < ApplicationPolicy
     gestor_or_above?
   end
 
+  def iniciar_n2?
+    user.analista_pdi? || user.admin?
+  end
+
+  def n2?
+    user.analista_pdi? || user.admin?
+  end
+
+  def decidir_elegibilidade?
+    user.analista_pdi? || user.admin?
+  end
+
   def destroy?
     (record.rascunho? && owner?) || user.admin?
   end

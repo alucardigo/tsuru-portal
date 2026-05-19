@@ -1,0 +1,62 @@
+<div class="max-w-3xl mx-auto">
+  <%= link_to "← Demanda", demand_path(@demand), class: "text-sm text-gray-500 hover:text-primary-700" %>
+
+  <div class="tsuru-card mt-4">
+    <h1 class="text-2xl font-bold text-primary-900 mb-1">Avaliação N2 — FI Group</h1>
+    <p class="text-sm text-gray-500 mb-6"><%= @demand.title %></p>
+
+    <%= form_with url: n2_demand_path(@demand), method: :patch do |f| %>
+      <div class="space-y-6">
+
+        <div>
+          <label class="tsuru-label">Motivação / Problema <span class="text-danger-600">*</span></label>
+          <p class="text-xs text-gray-400 mb-1">Qual problema técnico motivou o projeto? Cite métricas de baseline.</p>
+          <textarea name="demand[n2_assessment][motivacao]" rows="4" class="tsuru-input"
+            placeholder="Ex: Latência P99 de 480ms causava 3 timeouts/min em pico..."><%= @demand.motivacao %></textarea>
+        </div>
+
+        <div>
+          <label class="tsuru-label">Benchmark Anterior (estado da arte)</label>
+          <p class="text-xs text-gray-400 mb-1">Métricas quantitativas antes do projeto. O que existia e por que não funcionou?</p>
+          <textarea name="demand[n2_assessment][benchmark_anterior]" rows="3" class="tsuru-input"
+            placeholder="Ex: PostgreSQL 14, índice simples, P99=480ms, throughput 1.2k req/s..."><%= @demand.benchmark_anterior %></textarea>
+        </div>
+
+        <div>
+          <label class="tsuru-label">Barreira Técnica <span class="text-danger-600">*</span></label>
+          <p class="text-xs text-gray-400 mb-1">Qual incerteza tecnológica específica? Não é prazo ou orçamento — é o limite técnico/científico.</p>
+          <textarea name="demand[n2_assessment][barreira_tecnica]" rows="4" class="tsuru-input"
+            placeholder="Ex: Sem garantia que refatoração do índice manteria consistência transacional sob N writers concorrentes..."><%= @demand.barreira_tecnica %></textarea>
+        </div>
+
+        <div>
+          <label class="tsuru-label">Metodologia Experimental <span class="text-danger-600">*</span></label>
+          <p class="text-xs text-gray-400 mb-1">Hipóteses formuladas, PoCs realizados, testes conduzidos. Insucesso também é evidência válida.</p>
+          <textarea name="demand[n2_assessment][metodologia]" rows="4" class="tsuru-input"
+            placeholder="Ex: 3 hipóteses em ablation study: H1-sharding (refutada), H2-cache LRU, H3-índice. Testes A/B com benchmark-ips..."><%= @demand.metodologia %></textarea>
+        </div>
+
+        <div>
+          <label class="tsuru-label">Stack Tecnológico</label>
+          <input type="text" name="demand[n2_assessment][stack_tecnologico]" class="tsuru-input"
+            value="<%= @demand.stack_tecnologico %>"
+            placeholder="Ex: PostgreSQL 17, Redis 7, Ruby 3.4, benchmark-ips, pgbench">
+        </div>
+
+        <div>
+          <label class="tsuru-label">Resultado Obtido <span class="text-danger-600">*</span></label>
+          <p class="text-xs text-gray-400 mb-1">O que foi alcançado? Métricas quantitativas. Hipóteses confirmadas E refutadas são evidências válidas.</p>
+          <textarea name="demand[n2_assessment][resultado_obtido]" rows="4" class="tsuru-input"
+            placeholder="Ex: H1 refutada (+12% latência). H2+H3: P99=87ms (-82%), throughput 8k req/s (+567%)..."><%= @demand.resultado_obtido %></textarea>
+        </div>
+
+      </div>
+
+      <div class="flex gap-3 mt-6 pt-4 border-t border-gray-100">
+        <%= f.submit "Concluir Avaliação N2", class: "tsuru-btn-primary",
+              data: { turbo_confirm: "Confirma a conclusão da avaliação N2?" } %>
+        <%= link_to "Cancelar", demand_path(@demand), class: "tsuru-btn-secondary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

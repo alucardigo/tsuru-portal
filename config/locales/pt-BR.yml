@@ -13,6 +13,11 @@ pt-BR:
     n1_aprovada: "Demanda aprovada na triagem N1."
     n1_reprovada: "Demanda reprovada na triagem N1."
     attachment_removed: "Anexo removido."
+    n2_iniciada: "Avaliação N2 iniciada."
+    cannot_start_n2: "Não foi possível iniciar a avaliação N2."
+    n2_completa: "Avaliação N2 concluída."
+    elegivel: "Demanda marcada como elegível para a Lei do Bem."
+    nao_elegivel: "Demanda marcada como não elegível."
 
   comments:
     created: "Comentário adicionado."

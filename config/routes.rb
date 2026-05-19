@@ -10,8 +10,12 @@ Rails.application.routes.draw do
     member do
       patch :submeter
       patch :iniciar_triagem
-      get :triagem
+      get   :triagem
       patch :triagem, action: :update_triagem
+      patch :iniciar_n2
+      get   :n2
+      patch :n2, action: :update_n2
+      patch :decidir_elegibilidade
     end
 
     resources :comments, only: %i[create]

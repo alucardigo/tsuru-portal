@@ -1,5 +1,5 @@
 class DemandsController < ApplicationController
-  before_action :set_demand, only: %i[show edit update destroy submeter iniciar_triagem triagem update_triagem]
+  before_action :set_demand, only: %i[show edit update destroy submeter iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade]
 
   def index
     @demands = policy_scope(Demand).order(created_at: :desc)
@@ -81,6 +81,49 @@ class DemandsController < ApplicationController
     end
   end
 
+  def iniciar_n2
+    authorize @demand, :iniciar_n2?
+
+    if @demand.iniciar_n2
+      redirect_to n2_demand_path(@demand), notice: t("demands.n2_iniciada")
+    else
+      redirect_to @demand, alert: t("demands.cannot_start_n2")
+    end
+  end
+
+  def n2
+    authorize @demand, :n2?
+  end
+
+  def update_n2
+    authorize @demand, :n2?
+
+    @demand.assign_attributes(n2_assessment: n2_params.to_h)
+    if @demand.concluir_n2 && @demand.save
+      redirect_to @demand, notice: t("demands.n2_completa")
+    else
+      render :n2, status: :unprocessable_entity
+    end
+  end
+
+  def decidir_elegibilidade
+    authorize @demand, :decidir_elegibilidade?
+
+    decisao = params.dig(:demand, :decisao)
+    @demand.parecer_tecnico = params.dig(:demand, :parecer_tecnico)
+
+    sucesso = case decisao
+    when "elegivel"     then @demand.marcar_elegivel
+    when "nao_elegivel" then @demand.marcar_nao_elegivel
+    end
+
+    if sucesso && @demand.save
+      redirect_to @demand, notice: t("demands.#{decisao}")
+    else
+      render :show, status: :unprocessable_entity
+    end
+  end
+
   def destroy
     authorize @demand
 
@@ -101,5 +144,11 @@ class DemandsController < ApplicationController
   def triagem_params
     params.require(:demand).require(:n1_flags)
         .permit(Demand::N1_FLAGS)
+  end
+
+  def n2_params
+    params.require(:demand).require(:n2_assessment)
+          .permit(:motivacao, :benchmark_anterior, :barreira_tecnica,
+                  :metodologia, :stack_tecnologico, :resultado_obtido)
   end
 end

@@ -42,10 +42,45 @@
       <%= link_to "Formulário N1", triagem_demand_path(@demand), class: "tsuru-btn-secondary" %>
     <% end %>
 
+    <% if policy(@demand).iniciar_n2? && @demand.n1_aprovada? %>
+      <%= button_to "Iniciar Avaliação N2", iniciar_n2_demand_path(@demand), method: :patch,
+            class: "tsuru-btn-secondary" %>
+    <% end %>
+
+    <% if policy(@demand).n2? && @demand.n2_em_andamento? %>
+      <%= link_to "Formulário N2", n2_demand_path(@demand), class: "tsuru-btn-secondary" %>
+    <% end %>
+
     <% if policy(@demand).update? %>
       <%= link_to "Editar", edit_demand_path(@demand), class: "tsuru-btn-secondary" %>
     <% end %>
   </div>
+
+  <%# Decisão de elegibilidade %>
+  <% if policy(@demand).decidir_elegibilidade? && @demand.n2_completa? %>
+    <div class="tsuru-card mt-4 border border-primary-200">
+      <h3 class="text-base font-semibold text-primary-900 mb-3">Decisão de Elegibilidade — Lei do Bem</h3>
+      <%= form_with url: decidir_elegibilidade_demand_path(@demand), method: :patch do |f| %>
+        <div class="mb-3">
+          <label class="tsuru-label">Parecer Técnico <span class="text-danger-600">*</span></label>
+          <textarea name="demand[parecer_tecnico]" rows="4" class="tsuru-input"
+            placeholder="Descreva a fundamentação técnica da decisão com base nos critérios Lei do Bem (incerteza, TRL, método científico)..."></textarea>
+        </div>
+        <div class="flex gap-3">
+          <button type="submit" name="demand[decisao]" value="elegivel"
+            class="tsuru-btn-primary"
+            data-turbo-confirm="Confirma elegibilidade para a Lei do Bem?">
+            Marcar Elegível
+          </button>
+          <button type="submit" name="demand[decisao]" value="nao_elegivel"
+            class="bg-danger-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-danger-700"
+            data-turbo-confirm="Confirma como não elegível?">
+            Marcar Não Elegível
+          </button>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 
   <%# Comentários %>
   <div class="mt-8">

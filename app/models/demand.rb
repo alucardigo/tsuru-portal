@@ -53,15 +53,15 @@ class Demand < ApplicationRecord
     end
 
     event :concluir_n2 do
-      transition n2_em_andamento: :n2_completa
+      transition n2_em_andamento: :n2_completa, if: :n2_completo?
     end
 
     event :marcar_elegivel do
-      transition n2_completa: :elegivel
+      transition n2_completa: :elegivel, if: :parecer_presente?
     end
 
     event :marcar_nao_elegivel do
-      transition n2_completa: :nao_elegivel
+      transition n2_completa: :nao_elegivel, if: :parecer_presente?
     end
 
     event :cancelar do
@@ -77,8 +77,22 @@ class Demand < ApplicationRecord
     escopo_nao_tecnologico
   ].freeze
 
+  N2_REQUIRED_FIELDS = %w[motivacao barreira_tecnica metodologia resultado_obtido].freeze
+
+  store_accessor :n2_assessment,
+                 :motivacao, :benchmark_anterior, :barreira_tecnica,
+                 :metodologia, :stack_tecnologico, :resultado_obtido
+
   def reprovado_n1?
     n1_flags.any? { |_, v| v == true }
+  end
+
+  def n2_completo?
+    N2_REQUIRED_FIELDS.all? { |f| send(f).present? }
+  end
+
+  def parecer_presente?
+    parecer_tecnico.present?
   end
 
   private
