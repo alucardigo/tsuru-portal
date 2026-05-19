@@ -21,20 +21,46 @@ default: &default
 
 
 development:
-  <<: *default
-  database: tsuru_portal_development
-  host: localhost
-  port: 5432
-  username: <%= ENV.fetch("DB_USER", "postgres") %>
-  password: <%= ENV.fetch("DB_PASSWORD", "") %>
+  primary: &primary_development
+    <<: *default
+    database: tsuru_portal_development
+    host: localhost
+    port: 5432
+    username: <%= ENV.fetch("DB_USER", "postgres") %>
+    password: <%= ENV.fetch("DB_PASSWORD", "") %>
+  cache:
+    <<: *primary_development
+    database: tsuru_portal_development_cache
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary_development
+    database: tsuru_portal_development_queue
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_development
+    database: tsuru_portal_development_cable
+    migrations_paths: db/cable_migrate
 
 test:
-  <<: *default
-  database: tsuru_portal_test
-  host: localhost
-  port: 5432
-  username: <%= ENV.fetch("DB_USER", "postgres") %>
-  password: <%= ENV.fetch("DB_PASSWORD", "") %>
+  primary: &primary_test
+    <<: *default
+    database: tsuru_portal_test
+    host: localhost
+    port: 5432
+    username: <%= ENV.fetch("DB_USER", "postgres") %>
+    password: <%= ENV.fetch("DB_PASSWORD", "") %>
+  cache:
+    <<: *primary_test
+    database: tsuru_portal_test_cache
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary_test
+    database: tsuru_portal_test_queue
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_test
+    database: tsuru_portal_test_cable
+    migrations_paths: db/cable_migrate
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is

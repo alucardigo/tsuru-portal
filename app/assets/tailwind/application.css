@@ -1,1 +1,97 @@
 @import "tailwindcss";
+
+@theme {
+  /* === PALETA TSURU === */
+
+  /* Primária — institucional, confiança */
+  --color-primary-50: #EFF6FF;
+  --color-primary-100: #DBEAFE;
+  --color-primary-300: #93C5FD;
+  --color-primary-500: #3B82F6;
+  --color-primary-700: #1D4ED8;
+  --color-primary-900: #1E3A8A;
+
+  /* Secundária — crescimento, acolhimento */
+  --color-secondary-50: #F3F8F4;
+  --color-secondary-300: #B7D0BA;
+  --color-secondary-500: #84A98C;
+  --color-secondary-700: #4A6F52;
+
+  /* Acento — atenção, aguardando */
+  --color-accent-100: #FEF3C7;
+  --color-accent-500: #F59E0B;
+  --color-accent-700: #B45309;
+
+  /* Perigo — bloqueio, rejeitado */
+  --color-danger-100: #FECACA;
+  --color-danger-500: #DC2626;
+  --color-danger-700: #991B1B;
+
+  /* Sucesso — aprovado, avanço */
+  --color-success-100: #D1FAE5;
+  --color-success-500: #10B981;
+  --color-success-700: #047857;
+
+  /* Background especial */
+  --color-bg-warm: #FAF8F2;
+
+  /* === TIPOGRAFIA === */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: "Source Serif Pro", Georgia, serif;
+
+  --text-base: 1rem;
+  --leading-base: 1.6;
+}
+
+/* Inter e Source Serif Pro via Google Fonts */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;1,400&display=swap");
+
+/* Utilitários customizados Tsuru */
+@layer components {
+  .tsuru-card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
+  }
+
+  .tsuru-btn-primary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 bg-primary-900 text-white font-semibold rounded-lg
+           hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .tsuru-btn-secondary {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 bg-white text-primary-900 font-semibold rounded-lg
+           border border-primary-300 hover:bg-primary-50 focus:outline-none focus:ring-2
+           focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-150;
+  }
+
+  .tsuru-btn-danger {
+    @apply inline-flex items-center gap-2 px-5 py-2.5 bg-danger-700 text-white font-semibold rounded-lg
+           hover:bg-danger-500 focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2
+           transition-colors duration-150;
+  }
+
+  .tsuru-input {
+    @apply block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900
+           placeholder:text-gray-400 focus:border-primary-500 focus:outline-none
+           focus:ring-2 focus:ring-primary-500/20 transition-colors duration-150;
+  }
+
+  .tsuru-label {
+    @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+
+  .tsuru-badge-submitted {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+           bg-accent-100 text-accent-700;
+  }
+
+  .tsuru-badge-approved {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+           bg-success-100 text-success-700;
+  }
+
+  .tsuru-badge-rejected {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+           bg-danger-100 text-danger-700;
+  }
+}
