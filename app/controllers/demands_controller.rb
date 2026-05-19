@@ -67,19 +67,11 @@ class DemandsController < ApplicationController
 
   def update_triagem
     authorize @demand, :aprovar_n1?
-
     flags = triagem_params.transform_values { |v| v == "1" }
-    @demand.assign_attributes(n1_flags: flags)
+    result = Demands::EvaluateN1Triagem.call(demand: @demand, actor: current_user, flags: flags)
 
-    if @demand.reprovado_n1?
-      @demand.reprovar_n1
-      @demand.save!
-      DemandMailer.n1_reprovada(@demand).deliver_later
-      redirect_to @demand, notice: t("demands.n1_reprovada")
-    elsif @demand.aprovar_n1
-      @demand.save!
-      DemandMailer.n1_aprovada(@demand).deliver_later
-      redirect_to @demand, notice: t("demands.n1_aprovada")
+    if result.success?
+      redirect_to @demand, notice: t("demands.n1_#{result.payload[:outcome]}")
     else
       render :triagem, status: :unprocessable_content
     end
@@ -112,18 +104,14 @@ class DemandsController < ApplicationController
 
   def decidir_elegibilidade
     authorize @demand, :decidir_elegibilidade?
+    result = Demands::DecideEligibility.call(
+      demand: @demand, actor: current_user,
+      decision: params.dig(:demand, :decisao),
+      parecer_tecnico: params.dig(:demand, :parecer_tecnico)
+    )
 
-    decisao = params.dig(:demand, :decisao)
-    @demand.parecer_tecnico = params.dig(:demand, :parecer_tecnico)
-
-    sucesso = case decisao
-    when "elegivel"     then @demand.marcar_elegivel
-    when "nao_elegivel" then @demand.marcar_nao_elegivel
-    end
-
-    if sucesso && @demand.save
-      DemandMailer.send(decisao, @demand).deliver_later if decisao == "elegivel"
-      redirect_to @demand, notice: t("demands.#{decisao}")
+    if result.success?
+      redirect_to @demand, notice: t("demands.#{result.payload[:outcome]}")
     else
       render :show, status: :unprocessable_content
     end
