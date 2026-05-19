@@ -51,6 +51,10 @@ class DemandPolicy < ApplicationPolicy
     user.analista_pdi? || user.admin?
   end
 
+  def versions?
+    owner? || gestor_or_above?
+  end
+
   def destroy?
     (record.rascunho? && owner?) || user.admin?
   end

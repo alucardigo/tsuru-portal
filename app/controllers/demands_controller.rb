@@ -1,5 +1,5 @@
 class DemandsController < ApplicationController
-  before_action :set_demand, only: %i[show edit update destroy submeter iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade]
+  before_action :set_demand, only: %i[show edit update destroy submeter iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade versions]
 
   def index
     @demands = policy_scope(Demand).order(created_at: :desc)
@@ -126,6 +126,11 @@ class DemandsController < ApplicationController
     else
       render :show, status: :unprocessable_entity
     end
+  end
+
+  def versions
+    authorize @demand, :versions?
+    @versions = @demand.versions.order(created_at: :desc).includes(:item)
   end
 
   def destroy

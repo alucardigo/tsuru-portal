@@ -1,0 +1,53 @@
+<% content_for :title, "Histórico — #{@demand.title}" %>
+
+<div class="max-w-4xl mx-auto py-8 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-semibold">Histórico de alterações</h1>
+    <%= link_to "← Voltar à demanda", @demand, class: "text-sm text-blue-600 hover:underline" %>
+  </div>
+
+  <% if @versions.empty? %>
+    <p class="text-gray-500 text-sm">Nenhuma alteração registrada.</p>
+  <% else %>
+    <div class="space-y-4">
+      <% @versions.each do |version| %>
+        <div class="tsuru-card">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <% event_class = case version.event
+                               when "create"  then "bg-green-100 text-green-700"
+                               when "destroy" then "bg-red-100 text-red-700"
+                               else                "bg-blue-100 text-blue-700"
+                               end %>
+              <span class="inline-block text-xs font-medium uppercase tracking-wide px-2 py-0.5 rounded <%= event_class %>">
+                <%= version.event %>
+              </span>
+            </div>
+            <span class="text-xs text-gray-400">
+              <%= l(version.created_at, format: :short) %>
+            </span>
+          </div>
+
+          <% if version.whodunnit.present? %>
+            <% author = User.find_by(id: version.whodunnit) %>
+            <p class="text-sm text-gray-600 mb-2">
+              <strong>Por:</strong> <%= author&.display_name || "Sistema" %>
+            </p>
+          <% end %>
+
+          <% if version.changeset.present? %>
+            <% changes = version.changeset.except("updated_at", "created_at") %>
+            <% changes.each do |field, (before, after)| %>
+              <div class="text-sm mt-2 border-l-2 border-gray-200 pl-3">
+                <span class="font-medium text-gray-700"><%= field %>:</span>
+                <span class="text-red-500 line-through ml-1"><%= before.to_s.truncate(80) %></span>
+                →
+                <span class="text-green-600 ml-1"><%= after.to_s.truncate(80) %></span>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

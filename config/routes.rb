@@ -25,6 +25,7 @@ Rails.application.routes.draw do
       get   :n2
       patch :n2, action: :update_n2
       patch :decidir_elegibilidade
+      get   :versions
     end
 
     resources :comments, only: %i[create]
