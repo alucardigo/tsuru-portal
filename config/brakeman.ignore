@@ -1,0 +1,16 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 105,
+      "fingerprint": "01a88a0a17848e70999c17f6438a636b00e01da39a2c0aa0c46f20f0685c7202",
+      "check_name": "PermitAttributes",
+      "message": "Potentially dangerous key allowed for mass assignment",
+      "file": "app/controllers/admin/users_controller.rb",
+      "line": 20,
+      "note": "Admin-only endpoint protected by require_admin! before_action. Role change is intentional."
+    }
+  ],
+  "updated": "2026-05-19 11:00:00 -0300",
+  "brakeman_version": "8.0.4"
+}

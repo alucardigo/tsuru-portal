@@ -22,6 +22,11 @@ Rails.application.routes.draw do
     resources :attachments, only: %i[destroy]
   end
 
+  namespace :admin do
+    resources :users, only: %i[index update]
+    resources :demands, only: %i[index]
+  end
+
   get "dashboard", to: "dashboard#show", as: :dashboard
 
   get "up" => "rails/health#show", as: :rails_health_check

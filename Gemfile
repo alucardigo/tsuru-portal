@@ -38,6 +38,9 @@ gem "json-schema"
 # Paginação
 gem "pagy"
 
+# CSV export (extracted from stdlib in Ruby 3.4)
+gem "csv"
+
 # Markdown em comentários
 gem "redcarpet"
 

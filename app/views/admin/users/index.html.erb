@@ -1,0 +1,37 @@
+<div class="max-w-4xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-primary-900">Usuários</h1>
+    <%= link_to "← Admin", admin_demands_path, class: "text-sm text-gray-500" %>
+  </div>
+
+  <div class="tsuru-card">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-200 text-left text-gray-500">
+          <th class="pb-2 pr-4">Nome</th>
+          <th class="pb-2 pr-4">Email</th>
+          <th class="pb-2 pr-4">Role</th>
+          <th class="pb-2">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <tr class="border-b border-gray-100 py-2">
+            <td class="py-2 pr-4"><%= user.display_name %></td>
+            <td class="py-2 pr-4 text-gray-500"><%= user.email %></td>
+            <td class="py-2 pr-4">
+              <span class="tsuru-badge-<%= user.role %>"><%= user.role %></span>
+            </td>
+            <td class="py-2">
+              <%= form_with url: admin_user_path(user), method: :patch, class: "inline-flex gap-2 items-center" do |f| %>
+                <%= f.select :role, User.roles.keys.map { |r| [r.humanize, r] },
+                      { selected: user.role }, class: "tsuru-input py-1 text-xs" %>
+                <%= f.submit "Salvar", class: "tsuru-btn-secondary py-1 text-xs" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

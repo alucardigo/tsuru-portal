@@ -29,6 +29,11 @@ pt-BR:
     elegivel:
       subject: "[Tsuru] Sua demanda está elegível para a Lei do Bem"
 
+  admin:
+    users:
+      updated: "Role do usuário atualizada."
+      update_failed: "Não foi possível atualizar o usuário."
+
   comments:
     created: "Comentário adicionado."
     invalid: "Comentário inválido."

@@ -1,0 +1,50 @@
+<div class="max-w-5xl mx-auto">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-primary-900">Demandas — Painel Admin</h1>
+    <div class="flex gap-3">
+      <%= link_to "Usuários", admin_users_path, class: "tsuru-btn-secondary" %>
+      <%= link_to "Exportar CSV", admin_demands_path(format: :csv, estado: params[:estado]),
+            class: "tsuru-btn-secondary" %>
+    </div>
+  </div>
+
+  <%# Filtro por estado %>
+  <div class="flex flex-wrap gap-2 mb-4">
+    <%= link_to "Todas", admin_demands_path,
+          class: "#{params[:estado].blank? ? 'tsuru-btn-primary' : 'tsuru-btn-secondary'} text-xs py-1" %>
+    <% %w[rascunho submetida em_triagem n1_aprovada n1_reprovada n2_em_andamento n2_completa elegivel nao_elegivel cancelada].each do |estado| %>
+      <%= link_to estado.humanize, admin_demands_path(estado: estado),
+            class: "#{params[:estado] == estado ? 'tsuru-btn-primary' : 'tsuru-btn-secondary'} text-xs py-1" %>
+    <% end %>
+  </div>
+
+  <div class="tsuru-card">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-gray-200 text-left text-gray-500">
+          <th class="pb-2 pr-3">ID</th>
+          <th class="pb-2 pr-3">Título</th>
+          <th class="pb-2 pr-3">Solicitante</th>
+          <th class="pb-2 pr-3">Estado</th>
+          <th class="pb-2">Criada</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @demands.each do |demand| %>
+          <tr class="border-b border-gray-100">
+            <td class="py-2 pr-3 text-gray-400">#<%= demand.id %></td>
+            <td class="py-2 pr-3">
+              <%= link_to demand.title.truncate(50), demand_path(demand),
+                    class: "text-primary-700 hover:underline" %>
+            </td>
+            <td class="py-2 pr-3 text-gray-600"><%= demand.user.display_name %></td>
+            <td class="py-2 pr-3">
+              <span class="tsuru-badge-<%= demand.aasm_state %>"><%= demand.aasm_state.humanize %></span>
+            </td>
+            <td class="py-2 text-gray-400"><%= l demand.created_at, format: :short %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
