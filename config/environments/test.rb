@@ -50,4 +50,9 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions.
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # AR Encryption keys for devise-two-factor (encrypts :otp_secret) in test env
+  config.active_record.encryption.primary_key       = "test-primary-key-tsuru-portal-32ch"
+  config.active_record.encryption.deterministic_key = "test-deterministic-key-tsuru-3456"
+  config.active_record.encryption.key_derivation_salt = "test-key-derivation-salt-tsuru12"
 end

@@ -29,6 +29,21 @@ pt-BR:
     elegivel:
       subject: "[Tsuru] Sua demanda está elegível para a Lei do Bem"
 
+  two_factor_setup:
+    title: "Configurar autenticação em dois fatores"
+    scan_instructions: "Escaneie o QR code abaixo com seu aplicativo autenticador (Google Authenticator, Authy, etc.)."
+    manual_entry: "Ou insira a chave manualmente:"
+    enter_code: "Código de verificação (6 dígitos)"
+    verify: "Verificar e ativar 2FA"
+    invalid_code: "Código inválido. Tente novamente."
+    enabled: "Autenticação em dois fatores ativada com sucesso!"
+    enabled_title: "2FA ativado!"
+    enabled_body: "Guarde os códigos de backup abaixo em um local seguro. Você precisará deles se perder acesso ao seu autenticador."
+    save_backup: "Códigos de backup (guarde em local seguro):"
+    backup_placeholder: "Os códigos de backup serão gerados em uma versão futura."
+    done: "Ir para o painel"
+    disabled: "Autenticação em dois fatores desativada."
+
   admin:
     users:
       updated: "Role do usuário atualizada."

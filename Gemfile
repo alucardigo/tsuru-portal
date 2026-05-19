@@ -12,6 +12,7 @@ gem "tailwindcss-rails"
 # Auth & authz
 gem "devise"
 gem "devise-two-factor"
+gem "rqrcode"         # Inline SVG QR codes for 2FA setup (no external API)
 gem "pundit"
 
 # State machine

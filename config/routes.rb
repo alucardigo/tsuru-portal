@@ -6,6 +6,15 @@ Rails.application.routes.draw do
     passwords: "users/passwords"
   }
 
+  devise_scope :user do
+    resource :two_factor_setup,
+             only: %i[new create destroy],
+             controller: "users/two_factor_setup",
+             as: "users_two_factor_setup" do
+      get :backup, on: :member
+    end
+  end
+
   resources :demands do
     member do
       patch :submeter
