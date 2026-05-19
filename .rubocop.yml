@@ -1,0 +1,37 @@
+inherit_gem:
+  rubocop-rails-omakase: rubocop.yml
+
+require:
+  - rubocop-rspec
+  - rubocop-performance
+
+AllCops:
+  NewCops: enable
+  Exclude:
+    - 'db/**/*'
+    - 'bin/**/*'
+    - 'config/environments/**/*'
+    - 'vendor/**/*'
+    - 'node_modules/**/*'
+
+# Permite português em strings/comentários de domínio
+Style/AsciiComments:
+  Enabled: false
+
+# Permite nomes de método em snake_case com caracteres acentuados
+Naming/MethodName:
+  Enabled: false
+
+# Comprimento de linha generoso para redações técnicas
+Layout/LineLength:
+  Max: 120
+
+# Service Objects usam .call com keyword args
+Style/MethodCallWithArgsParentheses:
+  Enabled: false
+
+Metrics/MethodLength:
+  Max: 20
+
+Metrics/ClassLength:
+  Max: 200

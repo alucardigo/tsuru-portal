@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "sprint-*"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Tests + Lint + Security
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: tsuru
+          POSTGRES_PASSWORD: tsuru_test
+          POSTGRES_DB: tsuru_portal_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: "postgresql://tsuru:tsuru_test@localhost:5432/tsuru_portal_test"
+      COVERAGE: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby 3.4
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.4'
+          bundler-cache: true
+
+      - name: Setup Node (Tailwind)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Preparar banco de dados de teste
+        run: bundle exec rails db:schema:load
+
+      - name: RSpec + cobertura (gate >= 85%)
+        run: bundle exec rspec --format progress
+
+      - name: RuboCop
+        run: bundle exec rubocop --no-color
+
+      - name: Brakeman (falha em high/critical)
+        run: bundle exec brakeman --no-pager --no-color --exit-on-warn
+
+      - name: Bundler Audit (zero CVEs)
+        run: bundle exec bundler-audit check --update
+
+      - name: ERB Lint
+        run: bundle exec erblint --lint-all
