@@ -1,0 +1,6 @@
+<h2>Nova demanda submetida para triagem</h2>
+<p>Uma nova demanda foi submetida e aguarda triagem N1.</p>
+<p><strong>Título:</strong> <%= @demand.title %></p>
+<p><strong>Solicitante:</strong> <%= @demand.user.display_name %></p>
+<p><strong>Descrição:</strong> <%= @demand.description.truncate(200) %></p>
+<p><%= link_to "Ver demanda", demand_url(@demand) %></p>

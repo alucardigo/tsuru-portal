@@ -1,0 +1,8 @@
+<h2>Sua demanda está elegível para a Lei do Bem</h2>
+<p>Olá, <%= @demand.user.display_name %>.</p>
+<p>A demanda <strong><%= @demand.title %></strong> foi avaliada e considerada <strong>elegível</strong> para os benefícios da Lei do Bem (Lei nº 11.196/2005).</p>
+<% if @demand.parecer_tecnico.present? %>
+  <p><strong>Parecer técnico:</strong> <%= @demand.parecer_tecnico %></p>
+<% end %>
+<p>Parabéns! Esta demanda poderá integrar o dossiê anual de PD&amp;I para a Receita Federal.</p>
+<p><%= link_to "Ver demanda", demand_url(@demand) %></p>

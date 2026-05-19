@@ -22,8 +22,16 @@ FactoryBot.define do
       aasm_state { "cancelada" }
     end
 
+    trait :n1_reprovada_state do
+      aasm_state { "n1_reprovada" }
+    end
+
     trait :n2_em_andamento do
       aasm_state { "n2_em_andamento" }
+    end
+
+    trait :elegivel_state do
+      aasm_state { "elegivel" }
     end
 
     trait :n2_completa do

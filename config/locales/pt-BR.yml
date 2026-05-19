@@ -19,6 +19,16 @@ pt-BR:
     elegivel: "Demanda marcada como elegível para a Lei do Bem."
     nao_elegivel: "Demanda marcada como não elegível."
 
+  demand_mailer:
+    submetida:
+      subject: "Nova demanda submetida: %{title}"
+    n1_aprovada:
+      subject: "[Tsuru] Sua demanda foi aprovada na triagem N1"
+    n1_reprovada:
+      subject: "[Tsuru] Sua demanda foi reprovada na triagem N1"
+    elegivel:
+      subject: "[Tsuru] Sua demanda está elegível para a Lei do Bem"
+
   comments:
     created: "Comentário adicionado."
     invalid: "Comentário inválido."

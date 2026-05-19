@@ -43,6 +43,7 @@ class DemandsController < ApplicationController
     authorize @demand, :submeter?
 
     if @demand.submeter
+      DemandMailer.submetida(@demand).deliver_later
       redirect_to @demand, notice: t("demands.submitted")
     else
       redirect_to @demand, alert: t("demands.cannot_submit")
@@ -72,9 +73,11 @@ class DemandsController < ApplicationController
     if @demand.reprovado_n1?
       @demand.reprovar_n1
       @demand.save!
+      DemandMailer.n1_reprovada(@demand).deliver_later
       redirect_to @demand, notice: t("demands.n1_reprovada")
     elsif @demand.aprovar_n1
       @demand.save!
+      DemandMailer.n1_aprovada(@demand).deliver_later
       redirect_to @demand, notice: t("demands.n1_aprovada")
     else
       render :triagem, status: :unprocessable_entity
@@ -118,6 +121,7 @@ class DemandsController < ApplicationController
     end
 
     if sucesso && @demand.save
+      DemandMailer.send(decisao, @demand).deliver_later if decisao == "elegivel"
       redirect_to @demand, notice: t("demands.#{decisao}")
     else
       render :show, status: :unprocessable_entity

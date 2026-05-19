@@ -1,0 +1,5 @@
+<h2>Sua demanda foi reprovada na Triagem N1</h2>
+<p>Olá, <%= @demand.user.display_name %>.</p>
+<p>A demanda <strong><%= @demand.title %></strong> foi reprovada na triagem N1.</p>
+<p>Um ou mais critérios de inelegibilidade foram identificados. Entre em contato com seu gestor para mais detalhes.</p>
+<p><%= link_to "Ver demanda", demand_url(@demand) %></p>

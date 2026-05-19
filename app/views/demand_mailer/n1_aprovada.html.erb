@@ -1,0 +1,5 @@
+<h2>Sua demanda foi aprovada na Triagem N1</h2>
+<p>Olá, <%= @demand.user.display_name %>.</p>
+<p>A demanda <strong><%= @demand.title %></strong> foi aprovada na triagem N1 e avançou para a Avaliação N2.</p>
+<p>O próximo passo é a avaliação detalhada pelo analista de P&amp;D&amp;I.</p>
+<p><%= link_to "Ver demanda", demand_url(@demand) %></p>
