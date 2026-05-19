@@ -54,6 +54,7 @@ class DemandsController < ApplicationController
     authorize @demand, :iniciar_triagem?
 
     if @demand.iniciar_triagem
+      broadcast_state_change(@demand)
       redirect_to triagem_demand_path(@demand), notice: t("demands.triagem_iniciada")
     else
       redirect_to @demand, alert: t("demands.cannot_start_triagem")
@@ -141,6 +142,15 @@ class DemandsController < ApplicationController
   end
 
   private
+
+  def broadcast_state_change(demand)
+    Turbo::StreamsChannel.broadcast_replace_later_to(
+      "demand_state_#{demand.user_id}",
+      target: "demand_state_#{demand.id}",
+      partial: "demands/state_badge",
+      locals: { demand: demand }
+    )
+  end
 
   def set_demand
     @demand = Demand.find(params[:id])
