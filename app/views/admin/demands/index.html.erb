@@ -8,12 +8,38 @@
     </div>
   </div>
 
+  <%# Formulário de busca avançada %>
+  <%= form_with url: admin_demands_path, method: :get, local: true, class: "bg-gray-50 border rounded-lg p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3 items-end" do |f| %>
+    <div>
+      <%= f.label :q, "Buscar título", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.text_field :q, value: params[:q], placeholder: "palavra-chave…",
+            class: "border rounded px-2 py-1 text-sm w-full" %>
+    </div>
+    <div>
+      <%= f.label :trl, "TRL", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.select :trl, options_for_select([ [ "Qualquer", "" ] ] + (1..9).map { |n| [ "TRL #{n}", n ] }, params[:trl]),
+            {}, class: "border rounded px-2 py-1 text-sm w-full" %>
+    </div>
+    <div>
+      <%= f.label :data_ini, "De", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.date_field :data_ini, value: params[:data_ini], class: "border rounded px-2 py-1 text-sm w-full" %>
+    </div>
+    <div>
+      <%= f.label :data_fim, "Até", class: "block text-xs font-medium text-gray-600 mb-1" %>
+      <%= f.date_field :data_fim, value: params[:data_fim], class: "border rounded px-2 py-1 text-sm w-full" %>
+    </div>
+    <div class="col-span-2 md:col-span-4 flex gap-2">
+      <%= f.submit "Filtrar", class: "bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700" %>
+      <%= link_to "Limpar", admin_demands_path, class: "text-gray-500 text-sm hover:underline self-center" %>
+    </div>
+  <% end %>
+
   <%# Filtro por estado %>
   <div class="flex flex-wrap gap-2 mb-4">
-    <%= link_to "Todas", admin_demands_path,
+    <%= link_to "Todas", admin_demands_path(q: params[:q], trl: params[:trl], data_ini: params[:data_ini], data_fim: params[:data_fim]),
           class: "#{params[:estado].blank? ? 'tsuru-btn-primary' : 'tsuru-btn-secondary'} text-xs py-1" %>
     <% %w[rascunho submetida em_triagem n1_aprovada n1_reprovada n2_em_andamento n2_completa elegivel nao_elegivel cancelada].each do |estado| %>
-      <%= link_to estado.humanize, admin_demands_path(estado: estado),
+      <%= link_to estado.humanize, admin_demands_path(estado: estado, q: params[:q], trl: params[:trl], data_ini: params[:data_ini], data_fim: params[:data_fim]),
             class: "#{params[:estado] == estado ? 'tsuru-btn-primary' : 'tsuru-btn-secondary'} text-xs py-1" %>
     <% end %>
   </div>

@@ -18,6 +18,10 @@ module Admin
     def index
       @demands = Demand.includes(:user).order(created_at: :desc)
       @demands = @demands.where(aasm_state: params[:estado]) if params[:estado].present?
+      @demands = @demands.busca_titulo(params[:q])
+      @demands = @demands.por_trl(params[:trl])
+      @demands = @demands.de(params[:data_ini].presence && Date.parse(params[:data_ini]))
+      @demands = @demands.ate(params[:data_fim].presence && Date.parse(params[:data_fim]))
 
       respond_to do |format|
         format.html { }

@@ -22,6 +22,11 @@ class Demand < ApplicationRecord
   validate :attachments_valid
   validate :ods_goals_valid
 
+  scope :busca_titulo, ->(q) { where("title ILIKE ?", "%#{sanitize_sql_like(q)}%") if q.present? }
+  scope :por_trl, ->(trl) { where(trl: trl) if trl.present? }
+  scope :de, ->(data) { where("created_at >= ?", data.beginning_of_day) if data.present? }
+  scope :ate, ->(data) { where("created_at <= ?", data.end_of_day) if data.present? }
+
   state_machine :aasm_state, initial: :rascunho do
     state :rascunho
     state :submetida
