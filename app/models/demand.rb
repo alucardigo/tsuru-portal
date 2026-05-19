@@ -18,7 +18,9 @@ class Demand < ApplicationRecord
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :description, presence: true
+  validates :trl, inclusion: { in: 1..9 }, allow_nil: true
   validate :attachments_valid
+  validate :ods_goals_valid
 
   state_machine :aasm_state, initial: :rascunho do
     state :rascunho
@@ -95,7 +97,28 @@ class Demand < ApplicationRecord
     parecer_tecnico.present?
   end
 
+  def to_formpd
+    {
+      schema_versao: "FORMPD-2025",
+      id: id,
+      titulo: title,
+      solicitante: user.display_name,
+      estado: aasm_state,
+      trl: trl,
+      ods: ods_goals,
+      data_criacao: created_at.to_date.iso8601,
+      avaliacao_n2: n2_assessment || {}
+    }
+  end
+
   private
+
+  def ods_goals_valid
+    return if ods_goals.blank?
+
+    invalid = ods_goals.reject { |g| (1..17).cover?(g.to_i) }
+    errors.add(:ods_goals, :invalid, message: "deve conter apenas valores entre 1 e 17") if invalid.any?
+  end
 
   def attachments_valid
     attachments.each do |attachment|

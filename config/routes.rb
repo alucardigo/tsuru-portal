@@ -24,7 +24,9 @@ Rails.application.routes.draw do
 
   namespace :admin do
     resources :users, only: %i[index update]
-    resources :demands, only: %i[index]
+    resources :demands, only: %i[index] do
+      member { get :formpd }
+    end
   end
 
   get "dashboard", to: "dashboard#show", as: :dashboard

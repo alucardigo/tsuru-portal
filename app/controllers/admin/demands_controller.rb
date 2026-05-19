@@ -1,6 +1,11 @@
 module Admin
   class DemandsController < BaseController
-    def index
+    def formpd
+    demand = Demand.find(params[:id])
+    render json: demand.to_formpd
+  end
+
+  def index
       @demands = Demand.includes(:user).order(created_at: :desc)
       @demands = @demands.where(aasm_state: params[:estado]) if params[:estado].present?
 

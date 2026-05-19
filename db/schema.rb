@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_19_143549) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_19_150810) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -58,8 +58,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_143549) do
     t.text "description", null: false
     t.jsonb "n1_flags", default: {}, null: false
     t.jsonb "n2_assessment", default: {}
+    t.integer "ods_goals", default: [], array: true
     t.text "parecer_tecnico"
     t.string "title", null: false
+    t.integer "trl"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["aasm_state"], name: "index_demands_on_aasm_state"
