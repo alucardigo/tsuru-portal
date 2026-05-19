@@ -6,15 +6,13 @@ require 'rspec/rails'
 require 'capybara/rails'
 require 'capybara/rspec'
 
-# SimpleCov — coverage gate ≥ 85%
-if ENV['COVERAGE']
-  require 'simplecov'
-  SimpleCov.start 'rails' do
-    add_filter '/spec/'
-    add_filter '/config/'
-    add_filter '/db/'
-    minimum_coverage 85
-  end
+# SimpleCov — ativa em toda suite (CI ou LOCAL com COVERAGE=true)
+require "simplecov"
+SimpleCov.start "rails" do
+  add_filter "/spec/"
+  add_filter "/config/"
+  add_filter "/db/"
+  minimum_coverage 85 if ENV["CI"] || ENV["COVERAGE"]
 end
 
 # Support files
