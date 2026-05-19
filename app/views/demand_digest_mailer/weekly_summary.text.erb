@@ -1,0 +1,21 @@
+Resumo Semanal PD&I — Lei do Bem
+Período: <%= l @semana_inicio.to_date, format: :short %> a <%= l Date.current, format: :short %>
+
+Olá, <%= @recipient.display_name %>.
+
+=== PORTFÓLIO ATUAL ===
+<% @totais.sort_by { |_, v| -v }.each do |estado, count| %>
+  <%= estado.humanize %>: <%= count %>
+<% end %>
+
+<% if @novas.any? %>
+=== NOVAS SUBMISSÕES ESTA SEMANA (<%= @novas.count %>) ===
+<% @novas.each do |demand| %>
+  - <%= demand.title %> (por <%= demand.user.display_name %>)
+<% end %>
+<% else %>
+Nenhuma nova submissão esta semana.
+<% end %>
+
+--
+Portal PD&I Tsuru · <%= Date.current.strftime("%d/%m/%Y") %>

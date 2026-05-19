@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #222;">
+
+  <div style="background: #1E3A5F; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+    <h1 style="margin: 0; font-size: 18px;">Resumo Semanal PD&I — Lei do Bem</h1>
+    <p style="margin: 4px 0 0; opacity: .8; font-size: 13px;">
+      Período: <%= l @semana_inicio.to_date, format: :short %> a <%= l Date.current, format: :short %>
+    </p>
+  </div>
+
+  <div style="padding: 20px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+    <p>Olá, <%= @recipient.display_name %>.</p>
+    <p>Confira o resumo das demandas PD&I desta semana:</p>
+
+    <h2 style="font-size: 15px; color: #1E3A5F;">Portfólio atual</h2>
+    <table style="width:100%; border-collapse: collapse; font-size: 13px;">
+      <thead>
+        <tr style="background: #f5f7fa;">
+          <th style="text-align:left; padding: 6px 8px; border-bottom: 2px solid #ddd;">Estado</th>
+          <th style="text-align:right; padding: 6px 8px; border-bottom: 2px solid #ddd;">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @totais.sort_by { |_, v| -v }.each do |estado, count| %>
+          <tr>
+            <td style="padding: 5px 8px; border-bottom: 1px solid #eee;"><%= estado.humanize %></td>
+            <td style="padding: 5px 8px; border-bottom: 1px solid #eee; text-align:right; font-weight:bold;"><%= count %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+
+    <% if @novas.any? %>
+      <h2 style="font-size: 15px; color: #1E3A5F; margin-top: 20px;">
+        Novas submissões na semana (<%= @novas.count %>)
+      </h2>
+      <ul style="font-size: 13px; line-height: 1.7;">
+        <% @novas.each do |demand| %>
+          <li><strong><%= demand.title %></strong> — <%= demand.user.display_name %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p style="color: #666; font-size: 13px; margin-top: 16px;">Nenhuma nova submissão esta semana.</p>
+    <% end %>
+
+    <hr style="margin: 20px 0; border: none; border-top: 1px solid #eee;">
+    <p style="font-size: 11px; color: #999;">
+      Portal PD&I Tsuru · Gerado em <%= Date.current.strftime("%d/%m/%Y") %>
+    </p>
+  </div>
+
+</body>
+</html>
