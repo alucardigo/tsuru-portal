@@ -3,6 +3,8 @@ class Demand < ApplicationRecord
 
   belongs_to :user
   has_many :comments, dependent: :destroy
+  has_many :transitions, class_name: "DemandTransition", dependent: :restrict_with_exception
+  has_one  :lei_do_bem_record, dependent: :destroy
   has_many_attached :attachments
 
   ALLOWED_CONTENT_TYPES = %w[
@@ -28,6 +30,7 @@ class Demand < ApplicationRecord
   scope :ate, ->(data) { where("created_at <= ?", data.end_of_day) if data.present? }
 
   state_machine :aasm_state, initial: :rascunho do
+    # 13 estados (PRD)
     state :rascunho
     state :submetida
     state :em_triagem
@@ -35,8 +38,13 @@ class Demand < ApplicationRecord
     state :n1_reprovada
     state :n2_em_andamento
     state :n2_completa
+    state :awaiting_requester
+    state :board_review
     state :elegivel
     state :nao_elegivel
+    state :in_execution
+    state :concluida
+    state :arquivada
     state :cancelada
 
     event :submeter do
@@ -63,16 +71,40 @@ class Demand < ApplicationRecord
       transition n2_em_andamento: :n2_completa, if: :n2_completo?
     end
 
+    event :solicitar_revisao do
+      transition %i[em_triagem n2_em_andamento n2_completa board_review] => :awaiting_requester
+    end
+
+    event :retomar do
+      transition awaiting_requester: :submetida
+    end
+
+    event :enviar_para_board do
+      transition n2_completa: :board_review, if: :parecer_presente?
+    end
+
     event :marcar_elegivel do
-      transition n2_completa: :elegivel, if: :parecer_presente?
+      transition %i[n2_completa board_review] => :elegivel, if: :parecer_presente?
     end
 
     event :marcar_nao_elegivel do
-      transition n2_completa: :nao_elegivel, if: :parecer_presente?
+      transition %i[n2_completa board_review] => :nao_elegivel, if: :parecer_presente?
+    end
+
+    event :iniciar_execucao do
+      transition elegivel: :in_execution
+    end
+
+    event :concluir_execucao do
+      transition in_execution: :concluida
+    end
+
+    event :arquivar do
+      transition %i[concluida nao_elegivel] => :arquivada
     end
 
     event :cancelar do
-      transition %i[rascunho submetida em_triagem n1_aprovada n2_em_andamento] => :cancelada
+      transition %i[rascunho submetida em_triagem n1_aprovada n2_em_andamento awaiting_requester board_review] => :cancelada
     end
   end
 
