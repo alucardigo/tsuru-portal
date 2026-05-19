@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_19_152955) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_19_172955) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -52,6 +52,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_152955) do
     t.index ["user_id"], name: "index_comments_on_user_id"
   end
 
+  create_table "demand_transitions", force: :cascade do |t|
+    t.bigint "actor_id"
+    t.datetime "created_at", null: false
+    t.bigint "demand_id", null: false
+    t.string "event", null: false
+    t.string "from_state"
+    t.text "justification"
+    t.string "to_state", null: false
+    t.index ["actor_id"], name: "index_demand_transitions_on_actor_id"
+    t.index ["demand_id", "created_at"], name: "index_demand_transitions_on_demand_id_and_created_at"
+    t.index ["demand_id"], name: "index_demand_transitions_on_demand_id"
+  end
+
   create_table "demands", force: :cascade do |t|
     t.string "aasm_state", default: "rascunho", null: false
     t.datetime "created_at", null: false
@@ -66,6 +79,72 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_152955) do
     t.bigint "user_id", null: false
     t.index ["aasm_state"], name: "index_demands_on_aasm_state"
     t.index ["user_id"], name: "index_demands_on_user_id"
+  end
+
+  create_table "expenses", force: :cascade do |t|
+    t.string "categoria", null: false
+    t.string "centro_resultado_sankhya"
+    t.datetime "created_at", null: false
+    t.date "data_competencia", null: false
+    t.string "descricao", null: false
+    t.string "documento_fiscal"
+    t.bigint "lei_do_bem_record_id", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "valor", precision: 14, scale: 2, null: false
+    t.index ["categoria"], name: "index_expenses_on_categoria"
+    t.index ["data_competencia"], name: "index_expenses_on_data_competencia"
+    t.index ["lei_do_bem_record_id"], name: "index_expenses_on_lei_do_bem_record_id"
+  end
+
+  create_table "lei_do_bem_records", force: :cascade do |t|
+    t.integer "ano_base", null: false
+    t.boolean "base_zero_pesquisadores", default: false
+    t.decimal "beneficio_estimado", precision: 14, scale: 2
+    t.datetime "created_at", null: false
+    t.bigint "demand_id", null: false
+    t.string "natureza_projeto", null: false
+    t.text "ods_projeto", default: [], array: true
+    t.text "parecer_consolidado"
+    t.string "regime_tributacao", default: "lucro_real_anual"
+    t.boolean "tem_patente", default: false
+    t.decimal "total_dispendios", precision: 14, scale: 2, default: "0.0"
+    t.integer "trl_final"
+    t.integer "trl_inicial"
+    t.datetime "updated_at", null: false
+    t.index ["ano_base"], name: "index_lei_do_bem_records_on_ano_base"
+    t.index ["demand_id"], name: "index_lei_do_bem_records_on_demand_id", unique: true
+  end
+
+  create_table "partnerships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "data_fim"
+    t.date "data_inicio"
+    t.text "descricao_parceria"
+    t.string "ict_cnpj"
+    t.string "ict_nome", null: false
+    t.bigint "lei_do_bem_record_id", null: false
+    t.string "tipo", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "valor_contrato", precision: 14, scale: 2
+    t.index ["lei_do_bem_record_id"], name: "index_partnerships_on_lei_do_bem_record_id"
+  end
+
+  create_table "team_members", force: :cascade do |t|
+    t.boolean "contratado_no_ano_base", default: false
+    t.string "cpf"
+    t.datetime "created_at", null: false
+    t.decimal "custo_anual", precision: 14, scale: 2
+    t.boolean "dedicacao_exclusiva", default: false
+    t.decimal "dedicacao_percentual", precision: 5, scale: 2
+    t.decimal "horas_anuais", precision: 8, scale: 2
+    t.bigint "lei_do_bem_record_id", null: false
+    t.string "nome", null: false
+    t.string "titulacao"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.string "vinculo"
+    t.index ["lei_do_bem_record_id"], name: "index_team_members_on_lei_do_bem_record_id"
+    t.index ["user_id"], name: "index_team_members_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -105,5 +184,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_152955) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "comments", "demands"
   add_foreign_key "comments", "users"
+  add_foreign_key "demand_transitions", "demands"
+  add_foreign_key "demand_transitions", "users", column: "actor_id"
   add_foreign_key "demands", "users"
+  add_foreign_key "expenses", "lei_do_bem_records"
+  add_foreign_key "lei_do_bem_records", "demands"
+  add_foreign_key "partnerships", "lei_do_bem_records"
+  add_foreign_key "team_members", "lei_do_bem_records"
+  add_foreign_key "team_members", "users"
 end

@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "FORMP&D MCTI v2026",
+  "description": "Schema do formulário PD&I para Lei do Bem - ciclo 2026 (ano-base 2025)",
+  "type": "object",
+  "required": ["schema_versao", "id", "titulo", "solicitante", "estado", "data_criacao"],
+  "properties": {
+    "schema_versao": {
+      "type": "string",
+      "enum": ["FORMPD-2025", "FORMPD-2026"]
+    },
+    "id": { "type": "integer", "minimum": 1 },
+    "titulo": { "type": "string", "minLength": 5, "maxLength": 200 },
+    "solicitante": { "type": "string", "minLength": 1 },
+    "estado": {
+      "type": "string",
+      "enum": [
+        "rascunho", "submetida", "em_triagem",
+        "n1_aprovada", "n1_reprovada",
+        "n2_em_andamento", "n2_completa",
+        "awaiting_requester", "board_review",
+        "elegivel", "nao_elegivel",
+        "in_execution", "concluida", "arquivada", "cancelada"
+      ]
+    },
+    "trl": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "maximum": 9
+    },
+    "ods": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1, "maximum": 17 },
+      "uniqueItems": true,
+      "maxItems": 17
+    },
+    "data_criacao": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+    },
+    "avaliacao_n2": {
+      "type": "object",
+      "properties": {
+        "motivacao": { "type": ["string", "null"] },
+        "benchmark_anterior": { "type": ["string", "null"] },
+        "barreira_tecnica": { "type": ["string", "null"] },
+        "metodologia": { "type": ["string", "null"] },
+        "stack_tecnologico": { "type": ["string", "null"] },
+        "resultado_obtido": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
