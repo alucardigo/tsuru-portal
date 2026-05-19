@@ -86,7 +86,7 @@ RSpec.describe "Demand N2 avaliação", type: :request do
       patch decidir_elegibilidade_demand_path(demand_completa), params: {
         demand: { decisao: "elegivel", parecer_tecnico: "" }
       }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 end

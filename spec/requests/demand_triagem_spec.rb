@@ -61,7 +61,7 @@ RSpec.describe "Demand N1 triagem", type: :request do
 
       it "retorna unprocessable ou redireciona com erro" do
         patch triagem_demand_path(demand_submetida), params: { demand: { n1_flags: all_zero_flags } }
-        expect(response).to have_http_status(:unprocessable_entity).or redirect_to(demand_path(demand_submetida))
+        expect(response).to have_http_status(:unprocessable_content).or redirect_to(demand_path(demand_submetida))
       end
     end
   end

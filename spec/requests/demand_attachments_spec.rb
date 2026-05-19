@@ -17,7 +17,7 @@ RSpec.describe "Demand Attachments", type: :request do
 
     it "rejeita arquivo com tipo inválido" do
       patch demand_path(demand), params: { demand: base_params.merge(attachments: [ exe_file ]) }
-      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response).to have_http_status(:unprocessable_content)
     end
   end
 

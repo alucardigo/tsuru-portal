@@ -21,7 +21,7 @@ class DemandsController < ApplicationController
     if @demand.save
       redirect_to @demand, notice: t("demands.created")
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -35,7 +35,7 @@ class DemandsController < ApplicationController
     if @demand.update(demand_params)
       redirect_to @demand, notice: t("demands.updated")
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 
@@ -80,7 +80,7 @@ class DemandsController < ApplicationController
       DemandMailer.n1_aprovada(@demand).deliver_later
       redirect_to @demand, notice: t("demands.n1_aprovada")
     else
-      render :triagem, status: :unprocessable_entity
+      render :triagem, status: :unprocessable_content
     end
   end
 
@@ -105,7 +105,7 @@ class DemandsController < ApplicationController
     if @demand.concluir_n2 && @demand.save
       redirect_to @demand, notice: t("demands.n2_completa")
     else
-      render :n2, status: :unprocessable_entity
+      render :n2, status: :unprocessable_content
     end
   end
 
@@ -124,7 +124,7 @@ class DemandsController < ApplicationController
       DemandMailer.send(decisao, @demand).deliver_later if decisao == "elegivel"
       redirect_to @demand, notice: t("demands.#{decisao}")
     else
-      render :show, status: :unprocessable_entity
+      render :show, status: :unprocessable_content
     end
   end
 

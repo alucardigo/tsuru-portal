@@ -69,7 +69,7 @@ RSpec.describe "Demands", type: :request do
 
       it "rejeita título vazio" do
         post demands_path, params: { demand: { title: "", description: "desc" } }
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
 
