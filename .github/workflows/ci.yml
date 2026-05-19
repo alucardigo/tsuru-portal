@@ -30,6 +30,10 @@ jobs:
       RAILS_ENV: test
       DATABASE_URL: "postgresql://tsuru:tsuru_test@localhost:5432/tsuru_portal_test"
       COVERAGE: "true"
+      OTP_SECRET_KEY: "ci-otp-secret-key-for-testing-only-aaa"
+      ACTIVE_RECORD_ENCRYPTION_PRIMARY_KEY: "ci-primary-key-tsuru-portal-32chars"
+      ACTIVE_RECORD_ENCRYPTION_DETERMINISTIC_KEY: "ci-deterministic-key-tsuru-32char"
+      ACTIVE_RECORD_ENCRYPTION_KEY_DERIVATION_SALT: "ci-key-derivation-salt-tsuru-12ch"
 
     steps:
       - name: Checkout
