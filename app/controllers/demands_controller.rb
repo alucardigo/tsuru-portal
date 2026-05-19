@@ -2,7 +2,7 @@ class DemandsController < ApplicationController
   before_action :set_demand, only: %i[show edit update destroy submeter iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade versions]
 
   def index
-    @demands = policy_scope(Demand).order(created_at: :desc)
+    @pagy, @demands = pagy(policy_scope(Demand).order(created_at: :desc))
   end
 
   def show

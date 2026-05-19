@@ -23,12 +23,14 @@ module Admin
     end
 
     def index
-      @demands = Demand.includes(:user).order(created_at: :desc)
-      @demands = @demands.where(aasm_state: params[:estado]) if params[:estado].present?
-      @demands = @demands.busca_titulo(params[:q])
-      @demands = @demands.por_trl(params[:trl])
-      @demands = @demands.de(params[:data_ini].presence && Date.parse(params[:data_ini]))
-      @demands = @demands.ate(params[:data_fim].presence && Date.parse(params[:data_fim]))
+      scope = Demand.includes(:user).order(created_at: :desc)
+      scope = scope.where(aasm_state: params[:estado]) if params[:estado].present?
+      scope = scope.busca_titulo(params[:q])
+      scope = scope.por_trl(params[:trl])
+      scope = scope.de(params[:data_ini].presence && Date.parse(params[:data_ini]))
+      scope = scope.ate(params[:data_fim].presence && Date.parse(params[:data_fim]))
+
+      @pagy, @demands = pagy(scope)
 
       respond_to do |format|
         format.html { }

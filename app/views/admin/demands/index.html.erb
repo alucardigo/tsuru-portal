@@ -44,6 +44,10 @@
     <% end %>
   </div>
 
+  <p class="text-sm text-gray-500 mb-2">
+    <%= @pagy.count %> demanda(s) encontrada(s) — página <%= @pagy.page %> de <%= @pagy.last %>
+  </p>
+
   <div class="tsuru-card">
     <table class="w-full text-sm">
       <thead>
@@ -73,4 +77,9 @@
       </tbody>
     </table>
   </div>
+
+  <%# Pagy navigation %>
+  <nav aria-label="paginação" class="flex justify-center mt-4 gap-1 text-sm">
+    <%== @pagy.series_nav %>
+  </nav>
 </div>
