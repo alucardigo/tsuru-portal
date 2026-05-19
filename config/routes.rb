@@ -40,6 +40,7 @@ Rails.application.routes.draw do
         get :sankhya
       end
     end
+    get "metrics", to: "metrics#show", as: :metrics
   end
 
   get "dashboard", to: "dashboard#show", as: :dashboard

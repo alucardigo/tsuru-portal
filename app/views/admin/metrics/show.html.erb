@@ -1,0 +1,81 @@
+<div class="max-w-5xl mx-auto p-6 space-y-8">
+  <h1 class="text-2xl font-bold">Métricas do Portfólio PD&I</h1>
+
+  <%# KPI cards %>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white border rounded-lg p-4 text-center shadow-sm">
+      <p class="text-3xl font-bold text-blue-700"><%= @total %></p>
+      <p class="text-sm text-gray-500 mt-1">Total de Demandas</p>
+    </div>
+    <div class="bg-white border rounded-lg p-4 text-center shadow-sm">
+      <p class="text-3xl font-bold text-green-600"><%= @elegivel %></p>
+      <p class="text-sm text-gray-500 mt-1">Elegíveis</p>
+    </div>
+    <div class="bg-white border rounded-lg p-4 text-center shadow-sm">
+      <p class="text-3xl font-bold text-red-500"><%= @nao_elegivel %></p>
+      <p class="text-sm text-gray-500 mt-1">Não Elegíveis</p>
+    </div>
+    <div class="bg-white border rounded-lg p-4 text-center shadow-sm">
+      <p class="text-3xl font-bold text-indigo-600">
+        <%= @taxa_elegibilidade ? "#{@taxa_elegibilidade}%" : "—" %>
+      </p>
+      <p class="text-sm text-gray-500 mt-1">Taxa Elegibilidade</p>
+    </div>
+  </div>
+
+  <%# Por estado %>
+  <section>
+    <h2 class="text-lg font-semibold mb-3">Demandas por Estado</h2>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <% @por_estado.sort_by { |_, v| -v }.each do |estado, count| %>
+        <div class="bg-gray-50 border rounded p-3 text-center">
+          <p class="text-xl font-bold"><%= count %></p>
+          <p class="text-xs text-gray-600 mt-1 truncate"><%= estado.humanize %></p>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <%# Distribuição TRL %>
+  <section>
+    <h2 class="text-lg font-semibold mb-3">Distribuição TRL</h2>
+    <% if @trl_dist.empty? %>
+      <p class="text-gray-400 text-sm">Nenhuma demanda com TRL definido.</p>
+    <% else %>
+      <div class="flex gap-2 items-end h-24">
+        <% max_val = @trl_dist.values.max.to_f %>
+        <% (1..9).each do |trl| %>
+          <% count = @trl_dist.fetch(trl, 0) %>
+          <div class="flex flex-col items-center flex-1">
+            <span class="text-xs font-medium mb-1"><%= count > 0 ? count : "" %></span>
+            <div class="w-full rounded-t"
+                 style="height: <%= count > 0 ? [(count / max_val * 80).round, 4].max : 2 %>px;
+                        background: <%= count > 0 ? "#1d4ed8" : "#e5e7eb" %>"></div>
+            <span class="text-xs text-gray-500 mt-1"><%= trl %></span>
+          </div>
+        <% end %>
+      </div>
+      <p class="text-xs text-gray-400 mt-1">TRL 1–9 (Research Technology Levels)</p>
+    <% end %>
+  </section>
+
+  <%# ODS mais frequentes %>
+  <section>
+    <h2 class="text-lg font-semibold mb-3">ODS Mais Frequentes</h2>
+    <% if @ods_freq.empty? %>
+      <p class="text-gray-400 text-sm">Nenhuma demanda com ODS definido.</p>
+    <% else %>
+      <div class="flex flex-wrap gap-2">
+        <% @ods_freq.each do |ods, count| %>
+          <span class="inline-flex items-center gap-1 bg-teal-100 text-teal-800 rounded-full px-3 py-1 text-sm font-medium">
+            ODS <%= ods %> <span class="bg-teal-600 text-white rounded-full px-1.5 text-xs"><%= count %></span>
+          </span>
+        <% end %>
+      </div>
+    <% end %>
+  </section>
+
+  <div class="text-right">
+    <%= link_to "← Demandas", admin_demands_path, class: "text-blue-600 hover:underline text-sm" %>
+  </div>
+</div>
