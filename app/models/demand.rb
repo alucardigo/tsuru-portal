@@ -148,6 +148,15 @@ class Demand < ApplicationRecord
     }
   end
 
+  # Retorna violations da redacao Lei do Bem para o campo barreira_tecnica.
+  # NAO bloqueia save (wire up apenas) — uso esperado: alerta visual no N2 form.
+  def linus_violations
+    return [] if barreira_tecnica.blank?
+
+    result = Validators::LinusRedaction.call(text: barreira_tecnica.to_s)
+    result.errors || []
+  end
+
   private
 
   def ods_goals_valid

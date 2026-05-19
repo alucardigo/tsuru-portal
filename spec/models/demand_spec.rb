@@ -70,4 +70,12 @@ RSpec.describe Demand, type: :model do
   describe "PaperTrail" do
     it { is_expected.to be_a(PaperTrail::Model::InstanceMethods) }
   end
+
+  describe "#linus_violations (Lei do Bem redacao)" do
+    it "retorna violations quando barreira_tecnica usa termos banidos sem quantitativos" do
+      demand.n2_assessment = { "barreira_tecnica" => "O sistema ficou mais rapido depois" }
+      types = demand.linus_violations.map { |v| v[:type] }
+      expect(types).to include(:banned_phrase, :missing_quantitative)
+    end
+  end
 end
