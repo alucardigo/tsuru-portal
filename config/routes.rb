@@ -35,7 +35,10 @@ Rails.application.routes.draw do
   namespace :admin do
     resources :users, only: %i[index update]
     resources :demands, only: %i[index] do
-      member { get :formpd }
+      member do
+        get :formpd
+        get :sankhya
+      end
     end
   end
 

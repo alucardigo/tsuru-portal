@@ -5,6 +5,16 @@ module Admin
       render json: demand.to_formpd
     end
 
+    def sankhya
+      @demand = Demand.find(params[:id])
+      codparc = params[:codparc].presence
+      return unless codparc
+
+      @notas_fiscais = SankhyaService.new.notas_fiscais(codparc: codparc)
+    rescue Faraday::Error => e
+      redirect_to admin_demands_path, alert: t("admin.sankhya.error", message: e.message)
+    end
+
     def index
       @demands = Demand.includes(:user).order(created_at: :desc)
       @demands = @demands.where(aasm_state: params[:estado]) if params[:estado].present?

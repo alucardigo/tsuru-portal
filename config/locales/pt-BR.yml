@@ -48,6 +48,8 @@ pt-BR:
     users:
       updated: "Role do usuário atualizada."
       update_failed: "Não foi possível atualizar o usuário."
+    sankhya:
+      error: "Erro ao consultar Sankhya: %{message}"
 
   comments:
     created: "Comentário adicionado."

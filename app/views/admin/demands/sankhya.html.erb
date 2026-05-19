@@ -1,0 +1,51 @@
+<div class="max-w-4xl mx-auto p-6">
+  <h1 class="text-2xl font-bold mb-4">Consulta Sankhya — <%= @demand.title %></h1>
+
+  <%= form_with url: sankhya_admin_demand_path(@demand), method: :get, local: true, class: "mb-6 flex gap-3 items-end" do |f| %>
+    <div>
+      <%= f.label :codparc, "Código do Parceiro (CODPARC)", class: "block text-sm font-medium mb-1" %>
+      <%= f.text_field :codparc, value: params[:codparc],
+            placeholder: "ex: 12345",
+            class: "border rounded px-3 py-2 w-48" %>
+    </div>
+    <%= f.submit "Buscar Notas Fiscais", class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" %>
+  <% end %>
+
+  <% if @notas_fiscais %>
+    <h2 class="text-xl font-semibold mb-3">Notas Fiscais</h2>
+    <% if @notas_fiscais.empty? %>
+      <p class="text-gray-500">Nenhuma nota fiscal encontrada para CODPARC <%= params[:codparc] %>.</p>
+    <% else %>
+      <table class="w-full border-collapse border text-sm">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="border px-3 py-2 text-left">Campos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @notas_fiscais.each do |nf| %>
+            <tr class="hover:bg-gray-50">
+              <td class="border px-3 py-2">
+                <% fields = nf["f"] || nf %>
+                <% if fields.is_a?(Array) %>
+                  <dl class="grid grid-cols-2 gap-1">
+                    <% fields.each do |f| %>
+                      <dt class="font-medium text-gray-600"><%= f["_"] %></dt>
+                      <dd><%= f["$"] %></dd>
+                    <% end %>
+                  </dl>
+                <% else %>
+                  <%= nf.to_json %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  <% end %>
+
+  <div class="mt-6">
+    <%= link_to "← Voltar às Demandas", admin_demands_path, class: "text-blue-600 hover:underline" %>
+  </div>
+</div>
