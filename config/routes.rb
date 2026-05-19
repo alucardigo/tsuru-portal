@@ -38,6 +38,7 @@ Rails.application.routes.draw do
       member do
         get :formpd
         get :sankhya
+        get :relatorio_n3
       end
     end
     get "metrics", to: "metrics#show", as: :metrics

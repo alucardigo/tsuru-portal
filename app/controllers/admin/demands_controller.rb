@@ -5,6 +5,13 @@ module Admin
       render json: demand.to_formpd
     end
 
+    def relatorio_n3
+      demand = Demand.find(params[:id])
+      pdf_data = N3PdfService.new(demand).render
+      filename = "relatorio_n3_demanda_#{demand.id}_#{Date.current.iso8601}.pdf"
+      send_data pdf_data, filename: filename, type: "application/pdf", disposition: :attachment
+    end
+
     def sankhya
       @demand = Demand.find(params[:id])
       codparc = params[:codparc].presence

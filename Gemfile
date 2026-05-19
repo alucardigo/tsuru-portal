@@ -32,6 +32,8 @@ gem "caxlsx"
 gem "caxlsx_rails"
 gem "caracal"
 gem "caracal-rails"
+gem "prawn"
+gem "prawn-table"
 
 # JSON Schema validation (FORMP&D)
 gem "json-schema"
