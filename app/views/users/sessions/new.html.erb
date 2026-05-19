@@ -1,0 +1,45 @@
+<div class="min-h-[70vh] flex items-center justify-center">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-8">
+      <svg class="w-12 h-12 text-primary-900 mx-auto mb-3" viewBox="0 0 40 40" fill="none"
+           xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M20 4C20 4 8 14 8 24C8 31.732 13.268 37 20 37C26.732 37 32 31.732 32 24C32 14 20 4 20 4Z"
+              fill="currentColor" opacity="0.9"/>
+        <circle cx="20" cy="24" r="4" fill="white" opacity="0.8"/>
+      </svg>
+      <h1 class="text-2xl font-bold text-primary-900">Entrar no Tsuru</h1>
+      <p class="text-sm text-gray-500 mt-1">Portal de Inovação PD&I</p>
+    </div>
+
+    <div class="tsuru-card">
+      <%= form_for(resource, as: resource_name, url: session_path(resource_name), html: { class: "space-y-4" }) do |f| %>
+        <div>
+          <%= f.label :email, "E-mail", class: "tsuru-label" %>
+          <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "tsuru-input" %>
+        </div>
+
+        <div>
+          <%= f.label :password, "Senha", class: "tsuru-label" %>
+          <%= f.password_field :password, autocomplete: "current-password", class: "tsuru-input" %>
+        </div>
+
+        <% if devise_mapping.rememberable? %>
+          <div class="flex items-center justify-between text-sm">
+            <label class="flex items-center gap-2 text-gray-600 cursor-pointer">
+              <%= f.check_box :remember_me, class: "rounded border-gray-300 text-primary-700" %>
+              Lembrar de mim
+            </label>
+            <%= link_to "Esqueceu a senha?", new_password_path(resource_name), class: "text-primary-700 hover:underline" %>
+          </div>
+        <% end %>
+
+        <%= f.submit "Entrar", class: "tsuru-btn-primary w-full" %>
+      <% end %>
+    </div>
+
+    <p class="text-center text-sm text-gray-500 mt-4">
+      Não tem conta?
+      <%= link_to "Solicitar acesso", new_registration_path(resource_name), class: "text-primary-700 hover:underline" %>
+    </p>
+  </div>
+</div>

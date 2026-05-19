@@ -47,3 +47,11 @@ end
 
 # Capybara config
 Capybara.default_max_wait_time = 5
+
+# Shoulda Matchers
+Shoulda::Matchers.configure do |config|
+  config.integrate do |with|
+    with.test_framework :rspec
+    with.library :rails
+  end
+end

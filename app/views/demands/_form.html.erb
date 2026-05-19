@@ -1,0 +1,27 @@
+<%= form_with model: demand, class: "space-y-5" do |f| %>
+  <% if demand.errors.any? %>
+    <div class="bg-danger-50 border border-danger-200 rounded-lg p-4">
+      <ul class="list-disc list-inside text-sm text-danger-700">
+        <% demand.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.label :title, "Título da demanda", class: "tsuru-label" %>
+    <%= f.text_field :title, class: "tsuru-input", placeholder: "Ex: Algoritmo de compressão adaptativa para dados de telemetria" %>
+  </div>
+
+  <div>
+    <%= f.label :description, "Descrição técnica", class: "tsuru-label" %>
+    <p class="text-xs text-gray-400 mb-1">Descreva o problema técnico, a hipótese de pesquisa e a incerteza tecnológica.</p>
+    <%= f.text_area :description, rows: 8, class: "tsuru-input", placeholder: "Qual é o desafio técnico que ainda não tem solução conhecida? Quais experimentos serão necessários?" %>
+  </div>
+
+  <div class="flex gap-3">
+    <%= f.submit demand.new_record? ? "Salvar rascunho" : "Atualizar", class: "tsuru-btn-primary" %>
+    <%= link_to "Cancelar", demands_path, class: "tsuru-btn-secondary" %>
+  </div>
+<% end %>

@@ -73,6 +73,7 @@ group :development, :test do
   gem "bundler-audit", require: false
   gem "simplecov", require: false
   gem "erb_lint", require: false
+  gem "shoulda-matchers"
 end
 
 group :development do
