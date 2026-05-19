@@ -3,9 +3,22 @@ class Demand < ApplicationRecord
 
   belongs_to :user
   has_many :comments, dependent: :destroy
+  has_many_attached :attachments
+
+  ALLOWED_CONTENT_TYPES = %w[
+    application/pdf
+    application/msword
+    application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    application/vnd.ms-excel
+    application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    image/jpeg
+    image/png
+  ].freeze
+  MAX_ATTACHMENT_SIZE = 10.megabytes
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :description, presence: true
+  validate :attachments_valid
 
   state_machine :aasm_state, initial: :rascunho do
     state :rascunho
@@ -66,5 +79,20 @@ class Demand < ApplicationRecord
 
   def reprovado_n1?
     n1_flags.any? { |_, v| v == true }
+  end
+
+  private
+
+  def attachments_valid
+    attachments.each do |attachment|
+      unless ALLOWED_CONTENT_TYPES.include?(attachment.content_type)
+        errors.add(:attachments, :invalid_content_type,
+                   message: "#{attachment.filename} tem tipo não permitido")
+      end
+      if attachment.byte_size > MAX_ATTACHMENT_SIZE
+        errors.add(:attachments, :too_large,
+                   message: "#{attachment.filename} excede 10MB")
+      end
+    end
   end
 end

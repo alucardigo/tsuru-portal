@@ -95,7 +95,7 @@ class DemandsController < ApplicationController
   end
 
   def demand_params
-    params.require(:demand).permit(:title, :description)
+    params.require(:demand).permit(:title, :description, attachments: [])
   end
 
   def triagem_params

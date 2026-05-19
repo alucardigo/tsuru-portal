@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     end
 
     resources :comments, only: %i[create]
+    resources :attachments, only: %i[destroy]
   end
 
   get "dashboard", to: "dashboard#show", as: :dashboard
