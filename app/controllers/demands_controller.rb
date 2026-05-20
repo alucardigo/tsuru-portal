@@ -7,6 +7,7 @@ class DemandsController < ApplicationController
 
   def show
     authorize @demand
+    @transitions = @demand.transitions.includes(:actor).order(:created_at)
   end
 
   def new

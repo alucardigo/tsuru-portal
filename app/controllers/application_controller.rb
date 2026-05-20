@@ -6,10 +6,15 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   before_action :authenticate_user!
+  before_action :set_current_user
 
   rescue_from Pundit::NotAuthorizedError, with: :pundit_not_authorized
 
   private
+
+  def set_current_user
+    Current.user = current_user
+  end
 
   def pundit_not_authorized
     respond_to do |format|

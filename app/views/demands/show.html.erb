@@ -414,46 +414,46 @@
     <div>
       <div class="subhead mb-2">Linha do tempo</div>
       <ol class="space-y-2">
-        <%
-          step = flow_step_for(@demand.aasm_state)
-          blocked = %w[n1_reprovada nao_elegivel cancelada].include?(@demand.aasm_state)
-          steps = [
-            { label: "Submetida",       idx: 0, date: @demand.submetida? || step >= 0 ? l(@demand.created_at.to_date, format: :short) : nil },
-            { label: "Triagem N1",      idx: 1, date: nil },
-            { label: "Avaliação N2",    idx: 2, date: nil },
-            { label: "Decisão / PD&I",  idx: 3, date: nil },
-            { label: "Defesa MCTI",     idx: 4, date: nil }
-          ]
-        %>
-        <% steps.each do |s| %>
-          <% st = if blocked && s[:idx] == step
-                    :blocked
-                  elsif s[:idx] < step
-                    :done
-                  elsif s[:idx] == step
-                    :current
-                  else
-                    :future
-                  end %>
+        <%# Marco de criação %>
+        <li class="flex gap-2.5 items-start">
+          <div class="w-2.5 h-2.5 rounded-full mt-1 shrink-0 bg-gray-300"></div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[12px] text-gray-900 font-medium">Demanda criada</div>
+            <div class="text-[10.5px] text-gray-500">
+              <%= l @demand.created_at, format: :short %> ·
+              <%= @demand.user.display_name %>
+            </div>
+          </div>
+        </li>
+
+        <%# Transições reais a partir de DemandTransition (append-only) %>
+        <% (@transitions || @demand.transitions.includes(:actor).order(:created_at)).each do |t| %>
+          <% bullet_class =
+               if %w[elegivel n1_aprovada n2_completa concluida in_execution].include?(t.to_state)
+                 "bg-emerald-500"
+               elsif %w[n1_reprovada nao_elegivel cancelada].include?(t.to_state)
+                 "bg-rose-500"
+               elsif t == @transitions.last
+                 "bg-blue-500 ring-4 ring-blue-100"
+               else
+                 "bg-gray-400"
+               end %>
           <li class="flex gap-2.5 items-start">
-            <div class="w-2.5 h-2.5 rounded-full mt-1 shrink-0
-              <%= case st
-                  when :done then "bg-emerald-500"
-                  when :current then "bg-blue-500 ring-4 ring-blue-100"
-                  when :blocked then "bg-rose-500"
-                  else "bg-gray-200"
-                  end %>"></div>
+            <div class="w-2.5 h-2.5 rounded-full mt-1 shrink-0 <%= bullet_class %>"></div>
             <div class="flex-1 min-w-0">
-              <div class="text-[12px] truncate <%= st == :future ? "text-gray-400" : "text-gray-900 font-medium" %>">
-                <%= s[:label] %>
+              <div class="text-[12px] text-gray-900 font-medium">
+                <%= UiHelper::STATUS_LABELS[t.to_state] || t.to_state.humanize %>
               </div>
-              <% if s[:date] %>
-                <div class="text-[10.5px] text-gray-500"><%= s[:date] %></div>
-              <% elsif st == :current %>
-                <div class="text-[10.5px] text-gray-500">Agora</div>
-              <% end %>
+              <div class="text-[10.5px] text-gray-500">
+                <%= time_ago_in_words(t.created_at) %> atrás
+                <% if t.actor %> · por <%= t.actor.display_name %><% end %>
+              </div>
             </div>
           </li>
+        <% end %>
+
+        <% if (@transitions || []).empty? && !@demand.rascunho? %>
+          <li class="text-[11px] text-gray-400 italic ml-5">Aguardando próxima ação</li>
         <% end %>
       </ol>
     </div>

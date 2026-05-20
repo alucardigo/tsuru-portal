@@ -106,6 +106,20 @@ class Demand < ApplicationRecord
     event :cancelar do
       transition %i[rascunho submetida em_triagem n1_aprovada n2_em_andamento awaiting_requester board_review] => :cancelada
     end
+
+    # Registro append-only de cada transição (ADR-011)
+    after_transition any => any do |demand, transition|
+      next if transition.from == transition.to
+
+      DemandTransition.create!(
+        demand: demand,
+        actor: Current.user,
+        from_state: transition.from.to_s,
+        to_state: transition.to.to_s,
+        event: transition.event.to_s,
+        created_at: Time.current
+      )
+    end
   end
 
   N1_FLAGS = %w[
