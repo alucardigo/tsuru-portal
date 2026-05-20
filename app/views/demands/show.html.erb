@@ -71,10 +71,26 @@
           <div class="prop-row">
             <div class="prop-label">
               <%= icon(:bulb, size: 14) %>
-              <span>Área</span>
+              <span>Área impactada</span>
             </div>
-            <div class="prop-value text-gray-400 italic">—</div>
+            <div class="prop-value">
+              <% if @demand.area_impactada.present? %>
+                <%= @demand.area_impactada %>
+              <% else %>
+                <span class="text-gray-400 italic">—</span>
+              <% end %>
+            </div>
           </div>
+
+          <% if @demand.urgencia.present? %>
+            <div class="prop-row">
+              <div class="prop-label">
+                <%= icon(:flag, size: 14) %>
+                <span>Urgência</span>
+              </div>
+              <div class="prop-value text-gray-700"><%= @demand.urgencia %></div>
+            </div>
+          <% end %>
 
           <div class="prop-row">
             <div class="prop-label">
@@ -168,11 +184,22 @@
           </span>
           <h2 class="text-[15px] font-semibold text-gray-900">Visão geral</h2>
         </summary>
-        <div class="mt-3 ml-0">
-          <div class="subhead">Descrição da demanda</div>
-          <div class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line">
-            <%= @demand.description %>
+        <div class="mt-3 ml-0 space-y-4">
+          <div>
+            <div class="subhead">O que está acontecendo</div>
+            <div class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line">
+              <%= @demand.description %>
+            </div>
           </div>
+
+          <% if @demand.solucao_proposta.present? %>
+            <div>
+              <div class="subhead">Como o autor imagina resolver</div>
+              <div class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line">
+                <%= @demand.solucao_proposta %>
+              </div>
+            </div>
+          <% end %>
         </div>
       </details>
 

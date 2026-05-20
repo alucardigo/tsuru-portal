@@ -47,24 +47,27 @@
                 placeholder: "Ex: Automatizar a conferência de notas fiscais recebidas" %>
         </div>
 
-        <%# Grid 2 col: Área impactada + Urgência (UI guidance — não persiste no MVP) %>
+        <%# Grid 2 col: Área impactada + Urgência %>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="tsuru-label" for="demand_area_impactada">Área impactada</label>
-            <select id="demand_area_impactada" name="demand[area_impactada_ui]" class="tsuru-select mt-1">
-              <option value="">Selecione...</option>
-              <% [ "Operacional", "Comercial", "Financeiro", "Administrativo", "TI / Sistemas", "Atendimento", "Logística / Suprimentos", "Qualidade", "RH", "Projetos / P&D", "Outra" ].each do |a| %>
-                <option><%= a %></option>
-              <% end %>
-            </select>
+            <%= f.label :area_impactada, "Área impactada", class: "tsuru-label" %>
+            <%= f.select :area_impactada,
+                  options_for_select(
+                    [ [ "Selecione…", "" ] ] + [ "Operacional", "Comercial", "Financeiro", "Administrativo", "TI / Sistemas", "Atendimento", "Logística / Suprimentos", "Qualidade", "RH", "Projetos / P&D", "Outra" ],
+                    demand.area_impactada
+                  ),
+                  {},
+                  class: "tsuru-select mt-1" %>
           </div>
           <div>
-            <label class="tsuru-label" for="demand_urgencia_ui">Urgência percebida</label>
-            <select id="demand_urgencia_ui" name="demand[urgencia_ui]" class="tsuru-select mt-1">
-              <option>Posso esperar — é uma melhoria</option>
-              <option>Atrapalha o dia a dia</option>
-              <option>Está travando o atendimento ou o cliente</option>
-            </select>
+            <%= f.label :urgencia, "Urgência percebida", class: "tsuru-label" %>
+            <%= f.select :urgencia,
+                  options_for_select(
+                    [ "Posso esperar — é uma melhoria", "Atrapalha o dia a dia", "Está travando o atendimento ou o cliente" ],
+                    demand.urgencia
+                  ),
+                  { include_blank: "Selecione…" },
+                  class: "tsuru-select mt-1" %>
           </div>
         </div>
 
@@ -78,15 +81,14 @@
                 placeholder: "Hoje a conferência de cada nota fiscal leva 8 minutos e o setor recebe ~120 notas/dia. Já houve casos de pagamento duplicado por inconsistência manual. O processo gasta ~2 pessoas/dia só nessa atividade..." %>
         </div>
 
-        <%# Como resolver (UI guidance — opcionalmente apendado à descrição via JS no submit) %>
+        <%# Como resolver — persiste em solucao_proposta %>
         <div>
-          <label class="tsuru-label" for="demand_solucao_ui">Como você imagina que dá pra resolver?</label>
+          <%= f.label :solucao_proposta, "Como você imagina que dá pra resolver?", class: "tsuru-label" %>
           <p class="tsuru-hint">
             Tudo bem se a ideia for parcial — o time de inovação ajuda a desenvolver.
           </p>
-          <textarea id="demand_solucao_ui" name="demand[solucao_ui]" rows="4"
-                    class="tsuru-textarea mt-1"
-                    placeholder="Integrar com o ERP para puxar a NF automaticamente, comparar com o pedido de compra, e flagar divergências para revisão humana só nos casos que escapam da regra..."></textarea>
+          <%= f.text_area :solucao_proposta, rows: 4, class: "tsuru-textarea mt-1",
+                placeholder: "Integrar com o ERP para puxar a NF automaticamente, comparar com o pedido de compra, e flagar divergências para revisão humana só nos casos que escapam da regra..." %>
         </div>
 
         <%# Anexos — dropzone visual %>
