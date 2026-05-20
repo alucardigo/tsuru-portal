@@ -1,0 +1,204 @@
+<% content_for :title, "DEM-#{@demand.id.to_s.rjust(4, '0')} · Decisão" %>
+<% content_for :nav_active, "decisoes" %>
+<% content_for :crumb, "Diretoria · Decisões pendentes" %>
+<% content_for :subtitle, "· #{@demand.title.truncate(50)}" %>
+
+<% content_for :actions do %>
+  <%= link_to board_demands_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:arrow, size: 12, class_name: "rotate-180") %> Voltar
+  <% end %>
+  <%= link_to demand_path(@demand), class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:eye, size: 12) %> Ver demanda completa
+  <% end %>
+<% end %>
+
+<div class="max-w-[1180px] mx-auto px-7 py-6 grid grid-cols-3 gap-5">
+  <%# === COLUNA PRINCIPAL: EXECUTIVE SUMMARY === %>
+  <div class="col-span-2 space-y-5">
+
+    <%# Header %>
+    <div>
+      <div class="flex items-center gap-2 text-[11.5px] text-gray-500">
+        <span class="font-mono text-gray-700">DEM-<%= @demand.id.to_s.rjust(4, "0") %></span>
+        <span class="text-gray-300">·</span>
+        <%= status_pill(@demand.aasm_state) %>
+        <span class="text-gray-300">·</span>
+        <span><%= @demand.user.display_name %></span>
+      </div>
+      <h1 class="mt-2 text-[26px] font-semibold tracking-tight text-gray-900 leading-tight"><%= @demand.title %></h1>
+    </div>
+
+    <%# Executive Summary %>
+    <section class="tsuru-card p-5">
+      <div class="subhead">Resumo executivo</div>
+      <% if @demand.description.present? %>
+        <div class="mt-3">
+          <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">O que o projeto resolve</div>
+          <p class="mt-1 text-[13px] text-gray-800 leading-relaxed whitespace-pre-line"><%= @demand.description %></p>
+        </div>
+      <% end %>
+
+      <% if @demand.motivacao.present? %>
+        <div class="mt-3 pt-3 border-t border-gray-100">
+          <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Motivação</div>
+          <p class="mt-1 text-[13px] text-gray-800 leading-relaxed whitespace-pre-line"><%= @demand.motivacao %></p>
+        </div>
+      <% end %>
+
+      <% if @demand.barreira_tecnica.present? %>
+        <div class="mt-3 pt-3 border-t border-gray-100">
+          <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Barreira técnica</div>
+          <p class="mt-1 text-[13px] text-gray-800 leading-relaxed whitespace-pre-line"><%= @demand.barreira_tecnica %></p>
+        </div>
+      <% end %>
+
+      <% if @demand.resultado_obtido.present? %>
+        <div class="mt-3 pt-3 border-t border-gray-100">
+          <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Resultado / impacto esperado</div>
+          <p class="mt-1 text-[13px] text-gray-800 leading-relaxed whitespace-pre-line"><%= @demand.resultado_obtido %></p>
+        </div>
+      <% end %>
+
+      <% if @demand.parecer_tecnico.present? %>
+        <div class="mt-3 pt-3 border-t border-gray-100">
+          <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Parecer técnico do analista</div>
+          <p class="mt-1 text-[13px] text-gray-800 leading-relaxed whitespace-pre-line"><%= @demand.parecer_tecnico %></p>
+        </div>
+      <% end %>
+    </section>
+
+    <%# Painel de Decisão (3 opções) %>
+    <section class="tsuru-card p-5">
+      <div class="flex items-baseline justify-between mb-3">
+        <div>
+          <div class="text-[14px] font-semibold text-gray-900">Sua decisão</div>
+          <div class="text-[12px] text-gray-500 mt-0.5">Justificativa precisa ter no mínimo 100 caracteres para auditoria.</div>
+        </div>
+      </div>
+
+      <div data-controller="board-decision" class="space-y-3">
+        <textarea
+          data-board-decision-target="justification"
+          rows="4"
+          placeholder="Justifique sua decisão. Considere ROI projetado, alinhamento estratégico, riscos técnicos, capacidade da equipe, prazo realista…"
+          class="tsuru-textarea"></textarea>
+
+        <div class="flex items-center gap-2 text-[11.5px] text-gray-500">
+          <span data-board-decision-target="counter">0</span> / 100 caracteres mínimos
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 pt-3 border-t border-gray-100">
+          <%= button_to approve_board_demand_path(@demand), method: :post,
+                form: { class: "w-full" },
+                class: "rounded-md border border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50 p-3 text-left w-full" do %>
+            <div class="flex items-center gap-2 text-emerald-700"><%= icon(:check, size: 14) %><span class="text-[13px] font-medium">Aprovar</span></div>
+            <div class="text-[11px] text-gray-600 mt-1 leading-snug">Projeto aprovado → entra em execução PD&I.</div>
+            <input type="hidden" name="justification" value="">
+          <% end %>
+
+          <%= button_to defer_board_demand_path(@demand), method: :post,
+                form: { class: "w-full" },
+                class: "rounded-md border border-amber-200 bg-amber-50/40 hover:bg-amber-50 p-3 text-left w-full" do %>
+            <div class="flex items-center gap-2 text-amber-800"><%= icon(:flag, size: 14) %><span class="text-[13px] font-medium">Adiar</span></div>
+            <div class="text-[11px] text-gray-600 mt-1 leading-snug">Decisão postergada — registra no histórico, mantém estado.</div>
+            <input type="hidden" name="justification" value="">
+          <% end %>
+
+          <%= button_to reject_board_demand_path(@demand), method: :post,
+                form: { class: "w-full" },
+                class: "rounded-md border border-rose-200 bg-rose-50/40 hover:bg-rose-50 p-3 text-left w-full" do %>
+            <div class="flex items-center gap-2 text-rose-700"><%= icon(:x, size: 14) %><span class="text-[13px] font-medium">Rejeitar</span></div>
+            <div class="text-[11px] text-gray-600 mt-1 leading-snug">Não aprovado — arquivado como não elegível.</div>
+            <input type="hidden" name="justification" value="">
+          <% end %>
+        </div>
+      </div>
+    </section>
+
+    <%# Histórico de decisões anteriores (se houver) %>
+    <% if @demand.board_decisions.any? %>
+      <section>
+        <div class="subhead mb-2">Decisões anteriores nesta demanda</div>
+        <% @demand.board_decisions.order(created_at: :desc).each do |bd| %>
+          <div class="tsuru-card p-3.5 mb-2">
+            <div class="flex items-baseline justify-between">
+              <div class="flex items-center gap-2">
+                <%
+                  pill_color = { "approved" => "emerald", "rejected" => "rose", "deferred" => "amber" }[bd.outcome] || "gray"
+                  outcome_label = { "approved" => "Aprovado", "rejected" => "Rejeitado", "deferred" => "Adiado" }[bd.outcome]
+                %>
+                <%= pill(outcome_label, color: pill_color) %>
+                <span class="text-[11.5px] text-gray-500">por <%= bd.decider.display_name %></span>
+              </div>
+              <span class="text-[11px] text-gray-400"><%= l bd.created_at, format: :short %></span>
+            </div>
+            <p class="mt-1.5 text-[12.5px] text-gray-700 leading-relaxed whitespace-pre-line"><%= bd.justification %></p>
+          </div>
+        <% end %>
+      </section>
+    <% end %>
+  </div>
+
+  <%# === RAIL DIREITO: IMPACTO FISCAL + TIMELINE === %>
+  <aside class="space-y-4">
+    <% if @benefit %>
+      <div class="tsuru-card p-4">
+        <div class="flex items-baseline justify-between">
+          <div class="subhead">Impacto fiscal estimado</div>
+          <%= pill("IRPJ + CSLL", color: "emerald") %>
+        </div>
+        <div class="text-[28px] font-semibold tracking-tight text-emerald-700 mt-2 tabular-nums">
+          <%= number_to_currency(@benefit[:economia_tributaria], unit: "R$ ", separator: ",", delimiter: ".") %>
+        </div>
+        <div class="mt-3 pt-3 border-t border-gray-100 space-y-1.5 text-[11.5px]">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Dispêndios</span>
+            <span class="text-gray-900 tabular-nums"><%= number_to_currency(@benefit[:dispendios], unit: "R$ ", separator: ",", delimiter: ".") %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Exclusão base</span>
+            <span class="text-gray-900 tabular-nums"><%= number_to_currency(@benefit[:exclusao_base], unit: "R$ ", separator: ",", delimiter: ".") %></span>
+          </div>
+          <div class="flex justify-between font-medium">
+            <span class="text-gray-700">Exclusão total</span>
+            <span class="text-gray-900 tabular-nums"><%= number_to_currency(@benefit[:exclusao_total], unit: "R$ ", separator: ",", delimiter: ".") %></span>
+          </div>
+        </div>
+        <%= link_to "Ver Lei do Bem completa →", demand_lei_do_bem_record_path(@demand),
+              class: "mt-3 block text-[11.5px] hover:underline", style: "color: var(--accent)" %>
+      </div>
+    <% else %>
+      <div class="tsuru-card p-4">
+        <div class="subhead">Impacto fiscal</div>
+        <div class="text-[12px] text-gray-500 mt-2">Sem registro Lei do Bem cadastrado — projeto não tem cálculo de benefício.</div>
+      </div>
+    <% end %>
+
+    <%# Timeline %>
+    <div class="tsuru-card p-4">
+      <div class="subhead mb-3">Linha do tempo</div>
+      <ol class="space-y-2">
+        <% @transitions.each do |t| %>
+          <% bullet_class =
+               if %w[elegivel n1_aprovada n2_completa].include?(t.to_state)
+                 "bg-emerald-500"
+               elsif %w[n1_reprovada nao_elegivel cancelada].include?(t.to_state)
+                 "bg-rose-500"
+               else
+                 "bg-blue-400"
+               end %>
+          <li class="flex gap-2.5 items-start">
+            <div class="w-2 h-2 rounded-full mt-1.5 shrink-0 <%= bullet_class %>"></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-[12px] text-gray-900"><%= UiHelper::STATUS_LABELS[t.to_state] || t.to_state.humanize %></div>
+              <div class="text-[10.5px] text-gray-500">
+                <%= time_ago_in_words(t.created_at) %> atrás
+                <% if t.actor %> · <%= t.actor.display_name %><% end %>
+              </div>
+            </div>
+          </li>
+        <% end %>
+      </ol>
+    </div>
+  </aside>
+</div>

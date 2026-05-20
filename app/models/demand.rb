@@ -5,6 +5,7 @@ class Demand < ApplicationRecord
   has_many :comments, dependent: :destroy
   has_many :transitions, class_name: "DemandTransition", dependent: :restrict_with_exception
   has_one  :lei_do_bem_record, dependent: :destroy
+  has_many :board_decisions, dependent: :restrict_with_exception
   has_many_attached :attachments
 
   ALLOWED_CONTENT_TYPES = %w[

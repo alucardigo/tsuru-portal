@@ -123,7 +123,7 @@ module UiHelper
       [
         { key: "resumo",     label: "Resumo executivo",  icon: :chart,   path: dashboard_path },
         { key: "portfolio",  label: "Portfólio",         icon: :folder,  path: demands_path },
-        { key: "decisoes",   label: "Decisões pendentes", icon: :flag,    path: demands_path, badge: pending_count(user) },
+        { key: "decisoes",   label: "Decisões pendentes", icon: :flag,    path: board_demands_path, badge: board_pending_count },
         { key: "exportar",   label: "Exportar",          icon: :download, path: "#" }
       ]
     else
@@ -135,6 +135,12 @@ module UiHelper
     return nil unless user.gestor_or_above?
 
     Demand.where(aasm_state: %w[submetida em_triagem n2_em_andamento board_review]).count
+  rescue StandardError
+    nil
+  end
+
+  def board_pending_count
+    Demand.where(aasm_state: "board_review").count
   rescue StandardError
     nil
   end

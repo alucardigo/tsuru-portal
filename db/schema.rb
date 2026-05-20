@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_20_145633) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_20_153553) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_145633) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "board_decisions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "decider_id", null: false
+    t.bigint "demand_id", null: false
+    t.decimal "estimated_benefit", precision: 14, scale: 2
+    t.text "justification", null: false
+    t.string "outcome", null: false
+    t.datetime "updated_at", null: false
+    t.index ["decider_id"], name: "index_board_decisions_on_decider_id"
+    t.index ["demand_id"], name: "index_board_decisions_on_demand_id"
+    t.index ["outcome"], name: "index_board_decisions_on_outcome"
   end
 
   create_table "comments", force: :cascade do |t|
@@ -185,6 +198,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_145633) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "board_decisions", "demands"
+  add_foreign_key "board_decisions", "users", column: "decider_id"
   add_foreign_key "comments", "demands"
   add_foreign_key "comments", "users"
   add_foreign_key "demand_transitions", "demands"
