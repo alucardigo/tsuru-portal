@@ -13,9 +13,7 @@
   <div class="flex items-center gap-1">
     <% if actions.present? %>
       <%= actions %>
-    <% else %>
-      <button class="tsuru-btn-icon" aria-label="Buscar"><%= icon(:search, size: 14) %></button>
-      <button class="tsuru-btn-icon" aria-label="Notificações"><%= icon(:bell, size: 14) %></button>
     <% end %>
+    <%= render "shared/notification_bell" %>
   </div>
 </header>

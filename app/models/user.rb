@@ -2,6 +2,7 @@ class User < ApplicationRecord
   has_paper_trail
   has_many :demands, dependent: :destroy
   has_many :comments, dependent: :destroy
+  has_many :notifications_received, class_name: "Notification", foreign_key: :recipient_id, dependent: :destroy
 
   devise :database_authenticatable, :registerable, :recoverable,
          :rememberable, :validatable, :confirmable,

@@ -1,0 +1,13 @@
+<% unread = current_user&.notifications_received&.unread&.limit(11)&.to_a || [] %>
+<% unread_count = unread.size %>
+
+<%= link_to notifications_path,
+      class: "tsuru-btn-icon relative",
+      "aria-label": "Notificações (#{unread_count} não lidas)" do %>
+  <%= icon(:bell, size: 14) %>
+  <% if unread_count.positive? %>
+    <span class="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-rose-600 text-white text-[9.5px] font-semibold flex items-center justify-center leading-none">
+      <%= unread_count > 9 ? "9+" : unread_count %>
+    </span>
+  <% end %>
+<% end %>

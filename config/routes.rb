@@ -71,6 +71,11 @@ Rails.application.routes.draw do
     get "metrics", to: "metrics#show", as: :metrics
   end
 
+  resources :notifications, only: %i[index] do
+    member { patch :mark_read }
+    collection { post :mark_all_read }
+  end
+
   get "dashboard", to: "dashboard#show", as: :dashboard
 
   get "up" => "rails/health#show", as: :rails_health_check

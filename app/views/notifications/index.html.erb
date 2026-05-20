@@ -1,0 +1,54 @@
+<% content_for :title, "Notificações" %>
+<% content_for :crumb, "Central de notificações" %>
+<% content_for :subtitle, "· #{@unread_count} não lidas" %>
+
+<% content_for :actions do %>
+  <% if @unread_count.positive? %>
+    <%= button_to mark_all_read_notifications_path, method: :post,
+          form: { class: "inline" },
+          class: "tsuru-btn-secondary !h-7 !text-[11.5px] !px-2" do %>
+      <%= icon(:check, size: 12) %> Marcar todas como lidas
+    <% end %>
+  <% end %>
+<% end %>
+
+<div class="max-w-[720px] mx-auto px-7 py-6">
+  <div class="mb-5">
+    <div class="text-[22px] font-semibold tracking-tight text-gray-900">Notificações</div>
+    <p class="text-[13px] text-gray-500 mt-1">Mudanças de estado das suas demandas e atribuições.</p>
+  </div>
+
+  <% if @notifications.empty? %>
+    <div class="tsuru-card p-12 text-center">
+      <%= icon(:bell, size: 36, class_name: "mx-auto text-gray-300 mb-3") %>
+      <div class="text-[14px] font-semibold text-gray-900">Sem notificações</div>
+      <p class="text-[12.5px] text-gray-500 mt-1">Quando algo importante acontecer, aparece aqui.</p>
+    </div>
+  <% else %>
+    <div class="bg-white rounded-lg border border-gray-200 divide-y divide-gray-100">
+      <% @notifications.each do |notif| %>
+        <%= button_to mark_read_notification_path(notif), method: :patch,
+              form: { class: "w-full block" },
+              class: "w-full text-left p-4 hover:bg-gray-50 transition-colors block #{notif.read? ? '' : 'bg-blue-50/30'}" do %>
+          <div class="flex items-start gap-3">
+            <% color_class = notif.read? ? "bg-gray-300" : "bg-blue-500" %>
+            <div class="w-2 h-2 rounded-full <%= color_class %> mt-1.5 shrink-0"></div>
+            <div class="min-w-0 flex-1">
+              <div class="text-[13.5px] font-medium text-gray-900"><%= notif.title %></div>
+              <% if notif.body.present? %>
+                <div class="text-[12px] text-gray-600 mt-0.5 truncate"><%= notif.body %></div>
+              <% end %>
+              <div class="text-[10.5px] text-gray-400 mt-1">
+                <%= time_ago_in_words(notif.created_at) %> atrás
+                <% if notif.read? %>· lida<% end %>
+              </div>
+            </div>
+            <% if notif.demand %>
+              <span class="text-gray-400 shrink-0"><%= icon(:arrow, size: 14) %></span>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

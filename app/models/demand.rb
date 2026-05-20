@@ -120,6 +120,8 @@ class Demand < ApplicationRecord
         event: transition.event.to_s,
         created_at: Time.current
       )
+
+      Notifications::Dispatcher.call(demand: demand, event: transition.event.to_s)
     end
   end
 
