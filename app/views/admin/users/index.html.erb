@@ -1,37 +1,139 @@
-<div class="max-w-4xl mx-auto">
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold text-primary-900">Usuários</h1>
-    <%= link_to "← Admin", admin_demands_path, class: "text-sm text-gray-500" %>
+<% content_for :title, "Usuários — Painel Admin" %>
+<% content_for :nav_active, "usuarios" %>
+<% content_for :crumb, "Administração" %>
+<% content_for :subtitle, "· #{User.count} cadastrados" %>
+
+<% content_for :actions do %>
+  <%= link_to admin_demands_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:triage, size: 12) %> Esteira
+  <% end %>
+  <%= link_to admin_metrics_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:chart, size: 12) %> Métricas
+  <% end %>
+<% end %>
+
+<%
+  role_counts = User.group(:role).count rescue {}
+  total_confirmed = User.where.not(confirmed_at: nil).count rescue User.count
+%>
+
+<div class="max-w-[1180px] mx-auto px-7 py-6">
+  <%# === Cabeçalho da página === %>
+  <div class="flex items-baseline justify-between mb-5">
+    <div>
+      <div class="subhead">Administração</div>
+      <h1 class="mt-1 text-[22px] font-semibold tracking-tight text-gray-900">Usuários do portal</h1>
+      <p class="text-[12.5px] text-gray-500 mt-1 leading-relaxed max-w-2xl">
+        Gerencie papéis e permissões. Mudanças de role afetam imediatamente o acesso aos módulos do portal.
+      </p>
+    </div>
+    <div class="hidden md:flex items-center gap-2">
+      <div class="text-right">
+        <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Total</div>
+        <div class="text-[20px] font-semibold tracking-tight text-gray-900 tabular-nums"><%= @users.size %></div>
+      </div>
+    </div>
   </div>
 
-  <div class="tsuru-card">
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="border-b border-gray-200 text-left text-gray-500">
-          <th class="pb-2 pr-4">Nome</th>
-          <th class="pb-2 pr-4">Email</th>
-          <th class="pb-2 pr-4">Role</th>
-          <th class="pb-2">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @users.each do |user| %>
-          <tr class="border-b border-gray-100 py-2">
-            <td class="py-2 pr-4"><%= user.display_name %></td>
-            <td class="py-2 pr-4 text-gray-500"><%= user.email %></td>
-            <td class="py-2 pr-4">
-              <span class="tsuru-badge-<%= user.role %>"><%= user.role %></span>
-            </td>
-            <td class="py-2">
-              <%= form_with url: admin_user_path(user), method: :patch, class: "inline-flex gap-2 items-center" do |f| %>
-                <%= f.select :role, User.roles.keys.map { |r| [r.humanize, r] },
-                      { selected: user.role }, class: "tsuru-input py-1 text-xs" %>
-                <%= f.submit "Salvar", class: "tsuru-btn-secondary py-1 text-xs" %>
-              <% end %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+  <%# === Resumo por papel === %>
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-5">
+    <% [
+      [ "colaborador",  "Colaboradores" ],
+      [ "gestor",       "Superiores" ],
+      [ "analista_pdi", "Analistas T&I" ],
+      [ "admin",        "Administradores" ],
+      [ "board",        "Diretoria" ]
+    ].each do |role_key, label| %>
+      <div class="tsuru-card px-3 py-2.5">
+        <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium"><%= label %></div>
+        <div class="mt-0.5 text-[18px] font-semibold tracking-tight text-gray-900 tabular-nums"><%= role_counts.fetch(role_key, 0) %></div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# === Tabela === %>
+  <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <% if @users.empty? %>
+      <div class="p-12 text-center">
+        <%= icon(:user, size: 32, class_name: "mx-auto text-gray-300 mb-3") %>
+        <div class="text-[13px] text-gray-700 font-medium">Nenhum usuário cadastrado</div>
+      </div>
+    <% else %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-[12.5px] min-w-[860px]">
+          <thead>
+            <tr class="bg-gray-50/60 text-[10.5px] uppercase tracking-wider text-gray-500 text-left">
+              <th class="px-4 py-2.5 font-medium">Nome</th>
+              <th class="px-3 py-2.5 font-medium">Papel atual</th>
+              <th class="px-3 py-2.5 font-medium text-center">Confirmado</th>
+              <th class="px-3 py-2.5 font-medium whitespace-nowrap">Cadastrado em</th>
+              <th class="px-3 py-2.5 font-medium">Alterar papel</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @users.each do |user| %>
+              <tr class="border-t border-gray-100 hover:bg-gray-50/60">
+                <td class="px-4 py-2.5">
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <%= avatar(user, size: 28) %>
+                    <div class="min-w-0">
+                      <div class="text-[13px] font-medium text-gray-900 truncate leading-tight"><%= user.display_name %></div>
+                      <div class="text-[11.5px] text-gray-500 truncate leading-tight"><%= user.email %></div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-3 py-2.5">
+                  <%
+                    role_color = case user.role
+                                 when "admin"        then "teal"
+                                 when "board"        then "gray"
+                                 when "analista_pdi" then "blue"
+                                 when "gestor"       then "amber"
+                                 else                     "violet"
+                                 end
+                  %>
+                  <%= pill(role_label(user.role), color: role_color) %>
+                </td>
+                <td class="px-3 py-2.5 text-center">
+                  <% if user.confirmed_at.present? %>
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-50 text-emerald-600" title="Confirmado em <%= l(user.confirmed_at, format: :short) %>">
+                      <%= icon(:check, size: 12) %>
+                    </span>
+                  <% else %>
+                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-gray-400" title="Pendente de confirmação">
+                      <%= icon(:x, size: 12) %>
+                    </span>
+                  <% end %>
+                </td>
+                <td class="px-3 py-2.5 text-gray-500 whitespace-nowrap tabular-nums">
+                  <%= l(user.created_at, format: :short) %>
+                </td>
+                <td class="px-3 py-2.5">
+                  <%= form_with url: admin_user_path(user), method: :patch, local: true, class: "inline-flex items-center gap-1.5" do |f| %>
+                    <%= f.select :role,
+                          User.roles.keys.map { |r| [ role_label(r), r ] },
+                          { selected: user.role },
+                          class: "tsuru-select !h-8 !text-[12px] !py-0 !px-2 min-w-[140px]" %>
+                    <%= f.submit "Salvar", class: "tsuru-btn-secondary !h-8 !text-[11.5px] !px-2.5" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <%# Footer informativo %>
+      <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50/40 flex items-center justify-between text-[11.5px] text-gray-600">
+        <div>
+          <%= @users.size %> usuário(s) listado(s) ·
+          <span class="text-gray-500"><%= total_confirmed %> confirmados</span>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <%= icon(:shield, size: 11) %>
+          Mudanças de papel ficam auditadas (PaperTrail)
+        </div>
+      </div>
+    <% end %>
   </div>
 </div>

@@ -1,51 +1,146 @@
-<div class="max-w-4xl mx-auto p-6">
-  <h1 class="text-2xl font-bold mb-4">Consulta Sankhya — <%= @demand.title %></h1>
+<% content_for :title, "Consulta Sankhya — DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :nav_active, "elegibilidade" %>
+<% content_for :crumb, "Esteira · DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :subtitle, "· Notas fiscais por parceiro" %>
 
-  <%= form_with url: sankhya_admin_demand_path(@demand), method: :get, local: true, class: "mb-6 flex gap-3 items-end" do |f| %>
-    <div>
-      <%= f.label :codparc, "Código do Parceiro (CODPARC)", class: "block text-sm font-medium mb-1" %>
-      <%= f.text_field :codparc, value: params[:codparc],
-            placeholder: "ex: 12345",
-            class: "border rounded px-3 py-2 w-48" %>
-    </div>
-    <%= f.submit "Buscar Notas Fiscais", class: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700" %>
+<% content_for :actions do %>
+  <%= link_to demand_path(@demand), class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:arrow, size: 12, class_name: "rotate-180") %> Voltar à demanda
   <% end %>
+  <%= link_to admin_demands_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:triage, size: 12) %> Esteira
+  <% end %>
+<% end %>
 
+<div class="max-w-[1180px] mx-auto px-7 py-6">
+  <%# === Cabeçalho === %>
+  <div class="mb-5">
+    <div class="flex items-baseline gap-2 text-[11.5px] text-gray-500">
+      <span class="font-mono text-gray-700">DEM-<%= @demand.id.to_s.rjust(4, "0") %></span>
+      <span class="text-gray-300">·</span>
+      <%= status_pill(@demand.aasm_state) %>
+    </div>
+    <h1 class="mt-1.5 text-[22px] font-semibold tracking-tight text-gray-900 leading-tight">Consulta Sankhya</h1>
+    <p class="text-[12.5px] text-gray-500 mt-1 leading-relaxed max-w-3xl">
+      Busque notas fiscais associadas a um parceiro (CODPARC) no ERP Sankhya. Use estas evidências para compor o N3
+      e validar dispêndios elegíveis dentro do ano-base da Lei do Bem.
+    </p>
+    <div class="mt-2 text-[12px] text-gray-600">
+      <span class="text-gray-500">Demanda relacionada:</span>
+      <%= link_to @demand.title, demand_path(@demand), class: "font-medium text-gray-900 hover:underline" %>
+    </div>
+  </div>
+
+  <%# === Card de busca === %>
+  <div class="tsuru-card mb-5">
+    <div class="px-5 py-4 border-b border-gray-100">
+      <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Critério de busca</div>
+      <div class="mt-0.5 text-[14px] font-semibold text-gray-900">Parceiro Sankhya</div>
+    </div>
+
+    <%= form_with url: sankhya_admin_demand_path(@demand), method: :get, local: true, class: "p-5" do |f| %>
+      <div class="flex flex-col md:flex-row md:items-end gap-3">
+        <div class="md:flex-1 md:max-w-xs">
+          <%= f.label :codparc, "Código do Parceiro (CODPARC)", class: "tsuru-label" %>
+          <p class="tsuru-hint">Identificador numérico do parceiro no ERP Sankhya.</p>
+          <%= f.text_field :codparc,
+                value: params[:codparc],
+                placeholder: "ex.: 12345",
+                inputmode: "numeric",
+                autocomplete: "off",
+                class: "tsuru-input font-mono" %>
+        </div>
+        <div class="flex items-center gap-2">
+          <%= f.submit "Buscar notas fiscais", class: "tsuru-btn-primary" %>
+          <% if params[:codparc].present? %>
+            <%= link_to "Limpar", sankhya_admin_demand_path(@demand), class: "tsuru-btn-ghost" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# === Resultados === %>
   <% if @notas_fiscais %>
-    <h2 class="text-xl font-semibold mb-3">Notas Fiscais</h2>
-    <% if @notas_fiscais.empty? %>
-      <p class="text-gray-500">Nenhuma nota fiscal encontrada para CODPARC <%= params[:codparc] %>.</p>
-    <% else %>
-      <table class="w-full border-collapse border text-sm">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="border px-3 py-2 text-left">Campos</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @notas_fiscais.each do |nf| %>
-            <tr class="hover:bg-gray-50">
-              <td class="border px-3 py-2">
-                <% fields = nf["f"] || nf %>
+    <section class="mt-7">
+      <div class="flex items-baseline justify-between mb-3">
+        <div>
+          <h2 class="text-[16px] font-semibold tracking-tight text-gray-900">
+            Notas Fiscais
+            <span class="text-[12px] font-normal text-gray-500 ml-1">· CODPARC <span class="font-mono"><%= params[:codparc] %></span></span>
+          </h2>
+          <div class="text-[11.5px] text-gray-500 mt-0.5">
+            <%= @notas_fiscais.size %> resultado(s) retornado(s) pelo Sankhya
+          </div>
+        </div>
+      </div>
+
+      <% if @notas_fiscais.empty? %>
+        <div class="tsuru-card p-10 text-center">
+          <%= icon(:search, size: 32, class_name: "mx-auto text-gray-300 mb-3") %>
+          <div class="text-[13px] text-gray-700 font-medium">
+            Nenhuma nota fiscal encontrada para CODPARC <span class="font-mono"><%= params[:codparc] %></span>
+          </div>
+          <div class="text-[12px] text-gray-500 mt-1">
+            Verifique o código do parceiro ou tente outro identificador.
+          </div>
+        </div>
+      <% else %>
+        <div class="space-y-3">
+          <% @notas_fiscais.each_with_index do |nf, idx| %>
+            <% fields = nf["f"] || nf %>
+            <article class="tsuru-card">
+              <div class="px-5 py-3 border-b border-gray-100 bg-gray-50/40 flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <span class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white border border-gray-200 text-gray-500">
+                    <%= icon(:doc, size: 13) %>
+                  </span>
+                  <div>
+                    <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Nota fiscal</div>
+                    <div class="text-[13px] font-medium text-gray-900 leading-tight">
+                      Registro #<%= idx + 1 %>
+                    </div>
+                  </div>
+                </div>
+                <%= pill("Sankhya ERP", color: "teal") %>
+              </div>
+
+              <div class="p-5">
                 <% if fields.is_a?(Array) %>
-                  <dl class="grid grid-cols-2 gap-1">
-                    <% fields.each do |f| %>
-                      <dt class="font-medium text-gray-600"><%= f["_"] %></dt>
-                      <dd><%= f["$"] %></dd>
+                  <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-1.5">
+                    <% fields.each do |fld| %>
+                      <div class="flex items-baseline gap-2 py-1 border-b border-gray-100 last:border-0">
+                        <dt class="text-[11px] uppercase tracking-wider text-gray-500 font-medium min-w-[110px]">
+                          <%= fld["_"] %>
+                        </dt>
+                        <dd class="flex-1 text-[12.5px] text-gray-900 font-mono break-all">
+                          <%= fld["$"].presence || "—" %>
+                        </dd>
+                      </div>
                     <% end %>
                   </dl>
                 <% else %>
-                  <%= nf.to_json %>
+                  <pre class="text-[11.5px] font-mono text-gray-700 bg-gray-50 rounded-md p-3 overflow-x-auto"><%= JSON.pretty_generate(nf) rescue nf.to_json %></pre>
                 <% end %>
-              </td>
-            </tr>
+              </div>
+            </article>
           <% end %>
-        </tbody>
-      </table>
-    <% end %>
+        </div>
+      <% end %>
+    </section>
+  <% else %>
+    <%# Estado inicial — sem busca %>
+    <div class="rounded-md bg-gray-50 ring-1 ring-gray-100 p-5 flex items-start gap-3">
+      <span class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-white ring-1 ring-gray-200 text-gray-500 shrink-0">
+        <%= icon(:sparkle, size: 14) %>
+      </span>
+      <div>
+        <div class="text-[12.5px] font-medium text-gray-900">Informe um CODPARC para iniciar</div>
+        <p class="mt-1 text-[12px] text-gray-600 leading-relaxed max-w-2xl">
+          A consulta retorna todas as notas fiscais associadas ao parceiro no Sankhya. Os campos exibidos seguem
+          o schema retornado pelo serviço (NUNOTA, NUMNOTA, VLRNOTA, DTNEG, etc.).
+        </p>
+      </div>
+    </div>
   <% end %>
-
-  <div class="mt-6">
-    <%= link_to "← Voltar às Demandas", admin_demands_path, class: "text-blue-600 hover:underline" %>
-  </div>
 </div>

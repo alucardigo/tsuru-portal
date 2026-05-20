@@ -1,44 +1,124 @@
-<div class="min-h-[70vh] flex items-center justify-center">
-  <div class="w-full max-w-sm">
-    <div class="text-center mb-8">
-      <h1 class="text-2xl font-bold text-primary-900">Criar conta</h1>
-      <p class="text-sm text-gray-500 mt-1">Portal de Inovação Tsuru</p>
+<% content_for :title, "Criar conta · Portal PD&I" %>
+
+<div class="w-full min-h-screen bg-[#fafaf9] flex">
+  <%# === FORMULÁRIO === %>
+  <div class="flex-1 flex flex-col">
+    <div class="px-10 pt-8">
+      <div class="flex items-center gap-2">
+        <div class="relative w-6 h-6 shrink-0">
+          <div class="absolute inset-0 rounded-md bg-gray-900"></div>
+          <div class="absolute left-[5px] top-[5px] w-[6px] h-[6px] rounded-[1px] bg-white"></div>
+          <div class="absolute right-[5px] bottom-[5px] w-[6px] h-[6px] rounded-[1px]" style="background: var(--accent)"></div>
+        </div>
+        <div class="text-[14px] font-semibold tracking-tight text-gray-900">
+          Portal<span class="text-gray-300 mx-0.5">·</span><span class="font-normal text-gray-500">PD&amp;I</span>
+        </div>
+      </div>
     </div>
 
-    <div class="tsuru-card">
-      <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "space-y-4" }) do |f| %>
-        <%= render "users/shared/error_messages", resource: resource %>
-
-        <div>
-          <%= f.label :name, "Nome completo", class: "tsuru-label" %>
-          <%= f.text_field :name, autofocus: true, autocomplete: "name", class: "tsuru-input" %>
+    <div class="flex-1 flex items-center justify-center px-10 py-8">
+      <div class="w-full max-w-[380px]">
+        <div class="text-[12px] uppercase tracking-wider text-gray-400 font-medium">Criar conta corporativa</div>
+        <div class="text-[26px] font-semibold tracking-tight text-gray-900 mt-1">Bem-vindo ao Portal</div>
+        <div class="text-[13px] text-gray-500 mt-1.5 leading-relaxed">
+          Cadastre-se para registrar ideias, acompanhar demandas de PD&amp;I e participar do ciclo da Lei do Bem.
         </div>
 
-        <div>
-          <%= f.label :email, "E-mail corporativo", class: "tsuru-label" %>
-          <%= f.email_field :email, autocomplete: "email", class: "tsuru-input" %>
-        </div>
-
-        <div>
-          <%= f.label :password, "Senha", class: "tsuru-label" %>
-          <% if @minimum_password_length %>
-            <p class="text-xs text-gray-400 mb-1">Mínimo <%= @minimum_password_length %> caracteres</p>
+        <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "mt-7 space-y-3.5" }) do |f| %>
+          <% if resource.errors.any? %>
+            <div class="rounded-md bg-rose-50 border border-rose-200 px-3 py-2.5 text-[12.5px] text-rose-700">
+              <div class="font-medium mb-1">Não foi possível criar a conta:</div>
+              <ul class="list-disc list-inside space-y-0.5">
+                <% resource.errors.full_messages.each do |message| %>
+                  <li><%= message %></li>
+                <% end %>
+              </ul>
+            </div>
           <% end %>
-          <%= f.password_field :password, autocomplete: "new-password", class: "tsuru-input" %>
-        </div>
 
-        <div>
-          <%= f.label :password_confirmation, "Confirmar senha", class: "tsuru-label" %>
-          <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "tsuru-input" %>
-        </div>
+          <div>
+            <%= f.label :name, "Nome completo", class: "text-[11.5px] font-medium text-gray-700" %>
+            <%= f.text_field :name, autofocus: true, autocomplete: "name",
+                  class: "mt-1 tsuru-input", placeholder: "Seu nome" %>
+          </div>
 
-        <%= f.submit "Criar conta", class: "tsuru-btn-primary w-full" %>
-      <% end %>
+          <div>
+            <%= f.label :email, "E-mail corporativo", class: "text-[11.5px] font-medium text-gray-700" %>
+            <%= f.email_field :email, autocomplete: "email",
+                  class: "mt-1 tsuru-input", placeholder: "voce@empresa.com.br" %>
+          </div>
+
+          <div>
+            <%= f.label :password, "Senha", class: "text-[11.5px] font-medium text-gray-700" %>
+            <% if @minimum_password_length %>
+              <p class="text-[11px] text-gray-400 mt-0.5">Mínimo <%= @minimum_password_length %> caracteres</p>
+            <% end %>
+            <%= f.password_field :password, autocomplete: "new-password", class: "mt-1 tsuru-input" %>
+          </div>
+
+          <div>
+            <%= f.label :password_confirmation, "Confirmar senha", class: "text-[11.5px] font-medium text-gray-700" %>
+            <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "mt-1 tsuru-input" %>
+          </div>
+
+          <%= f.submit "Criar conta", class: "mt-2 w-full h-10 rounded-md text-white text-[13px] font-medium hover:opacity-90 cursor-pointer",
+                style: "background: var(--accent)" %>
+
+          <p class="text-center text-[12px] text-gray-500 mt-4">
+            Já tem conta?
+            <%= link_to "Entrar no Portal", new_session_path(resource_name),
+                  class: "underline-offset-2 hover:underline font-medium", style: "color: var(--accent)" %>
+          </p>
+        <% end %>
+      </div>
     </div>
 
-    <p class="text-center text-sm text-gray-500 mt-4">
-      Já tem conta?
-      <%= link_to "Entrar", new_session_path(resource_name), class: "text-primary-700 hover:underline" %>
-    </p>
+    <div class="px-10 pb-7 flex items-center justify-between text-[11px] text-gray-400">
+      <span>© <%= Date.current.year %> Bellube · Portal Tsuru PD&I</span>
+      <div class="flex gap-4"><a class="hover:text-gray-700">Privacidade</a><a class="hover:text-gray-700">Termos</a><a class="hover:text-gray-700">Suporte</a></div>
+    </div>
+  </div>
+
+  <%# === PAINEL INSTITUCIONAL === %>
+  <div class="flex-1 hidden md:flex flex-col justify-between relative overflow-hidden border-l border-gray-200 bg-gray-900 text-white">
+    <div class="absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 20px 20px;"></div>
+
+    <div class="relative px-12 pt-12">
+      <div class="text-[11px] uppercase tracking-[0.18em] text-white/40 font-medium">Onboarding · PD&amp;I</div>
+      <div class="text-[32px] leading-[1.05] font-semibold tracking-tight mt-3 max-w-md">
+        Sua ideia merece<br>chegar até o<br>incentivo fiscal.
+      </div>
+      <div class="text-[13px] text-white/60 mt-4 max-w-md leading-relaxed">
+        Cadastre-se para submeter demandas, acompanhar o fluxo de aprovação e ver o status de elegibilidade
+        para a Lei do Bem ao longo do ano-base.
+      </div>
+    </div>
+
+    <div class="relative px-12 pb-12">
+      <div class="text-[10.5px] uppercase tracking-wider text-white/40 mb-4 font-medium">O que você pode fazer aqui</div>
+      <ol class="space-y-2">
+        <% [
+          [ "Registrar",  "Ideia ou necessidade da sua área" ],
+          [ "Acompanhar", "Status da triagem e enquadramento" ],
+          [ "Colaborar",  "Comentar e anexar evidências" ],
+          [ "Visualizar", "Decisões da diretoria e do comitê" ],
+          [ "Histórico",  "Tudo auditado pelo PaperTrail" ]
+        ].each_with_index do |(k, d), i| %>
+          <li class="flex items-start gap-3">
+            <div class="mt-1 w-5 h-5 rounded-full bg-white/10 ring-1 ring-white/20 text-[10px] flex items-center justify-center font-medium"><%= i + 1 %></div>
+            <div class="flex-1 pb-1.5 border-b border-white/5 last:border-0">
+              <div class="text-[13px] font-medium"><%= k %></div>
+              <div class="text-[11.5px] text-white/55"><%= d %></div>
+            </div>
+          </li>
+        <% end %>
+      </ol>
+
+      <div class="mt-8 flex items-center gap-6 text-[11px] text-white/45">
+        <div class="flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-white/60"></span>Confirmação por e-mail</div>
+        <div class="flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-white/60"></span>LGPD</div>
+        <div class="flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-white/60"></span>2FA disponível</div>
+      </div>
+    </div>
   </div>
 </div>
