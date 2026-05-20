@@ -1,0 +1,22 @@
+<div id="comment_form" class="mt-4">
+  <%= form_with model: [ demand, Comment.new ], data: { turbo: true }, class: "flex gap-3" do |f| %>
+    <div class="shrink-0 mt-0.5">
+      <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-500 text-[11px] font-semibold">
+        <%= current_user&.initials %>
+      </span>
+    </div>
+    <div class="flex-1 min-w-0">
+      <%= f.text_area :body,
+            rows: 2,
+            required: true,
+            class: "tsuru-textarea",
+            placeholder: "Adicionar comentário técnico..." %>
+      <div class="flex items-center justify-end gap-2 mt-2">
+        <span class="text-[11px] text-gray-400 mr-auto">
+          Comentários são visíveis para o time T&I e o autor da demanda.
+        </span>
+        <%= f.submit "Comentar", class: "tsuru-btn-primary" %>
+      </div>
+    </div>
+  <% end %>
+</div>

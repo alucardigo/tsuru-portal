@@ -1,53 +1,130 @@
-<% content_for :title, "Histórico — #{@demand.title}" %>
+<% content_for :title, "Histórico de versões" %>
+<% content_for :nav_active, "demandas" %>
+<% content_for :crumb, "DEM-#{@demand.id.to_s.rjust(4, '0')} · #{@demand.title.truncate(60)}" %>
+<% content_for :subtitle, "· Histórico de alterações" %>
 
-<div class="max-w-4xl mx-auto py-8 px-4">
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-semibold">Histórico de alterações</h1>
-    <%= link_to "← Voltar à demanda", @demand, class: "text-sm text-blue-600 hover:underline" %>
+<%
+  event_meta = {
+    "create"   => { label: "criou",         color: "bg-emerald-500", ring: "ring-emerald-100", pill: "emerald" },
+    "update"   => { label: "atualizou",     color: "bg-blue-500",    ring: "ring-blue-100",    pill: "blue" },
+    "destroy"  => { label: "removeu",       color: "bg-rose-500",    ring: "ring-rose-100",    pill: "rose" }
+  }
+
+  human_field = lambda do |raw|
+    label = {
+      "aasm_state"        => "estado",
+      "title"             => "título",
+      "description"       => "descrição",
+      "trl"               => "TRL",
+      "parecer_tecnico"   => "parecer técnico",
+      "n1_flags"          => "flags N1",
+      "n2_assessment"     => "avaliação N2",
+      "ods_goals"         => "ODS",
+      "updated_at"        => "atualizado em",
+      "created_at"        => "criado em"
+    }[raw.to_s]
+    label || raw.to_s.humanize
+  end
+
+  format_change = lambda do |val|
+    if val.nil? || val == ""
+      "—"
+    elsif val.is_a?(Hash) || val.is_a?(Array)
+      val.to_json.truncate(80)
+    else
+      val.to_s.truncate(80)
+    end
+  end
+%>
+
+<div class="max-w-[820px] mx-auto px-12 py-8">
+  <!-- Header card -->
+  <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+    <div class="flex items-start gap-3">
+      <div class="w-9 h-9 rounded-md bg-gray-900 text-white flex items-center justify-center">
+        <%= icon(:doc, size: 20) %>
+      </div>
+      <div class="flex-1">
+        <div class="text-[13.5px] font-semibold text-gray-900">Histórico de alterações</div>
+        <div class="text-[12px] text-gray-600 leading-relaxed mt-0.5">
+          Registro auditável de todas as mudanças realizadas nesta demanda — autor, momento e diff dos campos.
+          Preserva a rastreabilidade exigida para defesa Lei do Bem.
+        </div>
+      </div>
+      <div class="shrink-0">
+        <%= link_to demand_path(@demand), class: "tsuru-btn-secondary" do %>
+          <%= icon(:arrow, size: 14, class_name: "rotate-180") %>
+          <span>Voltar à demanda</span>
+        <% end %>
+      </div>
+    </div>
   </div>
 
   <% if @versions.empty? %>
-    <p class="text-gray-500 text-sm">Nenhuma alteração registrada.</p>
-  <% else %>
-    <div class="space-y-4">
-      <% @versions.each do |version| %>
-        <div class="tsuru-card">
-          <div class="flex items-start justify-between mb-2">
-            <div>
-              <% event_class = case version.event
-                               when "create"  then "bg-green-100 text-green-700"
-                               when "destroy" then "bg-red-100 text-red-700"
-                               else                "bg-blue-100 text-blue-700"
-                               end %>
-              <span class="inline-block text-xs font-medium uppercase tracking-wide px-2 py-0.5 rounded <%= event_class %>">
-                <%= version.event %>
-              </span>
-            </div>
-            <span class="text-xs text-gray-400">
-              <%= l(version.created_at, format: :short) %>
-            </span>
-          </div>
-
-          <% if version.whodunnit.present? %>
-            <% author = User.find_by(id: version.whodunnit) %>
-            <p class="text-sm text-gray-600 mb-2">
-              <strong>Por:</strong> <%= author&.display_name || "Sistema" %>
-            </p>
-          <% end %>
-
-          <% if version.changeset.present? %>
-            <% changes = version.changeset.except("updated_at", "created_at") %>
-            <% changes.each do |field, (before, after)| %>
-              <div class="text-sm mt-2 border-l-2 border-gray-200 pl-3">
-                <span class="font-medium text-gray-700"><%= field %>:</span>
-                <span class="text-red-500 line-through ml-1"><%= before.to_s.truncate(80) %></span>
-                →
-                <span class="text-green-600 ml-1"><%= after.to_s.truncate(80) %></span>
-              </div>
-            <% end %>
-          <% end %>
-        </div>
-      <% end %>
+    <div class="bg-white rounded-lg border border-gray-200 p-8 text-center">
+      <div class="text-[13px] text-gray-500">Nenhuma alteração registrada até o momento.</div>
     </div>
+  <% else %>
+    <div class="subhead mb-3"><%= @versions.size %> entrada<%= "s" if @versions.size != 1 %></div>
+
+    <!-- Timeline -->
+    <ol class="relative border-l-2 border-gray-100 ml-3 space-y-0">
+      <% @versions.each do |version|
+           meta = event_meta[version.event.to_s] || { label: version.event.to_s, color: "bg-gray-400", ring: "ring-gray-100", pill: "gray" }
+           author = version.whodunnit.present? ? User.find_by(id: version.whodunnit) : nil
+           author_name = author&.display_name || "Sistema"
+           changes = version.changeset.is_a?(Hash) ? version.changeset.except("updated_at", "created_at") : {} %>
+        <li class="relative pl-6 pb-6 last:pb-0">
+          <!-- Bolinha do evento -->
+          <span class="absolute -left-[7px] top-1 w-3 h-3 rounded-full <%= meta[:color] %> ring-4 <%= meta[:ring] %>" aria-hidden="true"></span>
+
+          <!-- Card do evento -->
+          <div class="bg-white rounded-lg border border-gray-200 p-3.5 hover:border-gray-300 transition-colors">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-center gap-2 min-w-0">
+                <% if author %>
+                  <%= avatar(author, size: 22) %>
+                <% else %>
+                  <span class="inline-flex items-center justify-center w-[22px] h-[22px] rounded-full bg-gray-100 text-gray-500 text-[10px] font-semibold">SY</span>
+                <% end %>
+                <div class="text-[12.5px] text-gray-900 min-w-0">
+                  <span class="font-medium"><%= author_name %></span>
+                  <span class="text-gray-500"><%= meta[:label] %> a demanda</span>
+                </div>
+                <%= pill(version.event.to_s, color: meta[:pill]) %>
+              </div>
+              <div class="shrink-0 text-[11px] text-gray-400 font-mono"
+                   title="<%= l(version.created_at, format: :long) rescue version.created_at.strftime("%d/%m/%Y %H:%M:%S") %>">
+                <%= l(version.created_at, format: :short) %>
+              </div>
+            </div>
+
+            <% if changes.any? %>
+              <div class="mt-3 pt-3 border-t border-gray-100 space-y-1.5">
+                <% changes.each do |field, change_pair|
+                     before, after = Array(change_pair) %>
+                  <div class="grid grid-cols-[120px_1fr] gap-3 text-[12px] items-baseline">
+                    <div class="text-gray-500 truncate" title="<%= field %>"><%= human_field.call(field) %></div>
+                    <div class="min-w-0">
+                      <% if version.event.to_s == "create" %>
+                        <span class="text-emerald-700 break-words"><%= format_change.call(after) %></span>
+                      <% else %>
+                        <span class="inline-flex items-baseline gap-1.5 flex-wrap">
+                          <span class="text-rose-600 line-through break-words"><%= format_change.call(before) %></span>
+                          <span class="text-gray-400" aria-hidden="true">→</span>
+                          <span class="text-emerald-700 break-words"><%= format_change.call(after) %></span>
+                        </span>
+                      <% end %>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <div class="mt-2 text-[11.5px] text-gray-400 italic">Sem alterações de campo registradas neste evento.</div>
+            <% end %>
+          </div>
+        </li>
+      <% end %>
+    </ol>
   <% end %>
 </div>

@@ -1,12 +1,22 @@
-<div id="<%= dom_id(comment) %>" class="tsuru-card py-3">
-  <div class="flex items-center justify-between mb-2">
-    <div class="flex items-center gap-2">
-      <span class="w-7 h-7 rounded-full bg-primary-700 text-white text-xs flex items-center justify-center font-semibold">
-        <%= comment.user.initials %>
-      </span>
-      <span class="text-sm font-medium text-gray-800"><%= comment.user.display_name %></span>
-    </div>
-    <span class="text-xs text-gray-400"><%= l comment.created_at, format: :short %></span>
+<div id="<%= dom_id(comment) %>" class="group flex gap-3 py-3 first:pt-0 last:pb-0">
+  <div class="shrink-0 mt-0.5">
+    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-200 text-gray-700 text-[11px] font-semibold">
+      <%= comment.user.initials %>
+    </span>
   </div>
-  <p class="text-sm text-gray-700 whitespace-pre-line"><%= comment.body %></p>
+  <div class="flex-1 min-w-0">
+    <div class="flex items-baseline gap-2">
+      <span class="text-[13px] font-medium text-gray-900"><%= comment.user.display_name %></span>
+      <span class="text-[11px] text-gray-400">
+        <%= time_ago_in_words(comment.created_at) %> atrás
+        <span class="mx-0.5 text-gray-300">·</span>
+        <span title="<%= l(comment.created_at, format: :long) rescue comment.created_at.strftime("%d/%m/%Y %H:%M") %>">
+          <%= l(comment.created_at, format: :short) %>
+        </span>
+      </span>
+    </div>
+    <div class="mt-0.5 text-[13px] text-gray-800 whitespace-pre-line leading-relaxed">
+      <%= comment.body %>
+    </div>
+  </div>
 </div>

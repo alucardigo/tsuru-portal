@@ -1,0 +1,26 @@
+<%# Partial: seção de comentários estilo Notion para uma demanda
+    Locals: demand (Demand) %>
+<section class="mt-8" aria-labelledby="comments-heading">
+  <div class="flex items-baseline justify-between mb-3">
+    <h2 id="comments-heading" class="text-[14px] font-semibold text-gray-900 tracking-tight">
+      Comentários
+      <span class="ml-1.5 text-[12px] text-gray-400 font-normal">· <%= demand.comments.count %></span>
+    </h2>
+  </div>
+
+  <div class="border-l-2 border-gray-100 pl-4 ml-3">
+    <div id="comments" class="divide-y divide-gray-100">
+      <% if demand.comments.any? %>
+        <% demand.comments.order(:created_at).each do |comment| %>
+          <%= render "comments/comment", comment: comment %>
+        <% end %>
+      <% else %>
+        <div class="py-4 text-[12.5px] text-gray-400 italic">
+          Nenhum comentário ainda. Seja o primeiro a registrar uma observação técnica.
+        </div>
+      <% end %>
+    </div>
+
+    <%= render "demands/comment_form", demand: demand %>
+  </div>
+</section>

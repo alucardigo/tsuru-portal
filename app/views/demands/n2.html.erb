@@ -1,62 +1,202 @@
-<div class="max-w-3xl mx-auto">
-  <%= link_to "← Demanda", demand_path(@demand), class: "text-sm text-gray-500 hover:text-primary-700" %>
+<% content_for :title, "Avaliação N2" %>
+<% content_for :nav_active, "elegibilidade" %>
+<% content_for :crumb, "DEM-#{@demand.id.to_s.rjust(4, '0')} · #{@demand.title.truncate(60)}" %>
+<% content_for :subtitle, "· Mapeamento técnico Lei do Bem" %>
 
-  <div class="tsuru-card mt-4">
-    <h1 class="text-2xl font-bold text-primary-900 mb-1">Avaliação N2 — FI Group</h1>
-    <p class="text-sm text-gray-500 mb-6"><%= @demand.title %></p>
+<%
+  n2_sections = [
+    {
+      idx: 1,
+      key: "motivacao",
+      label: "Motivação",
+      hint: "Por que o projeto começou? Conte o cenário inicial, o problema e o gap tecnológico que motivou a investigação.",
+      placeholder: "Ex: Em 2025, as paradas não programadas representaram 18% da indisponibilidade. As tentativas com janelas fixas erravam para os dois lados — paradas precoces ou tardias demais...",
+      required: true,
+      rows: 5
+    },
+    {
+      idx: 2,
+      key: "benchmark_anterior",
+      label: "Estado anterior",
+      hint: "O cenário antes do projeto — métricas de baseline, ferramentas e abordagens existentes, e por que não eram suficientes.",
+      placeholder: "Ex: PostgreSQL 14 com índice simples, P99=480ms, throughput 1.2k req/s, sem leitura contínua de variáveis...",
+      required: false,
+      rows: 4
+    },
+    {
+      idx: 3,
+      key: "barreira_tecnica",
+      label: "Barreira técnica",
+      hint: "A incerteza tecnológica real — não é prazo nem orçamento. É o limite técnico/científico que o time enfrentou e precisou superar.",
+      placeholder: "Ex: Sem garantia de que a refatoração do índice manteria consistência transacional sob N writers concorrentes — exigiu PoCs comparativos com 3 hipóteses...",
+      required: true,
+      rows: 5
+    },
+    {
+      idx: 4,
+      key: "metodologia",
+      label: "Metodologia experimental",
+      hint: "Hipóteses formuladas, PoCs realizados, testes conduzidos. Insucesso também conta como evidência válida.",
+      placeholder: "Ex: 3 hipóteses em ablation study: H1-sharding (refutada), H2-cache LRU, H3-índice composto. Validação cruzada com benchmark-ips e pgbench, A/B controlado por 4 semanas...",
+      required: true,
+      rows: 5
+    },
+    {
+      idx: 5,
+      key: "stack_tecnologico",
+      label: "Stack tecnológico",
+      hint: "Linguagens, frameworks, ferramentas e plataformas usadas no desenvolvimento.",
+      placeholder: "Ex: PostgreSQL 17, Redis 7, Ruby 3.4, benchmark-ips, pgbench, Grafana, Prometheus",
+      required: false,
+      rows: 3
+    },
+    {
+      idx: 6,
+      key: "resultado_obtido",
+      label: "Resultado obtido",
+      hint: "O que foi alcançado — métricas quantitativas. Hipóteses confirmadas E refutadas são ambas evidências válidas.",
+      placeholder: "Ex: H1 refutada (+12% latência sob carga real). H2+H3 confirmadas: P99=87ms (-82%), throughput 8k req/s (+567%), redução de 73% nos timeouts de produção...",
+      required: true,
+      rows: 5
+    }
+  ]
+%>
 
-    <%= form_with url: n2_demand_path(@demand), method: :patch do |f| %>
-      <div class="space-y-6">
+<div class="max-w-[1100px] mx-auto px-7 py-6 grid grid-cols-3 gap-6">
+  <!-- col-span-2: framework header + 6 RichFields -->
+  <div class="col-span-2 space-y-3">
 
-        <div>
-          <label class="tsuru-label">Motivação / Problema <span class="text-danger-600">*</span></label>
-          <p class="text-xs text-gray-400 mb-1">Qual problema técnico motivou o projeto? Cite métricas de baseline.</p>
-          <textarea name="demand[n2_assessment][motivacao]" rows="4" class="tsuru-input"
-            placeholder="Ex: Latência P99 de 480ms causava 3 timeouts/min em pico..."><%= @demand.motivacao %></textarea>
+    <!-- Framework header card -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex items-start gap-3">
+        <div class="w-9 h-9 rounded-md bg-gray-900 text-white flex items-center justify-center">
+          <%= icon(:n2, size: 20) %>
         </div>
-
-        <div>
-          <label class="tsuru-label">Benchmark Anterior (estado da arte)</label>
-          <p class="text-xs text-gray-400 mb-1">Métricas quantitativas antes do projeto. O que existia e por que não funcionou?</p>
-          <textarea name="demand[n2_assessment][benchmark_anterior]" rows="3" class="tsuru-input"
-            placeholder="Ex: PostgreSQL 14, índice simples, P99=480ms, throughput 1.2k req/s..."><%= @demand.benchmark_anterior %></textarea>
+        <div class="flex-1">
+          <div class="text-[13.5px] font-semibold text-gray-900">Nível 2 · Mapeamento técnico FI Group</div>
+          <div class="text-[12px] text-gray-600 leading-relaxed mt-0.5">
+            6 campos estruturados para compor a defesa Lei do Bem.
+            Descreva <strong>motivação</strong>, <strong>estado anterior</strong>, <strong>barreira</strong>,
+            <strong>metodologia</strong>, <strong>stack</strong> e <strong>resultado</strong>.
+            Os campos com <span class="text-rose-600">*</span> são obrigatórios para concluir o N2.
+          </div>
         </div>
-
-        <div>
-          <label class="tsuru-label">Barreira Técnica <span class="text-danger-600">*</span></label>
-          <p class="text-xs text-gray-400 mb-1">Qual incerteza tecnológica específica? Não é prazo ou orçamento — é o limite técnico/científico.</p>
-          <textarea name="demand[n2_assessment][barreira_tecnica]" rows="4" class="tsuru-input"
-            placeholder="Ex: Sem garantia que refatoração do índice manteria consistência transacional sob N writers concorrentes..."><%= @demand.barreira_tecnica %></textarea>
-        </div>
-
-        <div>
-          <label class="tsuru-label">Metodologia Experimental <span class="text-danger-600">*</span></label>
-          <p class="text-xs text-gray-400 mb-1">Hipóteses formuladas, PoCs realizados, testes conduzidos. Insucesso também é evidência válida.</p>
-          <textarea name="demand[n2_assessment][metodologia]" rows="4" class="tsuru-input"
-            placeholder="Ex: 3 hipóteses em ablation study: H1-sharding (refutada), H2-cache LRU, H3-índice. Testes A/B com benchmark-ips..."><%= @demand.metodologia %></textarea>
-        </div>
-
-        <div>
-          <label class="tsuru-label">Stack Tecnológico</label>
-          <input type="text" name="demand[n2_assessment][stack_tecnologico]" class="tsuru-input"
-            value="<%= @demand.stack_tecnologico %>"
-            placeholder="Ex: PostgreSQL 17, Redis 7, Ruby 3.4, benchmark-ips, pgbench">
-        </div>
-
-        <div>
-          <label class="tsuru-label">Resultado Obtido <span class="text-danger-600">*</span></label>
-          <p class="text-xs text-gray-400 mb-1">O que foi alcançado? Métricas quantitativas. Hipóteses confirmadas E refutadas são evidências válidas.</p>
-          <textarea name="demand[n2_assessment][resultado_obtido]" rows="4" class="tsuru-input"
-            placeholder="Ex: H1 refutada (+12% latência). H2+H3: P99=87ms (-82%), throughput 8k req/s (+567%)..."><%= @demand.resultado_obtido %></textarea>
-        </div>
-
       </div>
+    </div>
 
-      <div class="flex gap-3 mt-6 pt-4 border-t border-gray-100">
-        <%= f.submit "Concluir Avaliação N2", class: "tsuru-btn-primary",
-              data: { turbo_confirm: "Confirma a conclusão da avaliação N2?" } %>
-        <%= link_to "Cancelar", demand_path(@demand), class: "tsuru-btn-secondary" %>
+    <!-- Form -->
+    <%= form_with url: n2_demand_path(@demand), method: :patch, local: true, class: "space-y-3" do |f| %>
+      <% n2_sections.each do |section| %>
+        <% current_value = @demand.send(section[:key]) %>
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+          <div class="flex items-start gap-3">
+            <div class="font-mono text-[11px] text-gray-400 mt-0.5 w-5"><%= section[:idx] %>.</div>
+            <div class="flex-1 min-w-0">
+              <div class="subhead">
+                <%= section[:label] %><% if section[:required] %><span class="text-rose-600 normal-case ml-0.5">*</span><% end %>
+              </div>
+              <div class="text-[12px] text-gray-500 leading-relaxed mt-0.5 mb-2"><%= section[:hint] %></div>
+              <textarea
+                name="demand[n2_assessment][<%= section[:key] %>]"
+                rows="<%= section[:rows] %>"
+                class="tsuru-textarea"
+                placeholder="<%= section[:placeholder] %>"
+                <%= "required" if section[:required] %>><%= current_value %></textarea>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Footer actions -->
+      <div class="flex items-center justify-between pt-3">
+        <%= link_to "Cancelar", demand_path(@demand), class: "text-[12.5px] text-gray-600 hover:text-gray-900" %>
+        <div class="flex items-center gap-2">
+          <%= f.submit "Concluir avaliação N2", class: "tsuru-btn-primary",
+                data: { turbo_confirm: "Confirma a conclusão da avaliação N2?" } %>
+        </div>
       </div>
     <% end %>
   </div>
+
+  <!-- col-span-1: rail direito com contexto e TRL/ODS -->
+  <aside class="space-y-4">
+    <!-- Contexto -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4 sticky top-2">
+      <div class="subhead">Contexto da demanda</div>
+      <div class="mt-2.5 space-y-2 text-[12px]">
+        <div class="flex justify-between">
+          <span class="text-gray-500">Código</span>
+          <span class="font-mono text-gray-900">DEM-<%= @demand.id.to_s.rjust(4, "0") %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-500">Autor</span>
+          <span class="text-gray-900"><%= @demand.user.display_name %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-500">Estado</span>
+          <span><%= status_pill(@demand.aasm_state) %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-500">Há</span>
+          <span class="text-gray-900"><%= time_ago_in_words(@demand.created_at) %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRL e ODS -->
+    <% if @demand.trl.present? || @demand.ods_goals.present? %>
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="subhead">TRL e ODS</div>
+        <div class="mt-2.5 space-y-2.5 text-[12px]">
+          <% if @demand.trl.present? %>
+            <div>
+              <div class="text-gray-500 mb-1">Technology Readiness Level</div>
+              <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md ring-1 ring-blue-100 bg-blue-50 text-blue-700 text-[11.5px] font-medium">
+                TRL <%= @demand.trl %>
+              </span>
+            </div>
+          <% end %>
+          <% if @demand.ods_goals.present? %>
+            <div>
+              <div class="text-gray-500 mb-1">Objetivos de Desenvolvimento Sustentável</div>
+              <div class="flex flex-wrap gap-1">
+                <% Array(@demand.ods_goals).each do |goal| %>
+                  <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10.5px] font-medium bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
+                    ODS <%= goal %>
+                  </span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Progresso N2 -->
+    <% required = Demand::N2_REQUIRED_FIELDS
+       filled = required.count { |f| @demand.send(f).present? }
+       progress_pct = required.empty? ? 0 : (filled * 100 / required.size) %>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="subhead">Progresso</div>
+      <div class="mt-3">
+        <div class="flex items-center justify-between text-[12px] mb-1.5">
+          <span class="text-gray-600"><%= filled %>/<%= required.size %> campos obrigatórios</span>
+          <span class="font-mono text-gray-900"><%= progress_pct %>%</span>
+        </div>
+        <div class="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+          <div class="h-full rounded-full transition-all"
+               style="width: <%= progress_pct %>%; background: <%= filled == required.size ? "#16a34a" : "var(--accent, #3b82f6)" %>;"></div>
+        </div>
+        <% if filled < required.size %>
+          <div class="text-[11px] text-gray-500 mt-2 leading-snug">
+            Preencha todos os campos obrigatórios para concluir o N2.
+          </div>
+        <% else %>
+          <div class="text-[11px] text-emerald-700 mt-2 leading-snug font-medium">
+            Pronto para concluir avaliação N2.
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </aside>
 </div>
