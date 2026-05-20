@@ -1,56 +1,161 @@
-<div class="max-w-2xl mx-auto">
-  <%= link_to "← #{@demand.title}", demand_path(@demand), class: "text-sm text-gray-500 hover:text-primary-700" %>
+<% content_for :title, "Triagem N1 — DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :nav_active, "elegibilidade" %>
+<% content_for :crumb, "Esteira do comitê · DEM-#{@demand.id.to_s.rjust(4, '0')} · #{@demand.title}" %>
+<% content_for :subtitle, "· Triagem de elegibilidade Lei do Bem" %>
 
-  <div class="tsuru-card mt-4">
-    <h1 class="text-xl font-bold text-primary-900 mb-2">Triagem N1 — Lei do Bem</h1>
-    <p class="text-sm text-gray-500 mb-6">
-      Critérios FI Group — responda SIM para cada questão que desqualifica o projeto.
-      <strong>Uma resposta SIM = projeto reprovado na triagem N1.</strong>
-    </p>
+<%
+  n1_questions = [
+    { id: "rotina_operacional",     label: "Rotina / operacional",       text: "O escopo é predominantemente rotina/operacional (manutenção, suporte, correção pontual sem salto tecnológico, parametrização padrão, rollout sem experimentação)?" },
+    { id: "adequacao_normativa",    label: "Apenas compliance",          text: "O objetivo é apenas adequação normativa/compliance sem criação/aperfeiçoamento tecnológico relevante?" },
+    { id: "solucao_prateleira",     label: "Solução de prateleira",      text: "A maior parte do esforço é implantação de solução de prateleira (software/ferramenta já existente) sem customização tecnológica relevante e sem validação experimental?" },
+    { id: "trl_fora_janela",        label: "Maturidade tecnológica",     text: "O projeto está fora da janela de experimentação (ideação pura ou já em implantação estabilizada)?" },
+    { id: "escopo_nao_tecnologico", label: "Sem componente técnico",     text: "Possui apenas atividades de contexto comercial, marketing ou financeiro, sem pesquisa/desenvolvimento de aspecto tecnológico/técnico?" }
+  ]
 
-    <%= form_with url: triagem_demand_path(@demand), method: :patch, data: { controller: "triagem" } do |f| %>
-      <div class="space-y-4">
-        <% n1_labels = {
-          "rotina_operacional"       => "O projeto trata predominantemente de atividades de rotina ou operacionais (manutenção, parametrização, rollout sem experimentação)?",
-          "adequacao_normativa"      => "O projeto visa apenas adequação normativa ou compliance sem desafio técnico relevante?",
-          "solucao_prateleira"       => "O projeto consiste em implantação de solução de prateleira (COTS) sem customização profunda com incerteza técnica?",
-          "trl_fora_janela"          => "O projeto está em maturidade fora da janela elegível (TRL < 3 ideação pura ou TRL > 7 já estabilizado em produção)?",
-          "escopo_nao_tecnologico"   => "O escopo é predominantemente não-tecnológico (marketing, comercial, financeiro, administrativo)?"
-        } %>
+  flags = @demand.n1_flags || {}
+  answered = n1_questions.count { |q| flags[q[:id]].in?([true, false]) }
+  blocking = n1_questions.count { |q| flags[q[:id]] == true }
+  verdict =
+    if answered < n1_questions.size
+      :incomplete
+    elsif blocking.zero?
+      :verde
+    else
+      :vermelho
+    end
+%>
 
-        <% Demand::N1_FLAGS.each_with_index do |flag, i| %>
-          <div class="border border-gray-200 rounded-lg p-4 hover:border-primary-300 transition-colors"
-               data-triagem-target="question">
-            <p class="text-sm font-medium text-gray-800 mb-3">
-              <span class="text-primary-700 font-bold mr-2"><%= i + 1 %>.</span>
-              <%= n1_labels[flag] %>
-            </p>
-            <div class="flex gap-4">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <%= f.fields_for :n1_flags do |nf| %>
-                  <input type="radio" name="demand[n1_flags][<%= flag %>]" value="1"
-                         class="text-danger-600" data-action="change->triagem#update">
-                <% end %>
-                <span class="text-danger-700 font-semibold text-sm">SIM — desqualifica</span>
+<div class="max-w-[1100px] mx-auto px-7 py-6 grid grid-cols-3 gap-6">
+  <!-- col-span-2: cabeçalho framework + 5 QuestionCards -->
+  <div class="col-span-2 space-y-3">
+
+    <!-- Framework header card -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="flex items-start gap-3">
+        <div class="w-9 h-9 rounded-md bg-gray-900 text-white flex items-center justify-center">
+          <%= icon(:n1, size: 20) %>
+        </div>
+        <div class="flex-1">
+          <div class="text-[13.5px] font-semibold text-gray-900">Nível 1 · Potencial de elegibilidade</div>
+          <div class="text-[12px] text-gray-600 leading-relaxed mt-0.5">
+            5 perguntas de triagem. Se qualquer resposta for <strong>SIM</strong>, o projeto não é elegível.
+            Se todas forem <strong>NÃO</strong>, pode avançar para o Nível 2.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- form_with com 5 perguntas -->
+    <%= form_with url: triagem_demand_path(@demand), method: :patch, local: true, class: "space-y-3" do |f| %>
+      <% n1_questions.each_with_index do |q, i| %>
+        <% current = flags[q[:id]] %>
+        <% border_class =
+             if current == true
+               'border-rose-200'
+             elsif current == false
+               'border-emerald-200'
+             else
+               'border-gray-200'
+             end %>
+        <div class="bg-white rounded-lg border <%= border_class %> p-4">
+          <div class="flex items-start gap-3">
+            <div class="font-mono text-[11px] text-gray-400 mt-0.5 w-5"><%= i + 1 %>.</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-medium"><%= q[:label] %></div>
+              <div class="text-[13px] text-gray-900 leading-relaxed mt-0.5"><%= q[:text] %></div>
+            </div>
+            <!-- YesNo toggle (feedback visual server-side; client toggle via Stimulus 'yesno') -->
+            <%
+              sim_active_cls = current == true  ? "bg-rose-600 text-white"    : "text-gray-600 hover:bg-white"
+              nao_active_cls = current == false ? "bg-emerald-600 text-white" : "text-gray-600 hover:bg-white"
+            %>
+            <div class="inline-flex rounded-md border border-gray-200 overflow-hidden bg-gray-50 shrink-0"
+                 data-controller="yesno"
+                 data-yesno-field-value="<%= q[:id] %>">
+              <label class="cursor-pointer">
+                <input type="radio" name="demand[n1_flags][<%= q[:id] %>]" value="1"
+                       <%= "checked" if current == true %>
+                       class="sr-only"
+                       data-yesno-target="sim"
+                       data-action="change->yesno#refresh">
+                <span data-yesno-target="simLabel"
+                      class="block h-9 px-3.5 leading-9 text-[12px] font-medium <%= sim_active_cls %>">Sim</span>
               </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="radio" name="demand[n1_flags][<%= flag %>]" value="0"
-                       class="text-success-600" checked data-action="change->triagem#update">
-                <span class="text-success-700 font-semibold text-sm">NÃO — prosseguir</span>
+              <label class="cursor-pointer border-l border-gray-200">
+                <input type="radio" name="demand[n1_flags][<%= q[:id] %>]" value="0"
+                       <%= "checked" if current == false %>
+                       class="sr-only"
+                       data-yesno-target="nao"
+                       data-action="change->yesno#refresh">
+                <span data-yesno-target="naoLabel"
+                      class="block h-9 px-3.5 leading-9 text-[12px] font-medium <%= nao_active_cls %>">Não</span>
               </label>
             </div>
           </div>
-        <% end %>
-      </div>
+        </div>
+      <% end %>
 
-      <div class="mt-6 p-4 bg-gray-50 rounded-lg" data-triagem-target="verdict">
-        <p class="text-sm text-gray-600">Responda todas as questões para ver o veredito.</p>
-      </div>
-
-      <div class="mt-4 flex gap-3">
-        <%= f.submit "Concluir triagem N1", class: "tsuru-btn-primary" %>
-        <%= link_to "Cancelar", demand_path(@demand), class: "tsuru-btn-secondary" %>
+      <!-- Submit no main -->
+      <div class="flex items-center justify-between pt-3">
+        <%= link_to "Cancelar", demand_path(@demand), class: "text-[12.5px] text-gray-600 hover:text-gray-900" %>
+        <%= f.submit "Salvar triagem", class: "tsuru-btn-primary" %>
       </div>
     <% end %>
   </div>
+
+  <!-- col-span-1: rail direito com semáforo -->
+  <aside class="space-y-4">
+    <div class="bg-white rounded-lg border border-gray-200 p-5 sticky top-2">
+      <div class="subhead">Veredicto automático</div>
+
+      <div class="mt-4 flex items-center gap-3">
+        <!-- Light column -->
+        <div class="flex flex-col gap-1.5">
+          <div class="w-4 h-4 rounded-full" style="background: <%= verdict == :verde ? '#16a34a' : '#e5e7eb' %>; box-shadow: <%= verdict == :verde ? '0 0 0 3px rgba(22,163,74,0.13)' : 'none' %>"></div>
+          <div class="w-4 h-4 rounded-full" style="background: #e5e7eb"></div>
+          <div class="w-4 h-4 rounded-full" style="background: <%= verdict == :vermelho ? '#dc2626' : verdict == :incomplete ? '#dc262622' : '#e5e7eb' %>; box-shadow: <%= verdict == :vermelho ? '0 0 0 3px rgba(220,38,38,0.13)' : 'none' %>"></div>
+        </div>
+        <div class="flex-1">
+          <% if verdict == :verde %>
+            <div class="text-[18px] font-semibold tracking-tight text-emerald-700">Potencialmente elegível</div>
+            <div class="text-[12px] text-gray-600 leading-snug mt-0.5">Pode avançar para o Nível 2.</div>
+          <% elsif verdict == :vermelho %>
+            <div class="text-[18px] font-semibold tracking-tight text-rose-700">Não elegível</div>
+            <div class="text-[12px] text-gray-600 leading-snug mt-0.5"><%= blocking %> resposta(s) bloqueante(s).</div>
+          <% else %>
+            <div class="text-[18px] font-semibold tracking-tight text-gray-500">Triagem incompleta</div>
+            <div class="text-[12px] text-gray-600 leading-snug mt-0.5"><%= n1_questions.size - answered %> pergunta(s) sem resposta.</div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Lista dos 5 quesitos com status -->
+      <div class="mt-5 pt-4 border-t border-gray-100 space-y-1.5">
+        <% n1_questions.each do |q| %>
+          <% v = flags[q[:id]] %>
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-[12px] text-gray-700 truncate"><%= q[:label] %></div>
+            <% if v == true %>
+              <%= pill("Sim", color: :rose) %>
+            <% elsif v == false %>
+              <%= pill("Não", color: :emerald) %>
+            <% else %>
+              <%= pill("—", color: :gray) %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Contexto da demanda -->
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="subhead">Contexto da demanda</div>
+      <div class="mt-2.5 space-y-2 text-[12px]">
+        <div class="flex justify-between"><span class="text-gray-500">Código</span><span class="font-mono text-gray-900">DEM-<%= @demand.id.to_s.rjust(4, '0') %></span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Autor</span><span class="text-gray-900"><%= @demand.user.respond_to?(:display_name) ? @demand.user.display_name : @demand.user.email %></span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Estado</span><span><%= status_pill(@demand.aasm_state) %></span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Há</span><span class="text-gray-900"><%= time_ago_in_words(@demand.created_at) %></span></div>
+      </div>
+    </div>
+  </aside>
 </div>
