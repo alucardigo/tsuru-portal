@@ -1,104 +1,472 @@
-<div class="max-w-3xl mx-auto">
-  <%= link_to "← Demandas", demands_path, class: "text-sm text-gray-500 hover:text-primary-700" %>
+<% content_for :title, "DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :nav_active, "demandas" %>
+<% content_for :crumb, "Minhas demandas" %>
+<% content_for :subtitle, "· Workspace" %>
 
-  <div class="tsuru-card mt-4">
-    <div class="flex items-start justify-between mb-4">
-      <h1 class="text-2xl font-bold text-primary-900"><%= @demand.title %></h1>
-      <span class="tsuru-badge-<%= @demand.aasm_state %> ml-4 shrink-0"><%= @demand.aasm_state.humanize %></span>
-    </div>
-
-    <p class="text-gray-700 whitespace-pre-line mb-6"><%= @demand.description %></p>
-
-    <% if @demand.n1_flags.any? { |_, v| v } %>
-      <div class="bg-danger-50 border border-danger-200 rounded-lg p-3 mb-4">
-        <p class="text-xs font-semibold text-danger-700 mb-1">Flags N1 identificados:</p>
-        <ul class="text-xs text-danger-600 list-disc list-inside">
-          <% @demand.n1_flags.select { |_, v| v }.each_key do |flag| %>
-            <li><%= flag.humanize %></li>
-          <% end %>
-        </ul>
-      </div>
-    <% end %>
-
-    <div class="text-xs text-gray-400 border-t border-gray-100 pt-3">
-      Criada por <%= @demand.user.display_name %> em <%= l @demand.created_at, format: :short %>
-    </div>
-  </div>
-
-  <%# Ações de estado %>
-  <div class="flex flex-wrap gap-2 mt-4">
-    <% if policy(@demand).submeter? %>
-      <%= button_to "Submeter para triagem", submeter_demand_path(@demand), method: :patch,
-            class: "tsuru-btn-primary",
-            data: { turbo_confirm: "Confirma a submissão?" } %>
-    <% end %>
-
-    <% if policy(@demand).iniciar_triagem? && @demand.submetida? %>
-      <%= button_to "Iniciar triagem N1", iniciar_triagem_demand_path(@demand), method: :patch,
-            class: "tsuru-btn-secondary" %>
-    <% end %>
-
-    <% if policy(@demand).triagem? && @demand.em_triagem? %>
-      <%= link_to "Formulário N1", triagem_demand_path(@demand), class: "tsuru-btn-secondary" %>
-    <% end %>
-
-    <% if policy(@demand).iniciar_n2? && @demand.n1_aprovada? %>
-      <%= button_to "Iniciar Avaliação N2", iniciar_n2_demand_path(@demand), method: :patch,
-            class: "tsuru-btn-secondary" %>
-    <% end %>
-
-    <% if policy(@demand).n2? && @demand.n2_em_andamento? %>
-      <%= link_to "Formulário N2", n2_demand_path(@demand), class: "tsuru-btn-secondary" %>
-    <% end %>
-
-    <% if policy(@demand).update? %>
-      <%= link_to "Editar", edit_demand_path(@demand), class: "tsuru-btn-secondary" %>
-    <% end %>
-  </div>
-
-  <%# Decisão de elegibilidade %>
-  <% if policy(@demand).decidir_elegibilidade? && @demand.n2_completa? %>
-    <div class="tsuru-card mt-4 border border-primary-200">
-      <h3 class="text-base font-semibold text-primary-900 mb-3">Decisão de Elegibilidade — Lei do Bem</h3>
-      <%= form_with url: decidir_elegibilidade_demand_path(@demand), method: :patch do |f| %>
-        <div class="mb-3">
-          <label class="tsuru-label">Parecer Técnico <span class="text-danger-600">*</span></label>
-          <textarea name="demand[parecer_tecnico]" rows="4" class="tsuru-input"
-            placeholder="Descreva a fundamentação técnica da decisão com base nos critérios Lei do Bem (incerteza, TRL, método científico)..."></textarea>
-        </div>
-        <div class="flex gap-3">
-          <button type="submit" name="demand[decisao]" value="elegivel"
-            class="tsuru-btn-primary"
-            data-turbo-confirm="Confirma elegibilidade para a Lei do Bem?">
-            Marcar Elegível
-          </button>
-          <button type="submit" name="demand[decisao]" value="nao_elegivel"
-            class="bg-danger-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-danger-700"
-            data-turbo-confirm="Confirma como não elegível?">
-            Marcar Não Elegível
-          </button>
-        </div>
-      <% end %>
-    </div>
+<% content_for :actions do %>
+  <%= link_to demands_path, class: "tsuru-btn-ghost" do %>
+    Voltar
   <% end %>
+  <% if policy(@demand).versions? %>
+    <%= link_to versions_demand_path(@demand), class: "tsuru-btn-ghost" do %>
+      Histórico
+    <% end %>
+  <% end %>
+<% end %>
 
-  <%# Comentários %>
-  <div class="mt-8">
-    <h2 class="text-lg font-semibold text-primary-900 mb-4">Comentários</h2>
+<div class="flex-1 flex min-h-0">
+  <%# === MAIN DOC =========================================================== %>
+  <div class="flex-1 overflow-auto">
+    <div class="max-w-[820px] mx-auto px-12 py-8 pb-24">
+      <%# Pills topo %>
+      <div class="flex items-center flex-wrap gap-2 text-[11.5px] text-gray-500">
+        <span id="demand_state_<%= @demand.id %>"><%= status_pill(@demand.aasm_state) %></span>
 
-    <div id="comments" class="space-y-3 mb-4">
-      <% @demand.comments.order(:created_at).each do |comment| %>
-        <%= render "comments/comment", comment: comment %>
+        <% if @demand.n1_aprovada? || @demand.n2_em_andamento? || @demand.n2_completa? || @demand.elegivel? || @demand.in_execution? || @demand.concluida? %>
+          <%= pill("Nível 1 · elegível", color: "emerald") %>
+        <% elsif @demand.em_triagem? %>
+          <%= pill("Nível 1 · em curso", color: "blue") %>
+        <% elsif @demand.n1_reprovada? %>
+          <%= pill("Nível 1 · barrado", color: "rose") %>
+        <% end %>
+
+        <% if @demand.n2_em_andamento? %>
+          <%= pill("Nível 2 · em curso", color: "blue") %>
+        <% elsif @demand.n2_completa? || @demand.elegivel? || @demand.nao_elegivel? || @demand.in_execution? || @demand.concluida? %>
+          <%= pill("Nível 2 · completo", color: "emerald") %>
+        <% else %>
+          <%= pill("Nível 2 · pendente", color: "gray") %>
+        <% end %>
+
+        <% if @demand.elegivel? || @demand.in_execution? || @demand.concluida? %>
+          <%= pill("Nível 3 · em curso", color: "blue") %>
+        <% elsif @demand.nao_elegivel? %>
+          <%= pill("Nível 3 · não elegível", color: "rose") %>
+        <% else %>
+          <%= pill("Nível 3 · pendente", color: "gray") %>
+        <% end %>
+      </div>
+
+      <%# Título %>
+      <div class="mt-4 flex items-start gap-3">
+        <div class="text-[44px] leading-none">⚙️</div>
+        <h1 class="text-[34px] font-bold tracking-tight text-gray-900 leading-[1.1]">
+          <%= @demand.title %>
+        </h1>
+      </div>
+
+      <%# === PROPERTIES BLOCK ============================================== %>
+      <div class="grid grid-cols-2 gap-x-8 mt-6">
+        <div class="space-y-0.5">
+          <div class="prop-row">
+            <div class="prop-label">
+              <%= icon(:folder, size: 14) %>
+              <span>Código</span>
+            </div>
+            <div class="prop-value font-mono text-[12px]">
+              DEM-<%= @demand.id.to_s.rjust(4, "0") %>
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <div class="prop-label">
+              <%= icon(:bulb, size: 14) %>
+              <span>Área</span>
+            </div>
+            <div class="prop-value text-gray-400 italic">—</div>
+          </div>
+
+          <div class="prop-row">
+            <div class="prop-label">
+              <%= icon(:shield, size: 14) %>
+              <span>Natureza</span>
+            </div>
+            <div class="prop-value">
+              <%= pill("Desenvolvimento Experimental", color: "emerald") %>
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <div class="prop-label">
+              <%= icon(:user, size: 14) %>
+              <span>Responsável T&amp;I</span>
+            </div>
+            <div class="prop-value text-gray-400 italic">a designar</div>
+          </div>
+        </div>
+
+        <div class="space-y-0.5">
+          <div class="prop-row">
+            <div class="prop-label">
+              <%= icon(:user, size: 14) %>
+              <span>Demandante</span>
+            </div>
+            <div class="prop-value">
+              <span class="inline-flex items-center gap-1.5">
+                <%= avatar(@demand.user, size: 16) %>
+                <span><%= @demand.user.display_name %></span>
+              </span>
+            </div>
+          </div>
+
+          <div class="prop-row">
+            <div class="prop-label">
+              <%= icon(:calendar, size: 14) %>
+              <span>Início (baseline)</span>
+            </div>
+            <div class="prop-value"><%= l @demand.created_at.to_date, format: :long %></div>
+          </div>
+
+          <div class="prop-row">
+            <div class="prop-label">
+              <%= icon(:flag, size: 14) %>
+              <span>Status</span>
+            </div>
+            <div class="prop-value">
+              <%= status_pill(@demand.aasm_state) %>
+            </div>
+          </div>
+
+          <% if @demand.trl.present? %>
+            <div class="prop-row">
+              <div class="prop-label">
+                <%= icon(:chart, size: 14) %>
+                <span>TRL</span>
+              </div>
+              <div class="prop-value">
+                <%= pill("Nível #{@demand.trl}", color: "violet") %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="mt-3 border-t border-gray-100"></div>
+
+      <%# === N1 FLAGS (alerta) =============================================== %>
+      <% if @demand.n1_flags.any? { |_, v| v } %>
+        <div class="mt-6 rounded-md p-3 bg-rose-50 ring-1 ring-rose-100">
+          <div class="flex items-start gap-2">
+            <%= icon(:flag, size: 14, class_name: "text-rose-600 mt-0.5 shrink-0") %>
+            <div class="flex-1">
+              <div class="text-[12.5px] font-semibold text-rose-800">Flags N1 identificados</div>
+              <ul class="mt-1 text-[12px] text-rose-700 list-disc list-inside space-y-0.5">
+                <% @demand.n1_flags.select { |_, v| v }.each_key do |flag| %>
+                  <li><%= flag.humanize %></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </div>
       <% end %>
-    </div>
 
-    <%# Formulário novo comentário %>
-    <div class="tsuru-card bg-gray-50">
-      <%= form_with model: [ @demand, Comment.new ], data: { turbo: true } do |f| %>
-        <%= f.text_area :body, rows: 3, class: "tsuru-input mb-3",
-              placeholder: "Adicionar comentário técnico..." %>
-        <%= f.submit "Comentar", class: "tsuru-btn-secondary" %>
+      <%# === SEÇÕES COLAPSÁVEIS ============================================== %>
+      <details open class="mt-8 group">
+        <summary class="flex items-center gap-2 cursor-pointer list-none -ml-5">
+          <span class="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform">
+            <%= icon("chev-r", size: 14) %>
+          </span>
+          <h2 class="text-[15px] font-semibold text-gray-900">Visão geral</h2>
+        </summary>
+        <div class="mt-3 ml-0">
+          <div class="subhead">Descrição da demanda</div>
+          <div class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line">
+            <%= @demand.description %>
+          </div>
+        </div>
+      </details>
+
+      <% if @demand.n2_assessment.present? && @demand.n2_assessment.any? { |_, v| v.present? } %>
+        <details open class="mt-6 group">
+          <summary class="flex items-center gap-2 cursor-pointer list-none -ml-5">
+            <span class="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform">
+              <%= icon("chev-r", size: 14) %>
+            </span>
+            <h2 class="text-[15px] font-semibold text-gray-900">Avaliação N2</h2>
+          </summary>
+          <div class="mt-3 space-y-4">
+            <% if @demand.motivacao.present? %>
+              <div>
+                <div class="subhead">Motivação</div>
+                <div class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line">
+                  <%= @demand.motivacao %>
+                </div>
+              </div>
+            <% end %>
+            <% if @demand.benchmark_anterior.present? %>
+              <div>
+                <div class="subhead">Benchmark anterior</div>
+                <div class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line">
+                  <%= @demand.benchmark_anterior %>
+                </div>
+              </div>
+            <% end %>
+            <% if @demand.barreira_tecnica.present? %>
+              <div>
+                <div class="subhead">Barreira técnica</div>
+                <div class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line">
+                  <%= @demand.barreira_tecnica %>
+                </div>
+              </div>
+            <% end %>
+            <% if @demand.metodologia.present? %>
+              <div>
+                <div class="subhead">Metodologia</div>
+                <div class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line">
+                  <%= @demand.metodologia %>
+                </div>
+              </div>
+            <% end %>
+            <% if @demand.stack_tecnologico.present? %>
+              <div>
+                <div class="subhead">Stack tecnológico</div>
+                <div class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line">
+                  <%= @demand.stack_tecnologico %>
+                </div>
+              </div>
+            <% end %>
+            <% if @demand.resultado_obtido.present? %>
+              <div>
+                <div class="subhead">Resultado obtido</div>
+                <div class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line">
+                  <%= @demand.resultado_obtido %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </details>
       <% end %>
+
+      <% if @demand.trl.present? || (@demand.ods_goals.present? && @demand.ods_goals.any?) %>
+        <details class="mt-6 group">
+          <summary class="flex items-center gap-2 cursor-pointer list-none -ml-5">
+            <span class="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform">
+              <%= icon("chev-r", size: 14) %>
+            </span>
+            <h2 class="text-[15px] font-semibold text-gray-900">TRL e ODS</h2>
+          </summary>
+          <div class="mt-3 grid grid-cols-2 gap-4">
+            <div>
+              <div class="subhead">TRL (Technology Readiness Level)</div>
+              <div class="mt-1.5 text-[13.5px] text-gray-800">
+                <% if @demand.trl.present? %>
+                  <%= pill("Nível #{@demand.trl} de 9", color: "violet") %>
+                <% else %>
+                  <span class="text-gray-400 italic">não classificado</span>
+                <% end %>
+              </div>
+            </div>
+            <div>
+              <div class="subhead">ODS associados</div>
+              <div class="mt-1.5 flex flex-wrap gap-1">
+                <% if @demand.ods_goals.present? && @demand.ods_goals.any? %>
+                  <% @demand.ods_goals.each do |goal| %>
+                    <%= pill("ODS #{goal}", color: "teal") %>
+                  <% end %>
+                <% else %>
+                  <span class="text-[12px] text-gray-400 italic">nenhum</span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </details>
+      <% end %>
+
+      <% if @demand.parecer_tecnico.present? %>
+        <details open class="mt-6 group">
+          <summary class="flex items-center gap-2 cursor-pointer list-none -ml-5">
+            <span class="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform">
+              <%= icon("chev-r", size: 14) %>
+            </span>
+            <h2 class="text-[15px] font-semibold text-gray-900">Parecer técnico</h2>
+          </summary>
+          <div class="mt-3 rounded-md bg-gray-50 ring-1 ring-gray-100 p-4">
+            <div class="text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line">
+              <%= @demand.parecer_tecnico %>
+            </div>
+          </div>
+        </details>
+      <% end %>
+
+      <% if @demand.attachments.attached? %>
+        <details class="mt-6 group">
+          <summary class="flex items-center gap-2 cursor-pointer list-none -ml-5">
+            <span class="w-4 h-4 text-gray-400 group-open:rotate-90 transition-transform">
+              <%= icon("chev-r", size: 14) %>
+            </span>
+            <h2 class="text-[15px] font-semibold text-gray-900">
+              Anexos
+              <span class="text-[12px] font-normal text-gray-500 ml-1">· <%= @demand.attachments.count %> arquivo<%= "s" if @demand.attachments.count != 1 %></span>
+            </h2>
+          </summary>
+          <div class="mt-3 space-y-1.5">
+            <% @demand.attachments.each do |att| %>
+              <div class="flex items-center gap-2.5 px-3 py-2 bg-white border border-gray-200 rounded-md text-[12.5px]">
+                <%= icon(:file, size: 14, class_name: "text-gray-400 shrink-0") %>
+                <span class="text-gray-800 truncate flex-1"><%= att.filename %></span>
+                <span class="text-gray-400 text-[11px]"><%= number_to_human_size(att.byte_size) %></span>
+                <%= link_to "baixar", url_for(att), class: "text-[11.5px] text-gray-600 hover:text-gray-900" %>
+              </div>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
+
+      <%# === AÇÕES DE ESTADO ================================================ %>
+      <div class="mt-8 pt-5 border-t border-gray-100">
+        <div class="subhead mb-3">Ações disponíveis</div>
+        <div class="flex flex-wrap gap-2">
+          <% if policy(@demand).submeter? %>
+            <%= button_to submeter_demand_path(@demand), method: :patch,
+                  class: "tsuru-btn-primary",
+                  data: { turbo_confirm: "Confirma a submissão?" } do %>
+              Submeter para triagem <%= icon(:arrow, size: 12) %>
+            <% end %>
+          <% end %>
+
+          <% if policy(@demand).iniciar_triagem? && @demand.submetida? %>
+            <%= button_to "Iniciar triagem N1", iniciar_triagem_demand_path(@demand), method: :patch,
+                  class: "tsuru-btn-secondary" %>
+          <% end %>
+
+          <% if policy(@demand).triagem? && @demand.em_triagem? %>
+            <%= link_to "Formulário N1", triagem_demand_path(@demand), class: "tsuru-btn-secondary" %>
+          <% end %>
+
+          <% if policy(@demand).iniciar_n2? && @demand.n1_aprovada? %>
+            <%= button_to "Iniciar Avaliação N2", iniciar_n2_demand_path(@demand), method: :patch,
+                  class: "tsuru-btn-secondary" %>
+          <% end %>
+
+          <% if policy(@demand).n2? && @demand.n2_em_andamento? %>
+            <%= link_to "Formulário N2", n2_demand_path(@demand), class: "tsuru-btn-secondary" %>
+          <% end %>
+
+          <% if policy(@demand).update? %>
+            <%= link_to "Editar", edit_demand_path(@demand), class: "tsuru-btn-ghost" %>
+          <% end %>
+        </div>
+      </div>
+
+      <%# === DECISÃO ELEGIBILIDADE ========================================== %>
+      <% if policy(@demand).decidir_elegibilidade? && @demand.n2_completa? %>
+        <div class="mt-8 bg-white rounded-lg border border-gray-200 p-5">
+          <div class="text-[14px] font-semibold text-gray-900">Decisão de Elegibilidade — Lei do Bem</div>
+          <div class="text-[12px] text-gray-500 mt-0.5">
+            Fundamente a decisão com base nos critérios da Lei do Bem (incerteza tecnológica, TRL, método científico).
+          </div>
+          <%= form_with url: decidir_elegibilidade_demand_path(@demand), method: :patch, class: "mt-4 space-y-3" do |f| %>
+            <div>
+              <label class="tsuru-label">Parecer técnico <span class="text-rose-600">*</span></label>
+              <textarea name="demand[parecer_tecnico]" rows="4" class="tsuru-textarea"
+                placeholder="Descreva a fundamentação técnica da decisão com base nos critérios Lei do Bem (incerteza, TRL, método científico)..."></textarea>
+            </div>
+            <div class="flex gap-2">
+              <button type="submit" name="demand[decisao]" value="elegivel"
+                class="tsuru-btn-primary"
+                data-turbo-confirm="Confirma elegibilidade para a Lei do Bem?">
+                Marcar Elegível
+              </button>
+              <button type="submit" name="demand[decisao]" value="nao_elegivel"
+                class="tsuru-btn-danger"
+                data-turbo-confirm="Confirma como não elegível?">
+                Marcar Não Elegível
+              </button>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# === COMENTÁRIOS ==================================================== %>
+      <%= render "demands/comments_section", demand: @demand %>
     </div>
   </div>
+
+  <%# === RIGHT RAIL ======================================================== %>
+  <aside class="w-[280px] shrink-0 border-l border-gray-200 bg-gray-50/40 overflow-auto p-4 space-y-4">
+    <div>
+      <div class="subhead mb-2">Linha do tempo</div>
+      <ol class="space-y-2">
+        <%
+          step = flow_step_for(@demand.aasm_state)
+          blocked = %w[n1_reprovada nao_elegivel cancelada].include?(@demand.aasm_state)
+          steps = [
+            { label: "Submetida",       idx: 0, date: @demand.submetida? || step >= 0 ? l(@demand.created_at.to_date, format: :short) : nil },
+            { label: "Triagem N1",      idx: 1, date: nil },
+            { label: "Avaliação N2",    idx: 2, date: nil },
+            { label: "Decisão / PD&I",  idx: 3, date: nil },
+            { label: "Defesa MCTI",     idx: 4, date: nil }
+          ]
+        %>
+        <% steps.each do |s| %>
+          <% st = if blocked && s[:idx] == step
+                    :blocked
+                  elsif s[:idx] < step
+                    :done
+                  elsif s[:idx] == step
+                    :current
+                  else
+                    :future
+                  end %>
+          <li class="flex gap-2.5 items-start">
+            <div class="w-2.5 h-2.5 rounded-full mt-1 shrink-0
+              <%= case st
+                  when :done then "bg-emerald-500"
+                  when :current then "bg-blue-500 ring-4 ring-blue-100"
+                  when :blocked then "bg-rose-500"
+                  else "bg-gray-200"
+                  end %>"></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-[12px] truncate <%= st == :future ? "text-gray-400" : "text-gray-900 font-medium" %>">
+                <%= s[:label] %>
+              </div>
+              <% if s[:date] %>
+                <div class="text-[10.5px] text-gray-500"><%= s[:date] %></div>
+              <% elsif st == :current %>
+                <div class="text-[10.5px] text-gray-500">Agora</div>
+              <% end %>
+            </div>
+          </li>
+        <% end %>
+      </ol>
+    </div>
+
+    <div class="pt-4 border-t border-gray-200">
+      <div class="subhead mb-1">Atividade recente</div>
+      <ul class="divide-y divide-gray-100">
+        <li class="flex gap-2.5 py-2 first:pt-0 last:pb-0 text-[12px]">
+          <span class="w-5 h-5 rounded-full bg-gray-200 text-gray-700 text-[9.5px] font-semibold flex items-center justify-center shrink-0 mt-0.5">
+            <%= initials_of(@demand.user) %>
+          </span>
+          <div class="flex-1">
+            <div class="text-gray-800">
+              <span class="font-medium"><%= @demand.user.display_name %></span> criou esta demanda
+            </div>
+            <div class="text-[10.5px] text-gray-400 mt-0.5"><%= l @demand.created_at, format: :short %></div>
+          </div>
+        </li>
+        <% if @demand.comments.any? %>
+          <% last = @demand.comments.order(created_at: :desc).first %>
+          <li class="flex gap-2.5 py-2 text-[12px]">
+            <span class="w-5 h-5 rounded-full bg-teal-100 text-gray-700 text-[9.5px] font-semibold flex items-center justify-center shrink-0 mt-0.5">
+              <%= initials_of(last.user) %>
+            </span>
+            <div class="flex-1">
+              <div class="text-gray-800">
+                <span class="font-medium"><%= last.user.display_name %></span> comentou
+              </div>
+              <div class="text-[10.5px] text-gray-400 mt-0.5"><%= l last.created_at, format: :short %></div>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+
+    <div class="pt-4 border-t border-gray-200">
+      <%= link_to "#comments", class: "text-[12px] text-gray-700 hover:text-gray-900 flex items-center gap-1.5" do %>
+        <%= icon(:msg, size: 12) %>
+        Ver comentários · <%= @demand.comments.count %>
+      <% end %>
+    </div>
+  </aside>
 </div>

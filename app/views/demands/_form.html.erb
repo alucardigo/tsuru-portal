@@ -1,27 +1,200 @@
-<%= form_with model: demand, class: "space-y-5" do |f| %>
-  <% if demand.errors.any? %>
-    <div class="bg-danger-50 border border-danger-200 rounded-lg p-4">
-      <ul class="list-disc list-inside text-sm text-danger-700">
-        <% demand.errors.full_messages.each do |msg| %>
-          <li><%= msg %></li>
-        <% end %>
-      </ul>
+<%# Form de demanda — usado em new e edit. %>
+<%# Estrutura SubmissionForm (Notion/Linear): card principal à esquerda + sidebar informativa à direita. %>
+<%# Campos persistidos: title, description, attachments. %>
+<%# Campos UI (area, urgencia, solucao) são visuais para guiar o autor; o time T&I refina depois em N2. %>
+
+<div class="max-w-[1180px] mx-auto px-7 py-6 grid grid-cols-3 gap-5">
+  <%= form_with model: demand, multipart: true, class: "col-span-2",
+                data: { controller: "submission-form" } do |f| %>
+
+    <div class="bg-white rounded-lg border border-gray-200">
+      <%# === HEADER ====================================================== %>
+      <div class="px-5 py-4 border-b border-gray-100 flex items-start justify-between">
+        <div>
+          <div class="text-[14px] font-semibold text-gray-900 tracking-tight">
+            <%= demand.new_record? ? "Registrar nova ideia ou necessidade" : "Editar demanda" %>
+          </div>
+          <div class="text-[12px] text-gray-500 mt-0.5">
+            Escreva como se estivesse explicando para um colega. Quem analisa depois ajuda a refinar.
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <%= demand.new_record? ? "Rascunho novo" : "Edição em curso" %>
+        </div>
+      </div>
+
+      <%# === ERROS ======================================================= %>
+      <% if demand.errors.any? %>
+        <div class="mx-5 mt-4 rounded-md p-3 bg-rose-50 ring-1 ring-rose-100">
+          <div class="text-[12px] font-semibold text-rose-800 mb-1">
+            Não foi possível salvar (<%= demand.errors.count %>):
+          </div>
+          <ul class="text-[12px] text-rose-700 list-disc list-inside space-y-0.5">
+            <% demand.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%# === BODY ======================================================== %>
+      <div class="p-5 space-y-4">
+        <%# Título %>
+        <div>
+          <%= f.label :title, "Título", class: "tsuru-label" %>
+          <%= f.text_field :title, class: "tsuru-input mt-1",
+                placeholder: "Ex: Sensoriamento preditivo de falhas na linha 3" %>
+        </div>
+
+        <%# Grid 2 col: Área impactada + Urgência (UI guidance — não persiste no MVP) %>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="tsuru-label" for="demand_area_impactada">Área impactada</label>
+            <select id="demand_area_impactada" name="demand[area_impactada_ui]" class="tsuru-select mt-1">
+              <option value="">Selecione...</option>
+              <% %w[Manufatura Logística Qualidade TI/Sistemas Energia P&D Engenharia Comercial Financeiro RH].each do |a| %>
+                <option><%= a %></option>
+              <% end %>
+            </select>
+          </div>
+          <div>
+            <label class="tsuru-label" for="demand_urgencia_ui">Urgência percebida</label>
+            <select id="demand_urgencia_ui" name="demand[urgencia_ui]" class="tsuru-select mt-1">
+              <option>Posso esperar — é uma melhoria</option>
+              <option>Atrapalha o dia a dia</option>
+              <option>Está parando produção / atendimento</option>
+            </select>
+          </div>
+        </div>
+
+        <%# Descrição (campo principal — persiste em demand.description) %>
+        <div>
+          <%= f.label :description, "O que está acontecendo?", class: "tsuru-label" %>
+          <p class="tsuru-hint">
+            Conte o problema, quem é afetado e o tamanho do incômodo. Sem jargão — o time T&amp;I traduz depois para PD&amp;I.
+          </p>
+          <%= f.text_area :description, rows: 6, class: "tsuru-textarea mt-1",
+                placeholder: "Hoje a gente para a linha 3 em média 2x por semana por falha do motor principal. Cada parada custa em torno de R$ 8 mil e dura 40min..." %>
+        </div>
+
+        <%# Como resolver (UI guidance — opcionalmente apendado à descrição via JS no submit) %>
+        <div>
+          <label class="tsuru-label" for="demand_solucao_ui">Como você imagina que dá pra resolver?</label>
+          <p class="tsuru-hint">
+            Tudo bem se a ideia for parcial — o time de inovação ajuda a desenvolver.
+          </p>
+          <textarea id="demand_solucao_ui" name="demand[solucao_ui]" rows="4"
+                    class="tsuru-textarea mt-1"
+                    placeholder="Colocar sensores baratos de vibração e temperatura no motor, mandar pra nuvem, e ter um modelo que avise no celular do mecânico antes da pane..."></textarea>
+        </div>
+
+        <%# Anexos — dropzone visual %>
+        <div>
+          <label class="tsuru-label">Anexos (opcional)</label>
+          <p class="tsuru-hint">Estudos preliminares, fotos, planilhas. Pode anexar depois também.</p>
+          <label for="demand_attachments" class="dropzone block cursor-pointer">
+            <div class="p-5 flex flex-col items-center text-center">
+              <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">
+                <%= icon(:upload, size: 16) %>
+              </div>
+              <div class="mt-2 text-[12.5px] text-gray-700">
+                <span class="font-medium">Arraste arquivos aqui</span> ou clique para escolher
+              </div>
+              <div class="mt-1 text-[10.5px] text-gray-400">
+                PDF, DOC, XLS, JPG, PNG até 10MB
+              </div>
+            </div>
+            <%= f.file_field :attachments, multiple: true, id: "demand_attachments",
+                  accept: Demand::ALLOWED_CONTENT_TYPES.join(","), class: "hidden" %>
+          </label>
+          <% if demand.attachments.attached? %>
+            <div class="mt-2 border border-gray-200 rounded-md divide-y divide-gray-100">
+              <% demand.attachments.each do |att| %>
+                <div class="flex items-center gap-2.5 px-3 h-9 text-[12px]">
+                  <%= icon(:file, size: 14, class_name: "text-gray-400 shrink-0") %>
+                  <span class="text-gray-800 truncate flex-1"><%= att.filename %></span>
+                  <span class="text-gray-400 text-[11px]"><%= number_to_human_size(att.byte_size) %></span>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <%# Alerta PD&I / Lei do Bem %>
+        <div class="flex items-start gap-2 px-3 py-2.5 rounded-md text-[12px] text-gray-700 bg-amber-50 ring-1 ring-amber-100">
+          <%= icon(:sparkle, size: 14, class_name: "text-amber-700 mt-0.5 shrink-0") %>
+          <span>
+            Ideias com potencial de pesquisa e desenvolvimento podem ser enquadradas como
+            <strong>PD&amp;I</strong> (incentivo fiscal pela Lei do Bem). O time de inovação faz essa
+            análise para você — não precisa pensar nisso agora.
+          </span>
+        </div>
+      </div>
+
+      <%# === FOOTER ====================================================== %>
+      <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/40 rounded-b-lg">
+        <button type="submit" class="text-[12.5px] text-gray-600 hover:text-gray-900">
+          <%= demand.new_record? ? "Salvar como rascunho" : "Atualizar rascunho" %>
+        </button>
+        <div class="flex gap-1.5">
+          <%= link_to demand.new_record? ? demands_path : demand_path(demand),
+                class: "tsuru-btn-ghost" do %>
+            Cancelar
+          <% end %>
+          <button type="submit" class="tsuru-btn-primary">
+            <%= demand.new_record? ? "Enviar para meu superior" : "Salvar alterações" %>
+            <%= icon(:arrow, size: 12) %>
+          </button>
+        </div>
+      </div>
     </div>
   <% end %>
 
-  <div>
-    <%= f.label :title, "Título da demanda", class: "tsuru-label" %>
-    <%= f.text_field :title, class: "tsuru-input", placeholder: "Ex: Algoritmo de compressão adaptativa para dados de telemetria" %>
-  </div>
+  <%# === SIDEBAR INFORMATIVA ============================================ %>
+  <aside class="col-span-1 space-y-4">
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="subhead">Por onde sua ideia passa</div>
+      <ol class="mt-3 space-y-2.5 text-[12px] text-gray-700">
+        <% [
+            { t: "Seu superior aprova", d: "Em até 3 dias úteis" },
+            { t: "Time T&I avalia elegibilidade (Nível 1)", d: "5 perguntas de triagem" },
+            { t: "Refinamento técnico, se necessário", d: "Você pode ser chamado para conversar" },
+            { t: "Vira projeto PD&I formal", d: "Recebe código e workspace" },
+            { t: "Defesa anual para o MCTI", d: "Time cuida da documentação fiscal" }
+          ].each_with_index do |step, i| %>
+          <li class="flex gap-2.5">
+            <span class="w-5 h-5 shrink-0 rounded-full bg-gray-100 text-gray-700 text-[10.5px] font-semibold flex items-center justify-center">
+              <%= i + 1 %>
+            </span>
+            <div class="flex-1 leading-snug pt-0.5">
+              <div class="text-gray-900 font-medium"><%= step[:t] %></div>
+              <div class="text-gray-500 text-[11px]"><%= step[:d] %></div>
+            </div>
+          </li>
+        <% end %>
+      </ol>
+    </div>
 
-  <div>
-    <%= f.label :description, "Descrição técnica", class: "tsuru-label" %>
-    <p class="text-xs text-gray-400 mb-1">Descreva o problema técnico, a hipótese de pesquisa e a incerteza tecnológica.</p>
-    <%= f.text_area :description, rows: 8, class: "tsuru-input", placeholder: "Qual é o desafio técnico que ainda não tem solução conhecida? Quais experimentos serão necessários?" %>
-  </div>
-
-  <div class="flex gap-3">
-    <%= f.submit demand.new_record? ? "Salvar rascunho" : "Atualizar", class: "tsuru-btn-primary" %>
-    <%= link_to "Cancelar", demands_path, class: "tsuru-btn-secondary" %>
-  </div>
-<% end %>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="subhead">O que costuma ser PD&amp;I</div>
+      <div class="mt-2 space-y-1.5">
+        <% [
+            [true,  "Algoritmo novo para um problema sem solução pronta"],
+            [true,  "Ajustar processo químico para reduzir consumo de insumo"],
+            [true,  "Prototipar embalagem com material alternativo"],
+            [false, "Instalar software de prateleira sem customização"],
+            [false, "Adequação para cumprir norma legal"]
+          ].each do |yes, t| %>
+          <div class="flex items-start gap-2 text-[12px]">
+            <span class="mt-0.5 w-7 h-4 shrink-0 rounded text-[9.5px] font-semibold flex items-center justify-center
+                          <%= yes ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800" %>">
+              <%= yes ? "Sim" : "Não" %>
+            </span>
+            <span class="text-gray-700 leading-snug"><%= t %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </aside>
+</div>

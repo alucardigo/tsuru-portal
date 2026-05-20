@@ -1,4 +1,6 @@
-<div class="max-w-2xl mx-auto">
-  <h1 class="text-2xl font-bold text-primary-900 mb-6">Nova Demanda de Inovação</h1>
-  <%= render "form", demand: @demand %>
-</div>
+<% content_for :title, "Registrar uma ideia" %>
+<% content_for :nav_active, "nova" %>
+<% content_for :crumb, "Início · Minhas demandas" %>
+<% content_for :subtitle, "· Nova demanda" %>
+
+<%= render "form", demand: @demand %>

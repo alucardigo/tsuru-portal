@@ -1,31 +1,95 @@
-<div class="max-w-5xl mx-auto">
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold text-primary-900">Minhas Demandas</h1>
-    <%= link_to "Nova Demanda", new_demand_path, class: "tsuru-btn-primary" %>
+<% content_for :title, "Minhas demandas" %>
+<% content_for :nav_active, "demandas" %>
+<% content_for :crumb, "Início" %>
+
+<% if current_user.colaborador? %>
+  <% content_for :actions do %>
+    <%= link_to new_demand_path, class: "tsuru-btn-primary" do %>
+      <%= icon(:plus, size: 14) %>
+      <span>Nova demanda</span>
+    <% end %>
+  <% end %>
+<% end %>
+
+<% enviadas_count = @demands.reject { |d| d.aasm_state == "rascunho" }.size %>
+<% andamento_count = @demands.count { |d| %w[em_triagem n1_aprovada n2_em_andamento n2_completa awaiting_requester board_review].include?(d.aasm_state) } %>
+<% elegiveis_count = @demands.count { |d| %w[elegivel in_execution concluida].include?(d.aasm_state) } %>
+
+<div class="max-w-[1180px] mx-auto px-7 py-6">
+  <div class="flex items-center justify-between mb-5">
+    <div>
+      <div class="text-[13.5px] font-semibold text-gray-900">Minhas demandas</div>
+      <div class="text-[11.5px] text-gray-500 mt-0.5">
+        <%= pluralize(@pagy.count, "demanda enviada", plural: "demandas enviadas") %>
+        <span class="text-gray-300">·</span>
+        <%= andamento_count %> em andamento
+        <span class="text-gray-300">·</span>
+        <%= elegiveis_count %> elegíveis
+      </div>
+    </div>
+    <% if @demands.any? %>
+      <button class="text-[12px] text-gray-600 hover:text-gray-900 flex items-center gap-1.5">
+        <%= icon(:filter, size: 12) %>
+        Filtrar
+      </button>
+    <% end %>
   </div>
 
   <% if @pagy.count.zero? %>
-    <div class="tsuru-card text-center py-12">
-      <p class="text-gray-500 mb-4">Nenhuma demanda ainda.</p>
-      <%= link_to "Criar primeira demanda", new_demand_path, class: "tsuru-btn-secondary" %>
-    </div>
-  <% else %>
-    <div class="space-y-3">
-      <% @demands.each do |demand| %>
-        <div class="tsuru-card flex items-center justify-between">
-          <div>
-            <h2 class="font-semibold text-primary-800"><%= demand.title %></h2>
-            <p class="text-sm text-gray-500 mt-0.5">
-              <%= demand.user.display_name %> ·
-              <span class="tsuru-badge-<%= demand.aasm_state %>"><%= demand.aasm_state.humanize %></span>
-            </p>
-          </div>
-          <%= link_to "Ver", demand_path(demand), class: "text-sm text-primary-700 hover:underline" %>
+    <div class="bg-white rounded-lg border border-gray-200 py-14 px-6 text-center">
+      <div class="w-12 h-12 mx-auto rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-3">
+        <%= icon(:bulb, size: 22) %>
+      </div>
+      <div class="text-[14px] font-semibold text-gray-900">Nenhuma ideia registrada ainda</div>
+      <p class="text-[12.5px] text-gray-500 mt-1 max-w-[340px] mx-auto leading-relaxed">
+        Quando você identificar um problema ou oportunidade que poderia virar projeto de inovação, registre aqui. O time T&amp;I ajuda a refinar.
+      </p>
+      <% if current_user.colaborador? %>
+        <div class="mt-5">
+          <%= link_to new_demand_path, class: "tsuru-btn-primary" do %>
+            <%= icon(:plus, size: 14) %>
+            <span>Registrar primeira ideia</span>
+          <% end %>
         </div>
       <% end %>
     </div>
-    <nav aria-label="paginação" class="flex justify-center mt-4 text-sm">
-      <%== @pagy.series_nav %>
-    </nav>
+  <% else %>
+    <div class="space-y-2.5">
+      <% @demands.each do |demand| %>
+        <div class="bg-white rounded-md border border-gray-200 p-3.5 hover:border-gray-300 transition-colors">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
+                <span class="font-mono text-gray-700">DEM-<%= demand.id.to_s.rjust(4, "0") %></span>
+                <span class="text-gray-300">·</span>
+                <span><%= demand.user.display_name %></span>
+                <span class="text-gray-300">·</span>
+                <span>Enviada <%= l demand.created_at.to_date, format: :short %></span>
+              </div>
+              <div class="mt-0.5 text-[13.5px] font-medium text-gray-900 truncate"><%= demand.title %></div>
+            </div>
+            <%= status_pill(demand.aasm_state) %>
+          </div>
+          <div class="mt-3"><%= flow_track(demand.aasm_state) %></div>
+          <div class="mt-2.5 text-[11.5px] text-gray-500 flex items-center justify-between gap-3">
+            <span class="truncate flex-1">
+              <%= UiHelper::STATUS_LABELS[demand.aasm_state] || demand.aasm_state.humanize %>
+              <% if demand.parecer_tecnico.present? %>
+                <span class="text-gray-300">·</span> parecer técnico registrado
+              <% end %>
+            </span>
+            <%= link_to demand_path(demand), class: "text-gray-600 hover:text-gray-900 shrink-0 flex items-center gap-1" do %>
+              Abrir <%= icon(:arrow, size: 12) %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @pagy.pages > 1 %>
+      <nav aria-label="paginação" class="flex justify-center mt-5 text-[12px] text-gray-600">
+        <%== @pagy.series_nav %>
+      </nav>
+    <% end %>
   <% end %>
 </div>
