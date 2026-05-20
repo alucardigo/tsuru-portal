@@ -2,19 +2,21 @@ require "rails_helper"
 
 RSpec.describe "Home", type: :request do
   describe "GET /" do
-    it "returns HTTP 200" do
-      get root_path
-      expect(response).to have_http_status(:ok)
+    context "quando deslogado" do
+      it "redireciona para login" do
+        get root_path
+        expect(response).to redirect_to(new_user_session_path)
+      end
     end
 
-    it "renders the Tsuru navbar brand" do
-      get root_path
-      expect(response.body).to include("Tsuru")
-    end
+    context "quando logado" do
+      let(:user) { create(:user) }
+      before { sign_in user }
 
-    it "renders Sprint 0 status" do
-      get root_path
-      expect(response.body).to include("Sprint 0 concluído")
+      it "redireciona para o dashboard" do
+        get root_path
+        expect(response).to redirect_to(dashboard_path)
+      end
     end
   end
 end

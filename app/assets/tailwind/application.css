@@ -1,9 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
 
 @theme {
-  /* === PALETA TSURU === */
+  /* === FONTS === */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  /* Primária — institucional, confiança */
+  /* === TSURU PALETTE === */
   --color-primary-50: #EFF6FF;
   --color-primary-100: #DBEAFE;
   --color-primary-300: #93C5FD;
@@ -11,87 +14,175 @@
   --color-primary-700: #1D4ED8;
   --color-primary-900: #1E3A8A;
 
-  /* Secundária — crescimento, acolhimento */
-  --color-secondary-50: #F3F8F4;
-  --color-secondary-300: #B7D0BA;
-  --color-secondary-500: #84A98C;
-  --color-secondary-700: #4A6F52;
-
-  /* Acento — atenção, aguardando */
   --color-accent-100: #FEF3C7;
   --color-accent-500: #F59E0B;
   --color-accent-700: #B45309;
 
-  /* Perigo — bloqueio, rejeitado */
   --color-danger-100: #FECACA;
   --color-danger-500: #DC2626;
   --color-danger-700: #991B1B;
 
-  /* Sucesso — aprovado, avanço */
   --color-success-100: #D1FAE5;
   --color-success-500: #10B981;
   --color-success-700: #047857;
 
-  /* Background especial */
   --color-bg-warm: #FAF8F2;
-
-  /* === TIPOGRAFIA === */
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-serif: "Source Serif Pro", Georgia, serif;
-
-  --text-base: 1rem;
-  --leading-base: 1.6;
 }
 
-/* Inter e Source Serif Pro via Google Fonts */
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+Pro:ital,wght@0,400;0,600;1,400&display=swap");
+/* Global CSS accent variable (overridable per role) */
+:root {
+  --accent: #4f46e5;
+  --accent-soft: color-mix(in oklab, var(--accent) 8%, white);
+  --accent-ring: color-mix(in oklab, var(--accent) 18%, white);
+}
 
-/* Utilitários customizados Tsuru */
+/* Role-tinted accent variants */
+[data-role="colaborador"] { --accent: #4f46e5; }
+[data-role="gestor"]      { --accent: #b45309; }
+[data-role="analista_pdi"]{ --accent: #2563eb; }
+[data-role="admin"]       { --accent: #0f766e; }
+[data-role="board"]       { --accent: #111827; }
+
+body {
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01", "ss03";
+  background: #fafaf9;
+  color: #111827;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === COMPONENT LAYER (Notion/Linear style) =============================== */
 @layer components {
-  .tsuru-card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6;
-  }
 
+  /* Cards & surfaces */
+  .tsuru-card        { @apply bg-white rounded-lg border border-gray-200; }
+  .tsuru-card-body   { @apply p-5; }
+  .tsuru-card-head   { @apply px-5 py-4 border-b border-gray-100; }
+  .tsuru-card-foot   { @apply px-5 py-3 border-t border-gray-100 bg-gray-50/40 rounded-b-lg; }
+
+  /* Buttons */
   .tsuru-btn-primary {
-    @apply inline-flex items-center gap-2 px-5 py-2.5 bg-primary-900 text-white font-semibold rounded-lg
-           hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
-           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+    background: var(--accent);
+    @apply inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-md text-white text-[12.5px] font-medium
+           hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-1
+           disabled:opacity-40 disabled:cursor-not-allowed transition-opacity;
   }
-
   .tsuru-btn-secondary {
-    @apply inline-flex items-center gap-2 px-5 py-2.5 bg-white text-primary-900 font-semibold rounded-lg
-           border border-primary-300 hover:bg-primary-50 focus:outline-none focus:ring-2
-           focus:ring-primary-500 focus:ring-offset-2 transition-colors duration-150;
+    @apply inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-md text-[12.5px] font-medium
+           bg-white text-gray-700 border border-gray-300 hover:bg-gray-50
+           focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-1 transition-colors;
   }
-
+  .tsuru-btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-md text-[12.5px] font-medium
+           text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-colors;
+  }
   .tsuru-btn-danger {
-    @apply inline-flex items-center gap-2 px-5 py-2.5 bg-danger-700 text-white font-semibold rounded-lg
-           hover:bg-danger-500 focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2
-           transition-colors duration-150;
+    @apply inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-md text-[12.5px] font-medium
+           bg-rose-600 text-white hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-300 transition-colors;
+  }
+  .tsuru-btn-icon {
+    @apply h-7 w-7 rounded hover:bg-gray-100 text-gray-500 flex items-center justify-center;
   }
 
+  /* Inputs */
   .tsuru-input {
-    @apply block w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900
-           placeholder:text-gray-400 focus:border-primary-500 focus:outline-none
-           focus:ring-2 focus:ring-primary-500/20 transition-colors duration-150;
+    @apply w-full h-9 px-3 rounded-md border border-gray-300 bg-white text-[13px] text-gray-900
+           placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-0;
   }
-
+  .tsuru-textarea {
+    @apply w-full p-2.5 text-[13px] text-gray-900 rounded-md border border-gray-300
+           placeholder:text-gray-400 focus:border-gray-900 focus:outline-none focus:ring-0 resize-none leading-relaxed;
+  }
   .tsuru-label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply text-[12.5px] font-medium text-gray-800 block;
+  }
+  .tsuru-hint {
+    @apply text-[11.5px] text-gray-500 mb-1.5 leading-snug;
+  }
+  .tsuru-select {
+    @apply w-full h-9 px-3 rounded-md border border-gray-300 bg-white text-[13px] focus:border-gray-900 focus:outline-none;
   }
 
-  .tsuru-badge-submitted {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-           bg-accent-100 text-accent-700;
+  /* STATUS PILLS — 15 estados Lei do Bem + extras */
+  .status-pill {
+    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium whitespace-nowrap;
+  }
+  .status-rascunho           { @apply bg-gray-100 text-gray-700; }
+  .status-submetida          { @apply bg-slate-100 text-slate-700; }
+  .status-em_triagem         { @apply bg-blue-100 text-blue-800; }
+  .status-n1_aprovada        { @apply bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200; }
+  .status-n1_reprovada       { @apply bg-rose-50 text-rose-700 ring-1 ring-rose-200; }
+  .status-n2_em_andamento    { @apply bg-violet-100 text-violet-800; }
+  .status-n2_completa        { @apply bg-violet-100 text-violet-800 ring-1 ring-violet-200; }
+  .status-awaiting_requester { @apply bg-amber-100 text-amber-800; }
+  .status-board_review       { @apply bg-teal-100 text-teal-800; }
+  .status-elegivel           { @apply bg-emerald-100 text-emerald-800; }
+  .status-nao_elegivel       { @apply bg-rose-100 text-rose-800; }
+  .status-in_execution       { @apply bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200; }
+  .status-concluida          { @apply bg-gray-900 text-white; }
+  .status-arquivada          { @apply bg-gray-200 text-gray-700; }
+  .status-cancelada          { @apply bg-rose-50 text-rose-600 line-through; }
+
+  /* Pills generic */
+  .pill { @apply inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-medium ring-1; }
+  .pill-gray    { @apply bg-gray-100 text-gray-700 ring-gray-200; }
+  .pill-blue    { @apply bg-blue-50 text-blue-700 ring-blue-100; }
+  .pill-emerald { @apply bg-emerald-50 text-emerald-700 ring-emerald-100; }
+  .pill-amber   { @apply bg-amber-50 text-amber-800 ring-amber-100; }
+  .pill-rose    { @apply bg-rose-50 text-rose-700 ring-rose-100; }
+  .pill-violet  { @apply bg-violet-50 text-violet-700 ring-violet-100; }
+  .pill-teal    { @apply bg-teal-50 text-teal-700 ring-teal-100; }
+
+  /* Sidebar */
+  .sidebar-link {
+    @apply w-full flex items-center gap-2.5 px-2.5 h-8 rounded-md text-[13px] text-left text-gray-600
+           hover:bg-gray-50 hover:text-gray-900 transition-colors;
+  }
+  .sidebar-link-active { @apply bg-gray-100 text-gray-900 font-medium; }
+
+  /* FlowTrack 5 segments */
+  .flow-track { @apply flex items-center gap-1 w-full; }
+  .flow-seg   { @apply flex-1 flex flex-col gap-1 min-w-0; }
+  .flow-bar   { @apply h-1 rounded-full bg-gray-200; }
+  .flow-bar-done    { background: var(--accent); }
+  .flow-bar-current { background: var(--accent); }
+  .flow-bar-blocked { @apply bg-rose-500; }
+  .flow-label       { @apply text-[10px] truncate text-gray-400; }
+  .flow-label-cur   { @apply text-[10px] truncate font-medium text-gray-900; }
+
+  /* Prop row */
+  .prop-row {
+    @apply flex items-center gap-3 py-1.5 px-1 hover:bg-gray-50 rounded -mx-1;
+  }
+  .prop-label { @apply w-44 shrink-0 flex items-center gap-2 text-[12px] text-gray-500; }
+  .prop-value { @apply flex-1 text-[12.5px] text-gray-900 min-w-0; }
+
+  /* Subhead (Notion small caps) */
+  .subhead {
+    @apply text-[10.5px] uppercase tracking-wider text-gray-500 font-medium;
   }
 
-  .tsuru-badge-approved {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-           bg-success-100 text-success-700;
+  /* Dropzone */
+  .dropzone {
+    @apply rounded-md border-2 border-dashed border-gray-300 bg-white transition-colors cursor-pointer hover:border-gray-400;
+  }
+  .dropzone-active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
   }
 
-  .tsuru-badge-rejected {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-           bg-danger-100 text-danger-700;
-  }
+  /* Topbar */
+  .topbar { @apply h-12 shrink-0 border-b border-gray-200 bg-white flex items-center justify-between px-5; }
+  .topbar-title { @apply text-[14px] font-semibold text-gray-900 truncate; }
+  .topbar-subtitle { @apply text-[12px] text-gray-500 truncate; }
+  .topbar-crumb { @apply text-[11px] text-gray-400 -mb-0.5; }
+}
+
+/* === SVG ICON STROKE DEFAULTS ============================================ */
+.tsuru-icon {
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
 }

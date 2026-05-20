@@ -1,75 +1,198 @@
-<div class="max-w-5xl mx-auto">
-  <h1 class="text-2xl font-bold text-primary-900 mb-6">Dashboard</h1>
+<% content_for :title, "Início" %>
+<% content_for :nav_active, "inicio" %>
+<% content_for :crumb, "Início" %>
+<% content_for :subtitle, "· Visão #{role_label(current_user.role).downcase}" %>
 
-  <%# Estatísticas %>
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-    <% stat_labels = { total: "Total", rascunho: "Rascunhos", submetidas: "Submetidas",
-                       em_triagem: "Em triagem", aprovadas: "N1 Aprovadas", elegiveis: "Elegíveis" } %>
-    <% @stats.each do |key, count| %>
-      <div class="tsuru-card text-center">
-        <p class="text-2xl font-bold text-primary-800"><%= count %></p>
-        <p class="text-xs text-gray-500 mt-1"><%= stat_labels[key] %></p>
+<div class="max-w-[1180px] mx-auto px-7 py-6">
+  <%# === HERO TÍTULO === %>
+  <div class="flex items-baseline justify-between mb-5">
+    <div>
+      <div class="text-[26px] font-semibold tracking-tight text-gray-900">Olá, <%= current_user.display_name.split.first %>.</div>
+      <div class="text-[13px] text-gray-500 mt-0.5">
+        <% if current_user.colaborador? %>
+          Aqui você registra ideias, acompanha o que enviou e vê o que virou projeto PD&I.
+        <% elsif current_user.gestor? %>
+          Aprovações da sua área aparecem aqui.
+        <% elsif current_user.analista_pdi? %>
+          Esteira do comitê — triagem, avaliação técnica e composição de defesa.
+        <% elsif current_user.admin? || current_user.board? %>
+          Visão executiva do portfólio PD&I e composição de defesa MCTI.
+        <% end %>
+      </div>
+    </div>
+    <% if current_user.colaborador? %>
+      <%= link_to new_demand_path, class: "tsuru-btn-primary" do %>
+        <%= icon(:plus, size: 14) %> Nova demanda
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# === KPI CARDS === %>
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+    <% [
+      [ "Total",       @stats[:total],      "Demandas registradas",       "text-gray-900" ],
+      [ "Em curso",    @stats[:submetidas] + @stats[:em_triagem], "Aguardando ação",   "text-blue-700" ],
+      [ "Aprovadas N1", @stats[:aprovadas], "Avançaram à avaliação",      "text-violet-700" ],
+      [ "Elegíveis Lei do Bem", @stats[:elegiveis], "Geram benefício fiscal", "text-emerald-700" ]
+    ].each do |label, value, sub, color| %>
+      <div class="tsuru-card p-4">
+        <div class="subhead"><%= label %></div>
+        <div class="text-[26px] font-semibold tracking-tight mt-1 <%= color %>"><%= value %></div>
+        <div class="text-[11px] text-gray-500 mt-0.5"><%= sub %></div>
       </div>
     <% end %>
   </div>
 
-  <div class="grid md:grid-cols-2 gap-6">
-    <%# Demandas recentes %>
-    <div>
-      <h2 class="text-lg font-semibold text-primary-900 mb-3">
-        <%= current_user.colaborador? ? "Minhas demandas" : "Demandas recentes" %>
-      </h2>
-      <% if @recent_demands.empty? %>
-        <div class="tsuru-card text-center py-8 text-gray-400 text-sm">Nenhuma demanda.</div>
-      <% else %>
-        <div class="space-y-2">
-          <% @recent_demands.each do |d| %>
-            <div class="tsuru-card flex items-center justify-between py-3">
-              <div>
-                <%= link_to d.title, demand_path(d), class: "font-medium text-primary-800 hover:underline text-sm" %>
-                <p class="text-xs text-gray-400 mt-0.5"><%= d.user.display_name %></p>
-              </div>
-              <span class="tsuru-badge-<%= d.aasm_state %> text-xs"><%= d.aasm_state.humanize %></span>
+  <div class="grid grid-cols-3 gap-5">
+    <%# === COLUNA PRINCIPAL === %>
+    <div class="col-span-2 space-y-5">
+
+      <%# Demandas recentes %>
+      <div>
+        <div class="flex items-center justify-between mb-2.5">
+          <div>
+            <div class="text-[13.5px] font-semibold text-gray-900">
+              <%= current_user.colaborador? ? "Minhas demandas" : "Demandas recentes" %>
             </div>
+            <div class="text-[11.5px] text-gray-500">
+              <%= @recent_demands.count %> mostradas
+            </div>
+          </div>
+          <%= link_to demands_path, class: "text-[12px] text-gray-600 hover:text-gray-900 flex items-center gap-1" do %>
+            Ver todas <%= icon(:arrow, size: 12) %>
           <% end %>
+        </div>
+
+        <% if @recent_demands.empty? %>
+          <div class="tsuru-card p-8 text-center">
+            <%= icon(:bulb, size: 40, class_name: "mx-auto text-gray-300 mb-3") %>
+            <div class="text-[13px] text-gray-700 font-medium">Nenhuma demanda ainda</div>
+            <% if current_user.colaborador? %>
+              <div class="text-[12px] text-gray-500 mt-1">
+                Comece registrando uma ideia ou necessidade.
+              </div>
+              <%= link_to new_demand_path, class: "tsuru-btn-primary mt-4" do %>
+                <%= icon(:plus, size: 14) %> Registrar primeira ideia
+              <% end %>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="space-y-2.5">
+            <% @recent_demands.each do |demand| %>
+              <%= link_to demand_path(demand), class: "block bg-white rounded-md border border-gray-200 p-3.5 hover:border-gray-300 transition-colors" do %>
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
+                      <span class="font-mono text-gray-700">DEM-<%= demand.id.to_s.rjust(4, '0') %></span>
+                      <span class="text-gray-300">·</span>
+                      <span><%= demand.user.display_name %></span>
+                      <span class="text-gray-300">·</span>
+                      <span>Enviada <%= l demand.created_at, format: :short %></span>
+                    </div>
+                    <div class="mt-0.5 text-[13.5px] font-medium text-gray-900 truncate"><%= demand.title %></div>
+                  </div>
+                  <%= status_pill(demand.aasm_state) %>
+                </div>
+                <div class="mt-3"><%= flow_track(demand.aasm_state) %></div>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Filas (gestores e analistas) %>
+      <% if current_user.gestor_or_above? && @pending_triagem&.any? %>
+        <div>
+          <div class="text-[13.5px] font-semibold text-gray-900 mb-2.5 flex items-center gap-2">
+            <%= icon(:inbox, size: 16, class_name: "text-amber-600") %>
+            Aguardando triagem N1
+            <span class="text-[10.5px] px-1.5 py-0.5 rounded font-medium bg-amber-100 text-amber-800"><%= @pending_triagem.count %></span>
+          </div>
+          <div class="space-y-2">
+            <% @pending_triagem.each do |d| %>
+              <div class="bg-white rounded-md border border-gray-200 p-3 flex items-center justify-between">
+                <div class="min-w-0 flex-1">
+                  <%= link_to d.title, demand_path(d), class: "text-[13px] font-medium text-gray-900 hover:underline truncate block" %>
+                  <div class="text-[11px] text-gray-500 mt-0.5">por <%= d.user.display_name %> · há <%= time_ago_in_words(d.created_at) %></div>
+                </div>
+                <%= button_to iniciar_triagem_demand_path(d), method: :patch, class: "tsuru-btn-primary !h-7 !text-[11px] !px-2.5" do %>
+                  Iniciar triagem
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if @pending_n2&.any? %>
+        <div>
+          <div class="text-[13.5px] font-semibold text-gray-900 mb-2.5 flex items-center gap-2">
+            <%= icon(:triage, size: 16, class_name: "text-violet-600") %>
+            Aguardando avaliação N2
+            <span class="text-[10.5px] px-1.5 py-0.5 rounded font-medium bg-violet-100 text-violet-800"><%= @pending_n2.count %></span>
+          </div>
+          <div class="space-y-2">
+            <% @pending_n2.each do |d| %>
+              <div class="bg-white rounded-md border border-gray-200 p-3 flex items-center justify-between">
+                <div class="min-w-0 flex-1">
+                  <%= link_to d.title, demand_path(d), class: "text-[13px] font-medium text-gray-900 hover:underline truncate block" %>
+                  <div class="text-[11px] text-gray-500 mt-0.5">aprovada N1 · agora cabe ao analista</div>
+                </div>
+                <%= link_to demand_path(d), class: "tsuru-btn-secondary !h-7 !text-[11px] !px-2.5" do %>
+                  Abrir
+                <% end %>
+              </div>
+            <% end %>
+          </div>
         </div>
       <% end %>
     </div>
 
-    <%# Fila de triagem (gestores) %>
-    <% if current_user.gestor_or_above? && @pending_triagem&.any? %>
-      <div>
-        <h2 class="text-lg font-semibold text-primary-900 mb-3">Aguardando triagem N1</h2>
-        <div class="space-y-2">
-          <% @pending_triagem.each do |d| %>
-            <div class="tsuru-card flex items-center justify-between py-3 border-l-4 border-accent-400">
-              <div>
-                <%= link_to d.title, demand_path(d), class: "font-medium text-primary-800 hover:underline text-sm" %>
-                <p class="text-xs text-gray-400 mt-0.5">por <%= d.user.display_name %></p>
+    <%# === COLUNA LATERAL === %>
+    <aside class="space-y-4">
+      <%# O que é PD&I %>
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="subhead">Por onde sua ideia passa</div>
+        <ol class="mt-3 space-y-2.5 text-[12px] text-gray-700">
+          <% [
+            [ "Seu superior aprova",                 "Em até 3 dias úteis" ],
+            [ "Time T&I avalia elegibilidade (N1)",  "5 perguntas de triagem" ],
+            [ "Refinamento técnico se necessário",   "Você pode ser chamado" ],
+            [ "Vira projeto PD&I formal",            "Recebe código e workspace" ],
+            [ "Defesa anual para o MCTI",            "Time cuida da documentação" ]
+          ].each_with_index do |(t, d), i| %>
+            <li class="flex gap-2.5">
+              <span class="w-5 h-5 shrink-0 rounded-full bg-gray-100 text-gray-700 text-[10.5px] font-semibold flex items-center justify-center"><%= i + 1 %></span>
+              <div class="flex-1 leading-snug pt-0.5">
+                <div class="text-gray-900 font-medium"><%= t %></div>
+                <div class="text-gray-500 text-[11px]"><%= d %></div>
               </div>
-              <%= button_to "Iniciar triagem", iniciar_triagem_demand_path(d), method: :patch,
-                    class: "text-xs tsuru-btn-primary py-1 px-3" %>
-            </div>
+            </li>
           <% end %>
-        </div>
+        </ol>
       </div>
-    <% end %>
 
-    <%# Fila N2 (analistas) %>
-    <% if (@pending_n2&.any?) %>
-      <div>
-        <h2 class="text-lg font-semibold text-primary-900 mb-3">Aguardando avaliação N2</h2>
-        <div class="space-y-2">
-          <% @pending_n2.each do |d| %>
-            <div class="tsuru-card flex items-center justify-between py-3 border-l-4 border-success-400">
-              <div>
-                <%= link_to d.title, demand_path(d), class: "font-medium text-primary-800 hover:underline text-sm" %>
-                <p class="text-xs text-gray-400 mt-0.5">por <%= d.user.display_name %></p>
-              </div>
+      <%# O que conta como PD&I %>
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="subhead">O que costuma ser PD&amp;I</div>
+        <div class="mt-2 space-y-1.5">
+          <% [
+            [ true,  "Algoritmo novo para um problema sem solução pronta" ],
+            [ true,  "Ajustar processo químico para reduzir consumo de insumo" ],
+            [ true,  "Prototipar embalagem com material alternativo" ],
+            [ false, "Instalar software de prateleira sem customização" ],
+            [ false, "Adequação para cumprir norma legal" ]
+          ].each do |yes, txt| %>
+            <div class="flex items-start gap-2 text-[12px]">
+              <span class="mt-0.5 w-5 h-4 shrink-0 rounded text-[9.5px] font-semibold flex items-center justify-center
+                  <%= yes ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800' %>">
+                <%= yes ? "Sim" : "Não" %>
+              </span>
+              <span class="text-gray-700 leading-snug"><%= txt %></span>
             </div>
           <% end %>
         </div>
       </div>
-    <% end %>
+    </aside>
   </div>
 </div>

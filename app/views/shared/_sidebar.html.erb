@@ -1,0 +1,58 @@
+<aside class="w-[228px] shrink-0 border-r border-gray-200 bg-white flex flex-col">
+  <%# Logo %>
+  <div class="px-3.5 h-12 flex items-center border-b border-gray-100">
+    <%= link_to root_path, class: "flex items-center gap-2 group" do %>
+      <div class="relative w-6 h-6 shrink-0">
+        <div class="absolute inset-0 rounded-md bg-gray-900"></div>
+        <div class="absolute left-[5px] top-[5px] w-[6px] h-[6px] rounded-[1px] bg-white"></div>
+        <div class="absolute right-[5px] bottom-[5px] w-[6px] h-[6px] rounded-[1px]" style="background: var(--accent)"></div>
+      </div>
+      <div class="text-[14px] font-semibold tracking-tight text-gray-900">
+        Portal<span class="text-gray-300 mx-0.5">·</span><span class="font-normal text-gray-500">PD&amp;I</span>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Perfil ativo %>
+  <div class="px-2 py-2.5 border-b border-gray-100">
+    <div class="text-[10px] uppercase tracking-wider text-gray-400 font-medium px-2 mb-1.5">Perfil ativo</div>
+    <div class="flex items-center gap-2 px-2 py-1.5 rounded-md bg-gray-50">
+      <div class="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-semibold" style="background: var(--accent)">
+        <%= initials_of(user) %>
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="text-[12px] font-medium text-gray-900 truncate leading-tight"><%= user.display_name %></div>
+        <div class="text-[10.5px] text-gray-500 truncate leading-tight"><%= role_label(user.role) %></div>
+      </div>
+    </div>
+  </div>
+
+  <%# Navegação por papel %>
+  <nav class="flex-1 p-2 space-y-0.5 overflow-auto">
+    <% sidebar_nav_for(user).each do |item| %>
+      <%= link_to item[:path], class: "sidebar-link #{'sidebar-link-active' if item[:key] == active}" do %>
+        <span class="w-4 h-4 flex items-center justify-center text-gray-400">
+          <%= icon(item[:icon], size: 15) %>
+        </span>
+        <span class="flex-1 truncate"><%= item[:label] %></span>
+        <% if item[:badge] && item[:badge].to_i > 0 %>
+          <span class="text-[10.5px] px-1.5 py-0.5 rounded font-medium bg-gray-900 text-white"><%= item[:badge] %></span>
+        <% end %>
+      <% end %>
+    <% end %>
+  </nav>
+
+  <%# Footer da sidebar — configurações + sair %>
+  <div class="p-2 border-t border-gray-100 space-y-0.5">
+    <%= link_to edit_user_registration_path, class: "sidebar-link" do %>
+      <span class="w-4 h-4 flex items-center justify-center text-gray-400"><%= icon(:cog, size: 15) %></span>
+      <span class="flex-1 truncate">Configurações</span>
+    <% end %>
+    <%= button_to destroy_user_session_path, method: :delete,
+          form: { class: "w-full" },
+          class: "sidebar-link w-full" do %>
+      <span class="w-4 h-4 flex items-center justify-center text-gray-400"><%= icon(:logout, size: 15) %></span>
+      <span class="flex-1 truncate text-left">Sair</span>
+    <% end %>
+  </div>
+</aside>

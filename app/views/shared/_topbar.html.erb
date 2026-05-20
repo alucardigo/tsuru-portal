@@ -1,0 +1,21 @@
+<header class="topbar">
+  <div class="min-w-0">
+    <% if crumb.present? %>
+      <div class="topbar-crumb"><%= crumb %></div>
+    <% end %>
+    <div class="flex items-baseline gap-2 min-w-0">
+      <div class="topbar-title"><%= title %></div>
+      <% if subtitle.present? %>
+        <div class="topbar-subtitle"><%= subtitle %></div>
+      <% end %>
+    </div>
+  </div>
+  <div class="flex items-center gap-1">
+    <% if actions.present? %>
+      <%= actions %>
+    <% else %>
+      <button class="tsuru-btn-icon" aria-label="Buscar"><%= icon(:search, size: 14) %></button>
+      <button class="tsuru-btn-icon" aria-label="Notificações"><%= icon(:bell, size: 14) %></button>
+    <% end %>
+  </div>
+</header>
