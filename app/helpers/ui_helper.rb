@@ -105,6 +105,7 @@ module UiHelper
     when "analista_pdi"
       [
         { key: "esteira",      label: "Esteira do comitê", icon: :triage,  path: dashboard_path, badge: pending_count(user) },
+        { key: "pipeline",     label: "Pipeline Kanban",   icon: :chart,   path: pipeline_path },
         { key: "projetos",     label: "Projetos PD&I",     icon: :folder,  path: demands_path },
         { key: "elegibilidade", label: "Elegibilidade",     icon: :shield,  path: demands_path },
         { key: "defesa",       label: "Composição defesa", icon: :doc,     path: "#" },
@@ -114,6 +115,7 @@ module UiHelper
     when "admin"
       [
         { key: "esteira",     label: "Esteira do comitê", icon: :triage,  path: admin_demands_path },
+        { key: "pipeline",    label: "Pipeline Kanban",   icon: :chart,   path: pipeline_path },
         { key: "metricas",    label: "Métricas",          icon: :chart,   path: admin_metrics_path },
         { key: "usuarios",    label: "Usuários",          icon: :user,    path: admin_users_path },
         { key: "elegibilidade", label: "Elegibilidade",   icon: :shield,  path: admin_demands_path },

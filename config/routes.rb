@@ -59,6 +59,10 @@ Rails.application.routes.draw do
     end
   end
 
+  post "validators/linus", to: "validators#linus", as: :linus_validator
+
+  get "pipeline", to: "pipeline#show", as: :pipeline
+
   namespace :admin do
     resources :users, only: %i[index update]
     resources :demands, only: %i[index] do

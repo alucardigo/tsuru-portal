@@ -88,6 +88,7 @@
     <%= form_with url: n2_demand_path(@demand), method: :patch, local: true, class: "space-y-3" do |f| %>
       <% n2_sections.each do |section| %>
         <% current_value = @demand.send(section[:key]) %>
+        <% is_barreira = section[:key] == "barreira_tecnica" %>
         <div class="bg-white rounded-lg border border-gray-200 p-4">
           <div class="flex items-start gap-3">
             <div class="font-mono text-[11px] text-gray-400 mt-0.5 w-5"><%= section[:idx] %>.</div>
@@ -96,16 +97,81 @@
                 <%= section[:label] %><% if section[:required] %><span class="text-rose-600 normal-case ml-0.5">*</span><% end %>
               </div>
               <div class="text-[12px] text-gray-500 leading-relaxed mt-0.5 mb-2"><%= section[:hint] %></div>
-              <textarea
-                name="demand[n2_assessment][<%= section[:key] %>]"
-                rows="<%= section[:rows] %>"
-                class="tsuru-textarea"
-                placeholder="<%= section[:placeholder] %>"
-                <%= "required" if section[:required] %>><%= current_value %></textarea>
+
+              <% if is_barreira %>
+                <div data-controller="linus-validator">
+                  <textarea
+                    name="demand[n2_assessment][barreira_tecnica]"
+                    rows="<%= section[:rows] %>"
+                    class="tsuru-textarea"
+                    placeholder="<%= section[:placeholder] %>"
+                    data-linus-validator-target="textarea"
+                    required><%= current_value %></textarea>
+                  <div data-linus-validator-target="warnings"></div>
+                  <div class="text-[10.5px] text-gray-400 mt-1.5">
+                    💡 Linus revisa este campo em busca de termos banidos e quantitativos faltando.
+                  </div>
+                </div>
+              <% else %>
+                <textarea
+                  name="demand[n2_assessment][<%= section[:key] %>]"
+                  rows="<%= section[:rows] %>"
+                  class="tsuru-textarea"
+                  placeholder="<%= section[:placeholder] %>"
+                  <%= "required" if section[:required] %>><%= current_value %></textarea>
+              <% end %>
             </div>
           </div>
         </div>
       <% end %>
+
+      <!-- TRL e ODS editáveis -->
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <div class="flex items-start gap-3">
+          <div class="font-mono text-[11px] text-gray-400 mt-0.5 w-5">7.</div>
+          <div class="flex-1 min-w-0">
+            <div class="subhead">Maturidade e ODS</div>
+            <div class="text-[12px] text-gray-500 leading-relaxed mt-0.5 mb-3">
+              Em qual nível de maturidade o projeto se encontra (TRL 1-9) e quais ODS da Agenda 2030 ele impacta.
+            </div>
+
+            <div class="grid grid-cols-1 gap-4">
+              <div>
+                <label class="text-[12px] font-medium text-gray-700">TRL (Technology Readiness Level)</label>
+                <p class="text-[11px] text-gray-500 mb-2">Janela elegível Lei do Bem: TRL 3 a 7 tipicamente.</p>
+                <div class="flex flex-wrap gap-1">
+                  <%= label_tag "demand_trl_blank", class: "cursor-pointer" do %>
+                    <%= radio_button_tag "demand[trl]", "", @demand.trl.blank?, class: "sr-only peer" %>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11.5px] font-medium border border-gray-200 text-gray-600 peer-checked:bg-gray-900 peer-checked:text-white peer-checked:border-gray-900 hover:bg-gray-50">Não definido</span>
+                  <% end %>
+                  <% (1..9).each do |n| %>
+                    <%= label_tag "demand_trl_#{n}", class: "cursor-pointer" do %>
+                      <%= radio_button_tag "demand[trl]", n, @demand.trl == n, class: "sr-only peer" %>
+                      <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11.5px] font-medium border border-gray-200 text-gray-600 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 hover:bg-gray-50">TRL <%= n %></span>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+
+              <div>
+                <label class="text-[12px] font-medium text-gray-700">ODS impactados</label>
+                <p class="text-[11px] text-gray-500 mb-2">Selecione 1 ou mais ODS da Agenda 2030 (1-17).</p>
+                <div class="flex flex-wrap gap-1">
+                  <%# hidden ensure submit envia array vazio quando nada selecionado %>
+                  <%= hidden_field_tag "demand[ods_goals][]", "" %>
+                  <% (1..17).each do |ods| %>
+                    <% checked = Array(@demand.ods_goals).map(&:to_i).include?(ods) %>
+                    <%= label_tag "demand_ods_#{ods}", class: "cursor-pointer" do %>
+                      <%= check_box_tag "demand[ods_goals][]", ods.to_s, checked, id: "demand_ods_#{ods}", class: "sr-only peer" %>
+                      <span class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-medium border border-gray-200 text-gray-600 peer-checked:bg-teal-600 peer-checked:text-white peer-checked:border-teal-600 hover:bg-gray-50">ODS <%= ods %></span>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Footer actions -->
       <div class="flex items-center justify-between pt-3">

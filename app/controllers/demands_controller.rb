@@ -106,6 +106,15 @@ class DemandsController < ApplicationController
     authorize @demand, :n2?
 
     @demand.assign_attributes(n2_assessment: n2_params.to_h)
+    if params[:demand][:trl].present?
+      @demand.trl = params[:demand][:trl].to_i.then { |v| (1..9).cover?(v) ? v : nil }
+    elsif params.dig(:demand).key?(:trl)
+      @demand.trl = nil
+    end
+    if params[:demand][:ods_goals].present?
+      @demand.ods_goals = Array(params[:demand][:ods_goals]).reject(&:blank?).map(&:to_i).uniq.sort
+    end
+
     if @demand.concluir_n2 && @demand.save
       redirect_to @demand, notice: t("demands.n2_completa")
     else

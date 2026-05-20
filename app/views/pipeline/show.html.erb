@@ -1,0 +1,79 @@
+<% content_for :title, "Pipeline PD&I" %>
+<% content_for :nav_active, "pipeline" %>
+<% content_for :crumb, "Esteira do comitê · Pipeline" %>
+<% content_for :subtitle, "· Kanban visual" %>
+
+<% content_for :actions do %>
+  <%= link_to demands_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:doc, size: 12) %> Lista
+  <% end %>
+  <%= link_to admin_metrics_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:chart, size: 12) %> Métricas
+  <% end %>
+<% end %>
+
+<div class="px-7 py-6">
+  <div class="mb-4">
+    <div class="text-[22px] font-semibold tracking-tight text-gray-900">Pipeline PD&amp;I</div>
+    <p class="text-[13px] text-gray-500 mt-1">
+      Visão Kanban das demandas em cada fase do funil Lei do Bem.
+    </p>
+  </div>
+
+  <div class="flex gap-3 overflow-x-auto pb-4">
+    <% @columns.each do |col| %>
+      <% accent =
+           case col[:key]
+           when "triagem"   then "bg-blue-500"
+           when "n2"        then "bg-violet-500"
+           when "decisao"   then "bg-teal-500"
+           when "execucao"  then "bg-emerald-500"
+           when "concluido" then "bg-gray-900"
+           else "bg-rose-400"
+           end %>
+
+      <div class="shrink-0 w-[280px] flex flex-col bg-gray-50/60 rounded-lg border border-gray-200 max-h-[calc(100vh-220px)]">
+        <%# Header da coluna %>
+        <div class="p-3 border-b border-gray-200 bg-white rounded-t-lg">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full <%= accent %>"></div>
+            <div class="text-[12.5px] font-semibold text-gray-900"><%= col[:label] %></div>
+            <span class="ml-auto text-[10.5px] px-1.5 py-0.5 rounded font-medium bg-gray-100 text-gray-600"><%= col[:total] %></span>
+          </div>
+        </div>
+
+        <%# Cards %>
+        <div class="flex-1 overflow-auto p-2 space-y-2">
+          <% if col[:demands].empty? %>
+            <div class="text-[11px] text-gray-400 italic text-center py-6">Vazio</div>
+          <% else %>
+            <% col[:demands].each do |demand| %>
+              <%= link_to demand_path(demand), class: "block bg-white rounded-md border border-gray-200 p-2.5 hover:border-gray-300 transition-colors" do %>
+                <div class="flex items-center gap-1.5 text-[10.5px] text-gray-500">
+                  <span class="font-mono text-gray-700">DEM-<%= demand.id.to_s.rjust(4, "0") %></span>
+                  <span class="text-gray-300">·</span>
+                  <span class="truncate"><%= demand.user.display_name.split.first %></span>
+                </div>
+                <div class="mt-0.5 text-[12px] font-medium text-gray-900 leading-snug line-clamp-2">
+                  <%= demand.title %>
+                </div>
+                <div class="mt-2 flex items-center justify-between gap-2 text-[10.5px]">
+                  <%= status_pill(demand.aasm_state) %>
+                  <% if demand.trl.present? %>
+                    <span class="text-gray-500">TRL <%= demand.trl %></span>
+                  <% end %>
+                </div>
+              <% end %>
+            <% end %>
+
+            <% if col[:total] > col[:demands].size %>
+              <div class="text-[10.5px] text-gray-400 text-center py-1">
+                + <%= col[:total] - col[:demands].size %> não exibidas
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
