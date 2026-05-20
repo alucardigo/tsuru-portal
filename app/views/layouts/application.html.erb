@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
-    <title><%= content_for(:title).presence || "Portal · PD&I" %></title>
+    <title><%= content_for(:title).presence ? "#{content_for(:title)} · Tsuru" : "Tsuru · Portal de Inovação PD&I" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta charset="utf-8">
     <%= csrf_meta_tags %>
@@ -20,7 +20,7 @@
         <div class="flex-1 flex flex-col min-w-0">
           <%= render "shared/topbar",
                 crumb: yield(:crumb),
-                title: yield(:title).presence || "Portal · PD&I",
+                title: yield(:title).presence || "Tsuru",
                 subtitle: yield(:subtitle),
                 actions: yield(:actions) %>
 

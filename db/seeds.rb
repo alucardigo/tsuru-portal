@@ -30,29 +30,29 @@ colaborador = usuarios_criados.find { |u| u.colaborador? }
 puts "\nCriando demandas de exemplo..."
 demandas_sample = [
   {
-    title: "IA para triagem automatica de patentes INPI",
-    description: "Modelo de NLP que classifica patentes do INPI por classe IPC em < 200ms, reduzindo o tempo de analise manual de 8 horas para 12 minutos. Treinamento em corpus de 50k patentes.",
+    title: "Automatizar conferencia de notas fiscais recebidas",
+    description: "Hoje a conferencia de cada NF leva 8 minutos e o setor recebe ~120 notas/dia. Ja houve pagamento duplicado por inconsistencia manual. A ideia e integrar com o ERP para puxar NF automaticamente, comparar com pedido de compra e flagar so divergencias para revisao humana.",
     aasm_state: "submetida",
     trl: 4,
-    ods_goals: [ 9, 17 ]
+    ods_goals: [ 9 ]
   },
   {
-    title: "Otimizacao de algoritmo de rota logistica",
-    description: "Implementacao de algoritmo genetico hibrido para roteirizacao de 200+ entregas/dia. Meta: reduzir distancia total em 23% e tempo P95 de 4h para 2.8h.",
+    title: "Roteirizacao inteligente de entregas",
+    description: "O setor de logistica monta rotas manualmente todo dia, 200+ entregas. A meta e usar otimizacao combinatoria + janela de horarios do cliente para reduzir distancia em ~23% e o tempo P95 de saida.",
     aasm_state: "em_triagem",
     trl: 5,
     ods_goals: [ 9, 13 ]
   },
   {
-    title: "Plataforma de monitoramento ambiental com sensores IoT",
-    description: "Rede de sensores LoRaWAN coletando temperatura, umidade e qualidade do ar a cada 30s. Dashboard tempo real com previsao ML 24h adiante (RMSE < 1.5C).",
+    title: "Plataforma de monitoramento contínuo de indicadores operacionais",
+    description: "Coletar metricas chave do dia-a-dia em tempo real e prever desvios com 24h de antecedencia. Dashboard unificado por area, alertas no celular dos responsaveis.",
     aasm_state: "n2_em_andamento",
     trl: 6,
-    ods_goals: [ 11, 13, 15 ]
+    ods_goals: [ 9, 11, 13 ]
   },
   {
-    title: "Refatoracao do modulo financeiro legado",
-    description: "Migracao de stored procedures Oracle para microservices Rails. Reescrita de 47k linhas de PL/SQL.",
+    title: "Modernizacao do modulo financeiro legado",
+    description: "Migrar relatorios financeiros de planilhas para um modulo proprio. E rotina operacional sem barreira tecnica relevante - so reorganizacao de processo.",
     aasm_state: "n1_reprovada",
     trl: nil,
     ods_goals: [],

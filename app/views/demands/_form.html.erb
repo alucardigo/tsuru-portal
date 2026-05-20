@@ -44,7 +44,7 @@
         <div>
           <%= f.label :title, "Título", class: "tsuru-label" %>
           <%= f.text_field :title, class: "tsuru-input mt-1",
-                placeholder: "Ex: Sensoriamento preditivo de falhas na linha 3" %>
+                placeholder: "Ex: Automatizar a conferência de notas fiscais recebidas" %>
         </div>
 
         <%# Grid 2 col: Área impactada + Urgência (UI guidance — não persiste no MVP) %>
@@ -53,7 +53,7 @@
             <label class="tsuru-label" for="demand_area_impactada">Área impactada</label>
             <select id="demand_area_impactada" name="demand[area_impactada_ui]" class="tsuru-select mt-1">
               <option value="">Selecione...</option>
-              <% %w[Manufatura Logística Qualidade TI/Sistemas Energia P&D Engenharia Comercial Financeiro RH].each do |a| %>
+              <% [ "Operacional", "Comercial", "Financeiro", "Administrativo", "TI / Sistemas", "Atendimento", "Logística / Suprimentos", "Qualidade", "RH", "Projetos / P&D", "Outra" ].each do |a| %>
                 <option><%= a %></option>
               <% end %>
             </select>
@@ -63,7 +63,7 @@
             <select id="demand_urgencia_ui" name="demand[urgencia_ui]" class="tsuru-select mt-1">
               <option>Posso esperar — é uma melhoria</option>
               <option>Atrapalha o dia a dia</option>
-              <option>Está parando produção / atendimento</option>
+              <option>Está travando o atendimento ou o cliente</option>
             </select>
           </div>
         </div>
@@ -75,7 +75,7 @@
             Conte o problema, quem é afetado e o tamanho do incômodo. Sem jargão — o time T&amp;I traduz depois para PD&amp;I.
           </p>
           <%= f.text_area :description, rows: 6, class: "tsuru-textarea mt-1",
-                placeholder: "Hoje a gente para a linha 3 em média 2x por semana por falha do motor principal. Cada parada custa em torno de R$ 8 mil e dura 40min..." %>
+                placeholder: "Hoje a conferência de cada nota fiscal leva 8 minutos e o setor recebe ~120 notas/dia. Já houve casos de pagamento duplicado por inconsistência manual. O processo gasta ~2 pessoas/dia só nessa atividade..." %>
         </div>
 
         <%# Como resolver (UI guidance — opcionalmente apendado à descrição via JS no submit) %>
@@ -86,7 +86,7 @@
           </p>
           <textarea id="demand_solucao_ui" name="demand[solucao_ui]" rows="4"
                     class="tsuru-textarea mt-1"
-                    placeholder="Colocar sensores baratos de vibração e temperatura no motor, mandar pra nuvem, e ter um modelo que avise no celular do mecânico antes da pane..."></textarea>
+                    placeholder="Integrar com o ERP para puxar a NF automaticamente, comparar com o pedido de compra, e flagar divergências para revisão humana só nos casos que escapam da regra..."></textarea>
         </div>
 
         <%# Anexos — dropzone visual %>

@@ -11,7 +11,7 @@ RSpec.describe "Authentication", type: :request do
 
     it "exibe o formulário de login" do
       get new_user_session_path
-      expect(response.body).to include("Entrar no Portal")
+      expect(response.body).to include("Entrar no Tsuru")
     end
   end
 
