@@ -1,5 +1,5 @@
 class DemandsController < ApplicationController
-  before_action :set_demand, only: %i[show edit update destroy submeter iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade versions]
+  before_action :set_demand, only: %i[show edit update destroy submeter retomar iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade versions]
 
   def index
     @pagy, @demands = pagy(policy_scope(Demand).order(created_at: :desc))
@@ -48,6 +48,16 @@ class DemandsController < ApplicationController
       redirect_to @demand, notice: t("demands.submitted")
     else
       redirect_to @demand, alert: t("demands.cannot_submit")
+    end
+  end
+
+  def retomar
+    authorize @demand, :retomar?
+
+    if @demand.retomar && @demand.save
+      redirect_to @demand, notice: "Demanda reenviada para análise."
+    else
+      redirect_to @demand, alert: "Não foi possível reenviar."
     end
   end
 

@@ -1,0 +1,71 @@
+<% content_for :title, "Para aprovar" %>
+<% content_for :nav_active, "aprovar" %>
+<% content_for :crumb, "Superior · #{current_user.display_name}" %>
+<% content_for :subtitle, "· #{@pagy.count} aguardando" %>
+
+<div class="max-w-[1180px] mx-auto px-7 py-6">
+  <div class="mb-5">
+    <div class="text-[22px] font-semibold tracking-tight text-gray-900">Caixa de entrada</div>
+    <p class="text-[13px] text-gray-500 mt-1">
+      Ideias enviadas pela equipe aguardando sua decisão: <strong>Encaminhar para análise técnica</strong>,
+      <strong>Devolver pedindo esclarecimento</strong> ou <strong>Arquivar</strong>.
+    </p>
+  </div>
+
+  <% if @demands.empty? %>
+    <div class="tsuru-card p-12 text-center">
+      <%= icon(:inbox, size: 36, class_name: "mx-auto text-gray-300 mb-3") %>
+      <div class="text-[14px] font-semibold text-gray-900">Nenhuma ideia aguardando</div>
+      <p class="text-[12.5px] text-gray-500 mt-1">Quando alguém da equipe enviar uma demanda, ela aparece aqui.</p>
+    </div>
+  <% else %>
+    <div class="space-y-2.5">
+      <% @demands.each do |demand| %>
+        <%
+          dias = ((Time.current - demand.created_at) / 1.day).floor
+          urgency_color = case demand.urgencia
+                          when "Está travando o atendimento ou o cliente" then "rose"
+                          when "Atrapalha o dia a dia" then "amber"
+                          else "gray"
+                          end
+        %>
+        <%= link_to gestor_demand_path(demand), class: "block tsuru-card p-4 hover:border-gray-300 transition-colors" do %>
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
+                <span class="font-mono text-gray-700">DEM-<%= demand.id.to_s.rjust(4, "0") %></span>
+                <span class="text-gray-300">·</span>
+                <span><%= demand.user.display_name %></span>
+                <% if demand.area_impactada.present? %>
+                  <span class="text-gray-300">·</span>
+                  <span><%= demand.area_impactada %></span>
+                <% end %>
+              </div>
+              <div class="mt-0.5 text-[14px] font-medium text-gray-900 truncate"><%= demand.title %></div>
+              <div class="mt-1.5 flex items-center gap-2 text-[11.5px]">
+                <% if demand.urgencia.present? %>
+                  <%= pill(demand.urgencia, color: urgency_color) %>
+                <% end %>
+                <span class="text-gray-500"><%= dias.zero? ? "Enviada hoje" : "Aguardando há #{dias}d" %></span>
+                <% if demand.attachments.attached? %>
+                  <span class="text-gray-400 flex items-center gap-0.5">
+                    <%= icon(:file, size: 11) %> <%= demand.attachments.count %>
+                  </span>
+                <% end %>
+              </div>
+            </div>
+            <div class="shrink-0 text-[11.5px] text-gray-400">
+              <%= icon(:arrow, size: 14) %>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if @pagy.pages > 1 %>
+      <nav aria-label="paginação" class="flex justify-center mt-5 text-[12px] text-gray-600">
+        <%== @pagy.series_nav %>
+      </nav>
+    <% end %>
+  <% end %>
+</div>

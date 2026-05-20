@@ -97,7 +97,7 @@ module UiHelper
       ]
     when "gestor"
       [
-        { key: "aprovar",    label: "Para aprovar",      icon: :inbox,   path: dashboard_path, badge: pending_count(user) },
+        { key: "aprovar",    label: "Para aprovar",      icon: :inbox,   path: gestor_demands_path, badge: gestor_pending_count },
         { key: "minha-area", label: "Minha área",        icon: :folder,  path: demands_path },
         { key: "historico",  label: "Histórico",         icon: :doc,     path: demands_path },
         { key: "biblioteca", label: "Biblioteca PD&I",   icon: :book,    path: "#" }
@@ -141,6 +141,12 @@ module UiHelper
 
   def board_pending_count
     Demand.where(aasm_state: "board_review").count
+  rescue StandardError
+    nil
+  end
+
+  def gestor_pending_count
+    Demand.where(aasm_state: "submetida").count
   rescue StandardError
     nil
   end

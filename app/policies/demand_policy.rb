@@ -19,6 +19,10 @@ class DemandPolicy < ApplicationPolicy
     record.rascunho? && owner?
   end
 
+  def retomar?
+    record.awaiting_requester? && owner?
+  end
+
   def iniciar_triagem?
     gestor_or_above?
   end

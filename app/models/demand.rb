@@ -73,7 +73,7 @@ class Demand < ApplicationRecord
     end
 
     event :solicitar_revisao do
-      transition %i[em_triagem n2_em_andamento n2_completa board_review] => :awaiting_requester
+      transition %i[submetida em_triagem n2_em_andamento n2_completa board_review] => :awaiting_requester
     end
 
     event :retomar do

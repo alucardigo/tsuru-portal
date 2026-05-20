@@ -18,6 +18,7 @@ Rails.application.routes.draw do
   resources :demands do
     member do
       patch :submeter
+      patch :retomar
       patch :iniciar_triagem
       get   :triagem
       patch :triagem, action: :update_triagem
@@ -44,6 +45,16 @@ Rails.application.routes.draw do
         post :approve
         post :reject
         post :defer
+      end
+    end
+  end
+
+  namespace :gestor do
+    resources :demands, only: %i[index show] do
+      member do
+        post :encaminhar
+        post :devolver
+        post :arquivar
       end
     end
   end

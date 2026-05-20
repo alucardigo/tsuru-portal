@@ -1,0 +1,158 @@
+<% content_for :title, "DEM-#{@demand.id.to_s.rjust(4, '0')} · Decisão" %>
+<% content_for :nav_active, "aprovar" %>
+<% content_for :crumb, "Para aprovar" %>
+<% content_for :subtitle, "· #{@demand.title.truncate(50)}" %>
+
+<% content_for :actions do %>
+  <%= link_to gestor_demands_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:arrow, size: 12, class_name: "rotate-180") %> Voltar à caixa
+  <% end %>
+  <%= link_to demand_path(@demand), class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:eye, size: 12) %> Ver demanda completa
+  <% end %>
+<% end %>
+
+<div class="max-w-[820px] mx-auto px-7 py-6">
+
+  <%# === Header da demanda === %>
+  <div class="flex items-center justify-between text-[11.5px] text-gray-500">
+    <div class="flex items-center gap-2">
+      <span class="font-mono text-gray-700">DEM-<%= @demand.id.to_s.rjust(4, "0") %></span>
+      <span class="text-gray-300">·</span>
+      <%= status_pill(@demand.aasm_state) %>
+      <% if @demand.urgencia.present? %>
+        <%= pill(@demand.urgencia, color: "rose") %>
+      <% end %>
+    </div>
+    <div>Enviada <%= time_ago_in_words(@demand.created_at) %> atrás</div>
+  </div>
+
+  <h1 class="mt-2.5 text-[24px] font-semibold tracking-tight text-gray-900 leading-tight"><%= @demand.title %></h1>
+  <div class="mt-1.5 flex items-center gap-2 text-[12px] text-gray-600">
+    <%= avatar(@demand.user, size: 20) %>
+    <span class="font-medium text-gray-800"><%= @demand.user.display_name %></span>
+    <% if @demand.area_impactada.present? %>
+      <span class="text-gray-400">·</span>
+      <span><%= @demand.area_impactada %></span>
+    <% end %>
+  </div>
+
+  <%# === Corpo da demanda === %>
+  <div class="mt-7 space-y-6">
+    <div>
+      <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">O que está acontecendo</div>
+      <p class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line"><%= @demand.description %></p>
+    </div>
+
+    <% if @demand.solucao_proposta.present? %>
+      <div>
+        <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Como <%= @demand.user.display_name.split.first %> imagina resolver</div>
+        <p class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line"><%= @demand.solucao_proposta %></p>
+      </div>
+    <% end %>
+
+    <% if @demand.attachments.attached? %>
+      <div>
+        <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Anexos</div>
+        <div class="mt-1.5 flex flex-wrap gap-2">
+          <% @demand.attachments.each do |att| %>
+            <div class="inline-flex items-center gap-2 px-3 h-8 rounded-md border border-gray-200 text-[12px]">
+              <%= icon(:file, size: 13, class_name: "text-gray-500") %>
+              <span class="text-gray-800"><%= att.filename %></span>
+              <span class="text-gray-400 text-[11px]"><%= number_to_human_size(att.byte_size) %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# === Similares (contexto) === %>
+    <% if @similar.present? && @similar.any? %>
+      <div class="rounded-md bg-gray-50 ring-1 ring-gray-100 p-3.5">
+        <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-medium flex items-center gap-1.5">
+          <%= icon(:sparkle, size: 11) %>
+          Outras demandas da mesma área
+        </div>
+        <div class="mt-2 space-y-1.5 text-[12px]">
+          <% @similar.each do |s| %>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-gray-500 text-[11px]">DEM-<%= s.id.to_s.rjust(4, "0") %></span>
+              <%= link_to s.title.truncate(60), demand_path(s), class: "text-gray-800 hover:underline truncate" %>
+              <span class="ml-auto"><%= status_pill(s.aasm_state) %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# === Comentários === %>
+    <% if @comments.any? %>
+      <div>
+        <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Comentários anteriores</div>
+        <ul class="mt-2 space-y-2">
+          <% @comments.each do |c| %>
+            <li class="flex gap-2.5 text-[12.5px]">
+              <%= avatar(c.user, size: 20) %>
+              <div class="flex-1">
+                <div class="flex items-center gap-1.5">
+                  <span class="font-medium text-gray-900"><%= c.user.display_name %></span>
+                  <span class="text-[11px] text-gray-400"><%= time_ago_in_words(c.created_at) %> atrás</span>
+                </div>
+                <p class="text-gray-700 whitespace-pre-line mt-0.5"><%= c.body %></p>
+              </div>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </div>
+
+  <%# === Painel de decisão === %>
+  <div class="mt-9 pt-5 border-t border-gray-200">
+    <div class="text-[14px] font-semibold text-gray-900">Sua decisão</div>
+    <p class="text-[12px] text-gray-500 mt-0.5">
+      Como superior da área, você decide se faz sentido seguir adiante.
+    </p>
+
+    <div data-controller="gestor-decision" class="mt-4 space-y-3">
+      <div>
+        <label class="tsuru-label">Comentário (obrigatório para Devolver e Arquivar — opcional para Encaminhar)</label>
+        <textarea
+          data-gestor-decision-target="comentario"
+          rows="3"
+          placeholder="Deixe uma mensagem para o autor ou para o time T&I. Para devolver pedindo info, descreva exatamente o que precisa ser esclarecido."
+          class="tsuru-textarea mt-1"></textarea>
+        <div class="mt-1 text-[10.5px] text-gray-500">
+          <span data-gestor-decision-target="counter">0</span> caracteres ·
+          mínimo 20 para devolver/arquivar
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 pt-3 border-t border-gray-100">
+        <%= button_to encaminhar_gestor_demand_path(@demand), method: :post,
+              form: { class: "w-full" },
+              class: "rounded-md border border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50 p-3 text-left w-full" do %>
+          <div class="flex items-center gap-2 text-emerald-700"><%= icon(:check, size: 14) %><span class="text-[13px] font-medium">Encaminhar</span></div>
+          <div class="text-[11px] text-gray-600 mt-1 leading-snug">Faz sentido — vai para a triagem do time T&I.</div>
+          <input type="hidden" name="comentario" value="">
+        <% end %>
+
+        <%= button_to devolver_gestor_demand_path(@demand), method: :post,
+              form: { class: "w-full" },
+              class: "rounded-md border border-amber-200 bg-amber-50/40 hover:bg-amber-50 p-3 text-left w-full" do %>
+          <div class="flex items-center gap-2 text-amber-800"><%= icon(:msg, size: 14) %><span class="text-[13px] font-medium">Devolver</span></div>
+          <div class="text-[11px] text-gray-600 mt-1 leading-snug">Pedir esclarecimento — devolve para o autor revisar.</div>
+          <input type="hidden" name="comentario" value="">
+        <% end %>
+
+        <%= button_to arquivar_gestor_demand_path(@demand), method: :post,
+              form: { class: "w-full", data: { turbo_confirm: "Arquivar esta demanda? A ação não pode ser desfeita." } },
+              class: "rounded-md border border-rose-200 bg-rose-50/40 hover:bg-rose-50 p-3 text-left w-full" do %>
+          <div class="flex items-center gap-2 text-rose-700"><%= icon(:x, size: 14) %><span class="text-[13px] font-medium">Arquivar</span></div>
+          <div class="text-[11px] text-gray-600 mt-1 leading-snug">Não faz sentido seguir — justificativa obrigatória.</div>
+          <input type="hidden" name="comentario" value="">
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

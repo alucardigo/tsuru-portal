@@ -176,6 +176,26 @@
         </div>
       <% end %>
 
+      <%# === BANNER DEVOLUÇÃO (autor precisa reenviar) ===================== %>
+      <% if @demand.aasm_state == "awaiting_requester" && @demand.user == current_user %>
+        <div class="mt-6 rounded-lg p-4 ring-1 ring-amber-200 bg-amber-50/40 flex items-start gap-3">
+          <div class="w-9 h-9 rounded-md bg-amber-500 text-white flex items-center justify-center shrink-0">
+            <%= icon(:msg, size: 18) %>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13px] font-semibold text-amber-900">Seu superior pediu mais informações</div>
+            <div class="text-[12px] text-amber-800/80 mt-0.5">
+              Veja o comentário mais recente, ajuste a demanda se necessário e reenvie.
+            </div>
+          </div>
+          <%= button_to retomar_demand_path(@demand), method: :patch,
+                class: "tsuru-btn-primary !h-7 !text-[11.5px] !px-2.5 shrink-0",
+                form: { data: { turbo_confirm: "Reenviar esta demanda para análise?" } } do %>
+            Reenviar para análise →
+          <% end %>
+        </div>
+      <% end %>
+
       <%# === BANNER LEI DO BEM (quando estado elegível) ==================== %>
       <% if @demand.aasm_state.in?(%w[n2_em_andamento n2_completa elegivel in_execution board_review concluida]) %>
         <div class="mt-6 rounded-lg p-4 ring-1 ring-emerald-200 bg-emerald-50/40 flex items-start gap-3">
