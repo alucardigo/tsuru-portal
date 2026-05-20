@@ -1,85 +1,200 @@
-<div class="max-w-5xl mx-auto">
-  <div class="flex items-center justify-between mb-6">
-    <h1 class="text-2xl font-bold text-primary-900">Demandas — Painel Admin</h1>
-    <div class="flex gap-3">
-      <%= link_to "Usuários", admin_users_path, class: "tsuru-btn-secondary" %>
-      <%= link_to "Exportar CSV", admin_demands_path(format: :csv, estado: params[:estado]),
-            class: "tsuru-btn-secondary" %>
-    </div>
-  </div>
+<% content_for :title, "Demandas — Painel Admin" %>
+<% content_for :nav_active, "esteira" %>
+<% content_for :crumb, "Esteira do comitê · Painel Admin" %>
+<% content_for :subtitle, "· #{@pagy.count} encontradas" %>
 
-  <%# Formulário de busca avançada %>
-  <%= form_with url: admin_demands_path, method: :get, local: true, class: "bg-gray-50 border rounded-lg p-4 mb-4 grid grid-cols-2 md:grid-cols-4 gap-3 items-end" do |f| %>
-    <div>
-      <%= f.label :q, "Buscar título", class: "block text-xs font-medium text-gray-600 mb-1" %>
-      <%= f.text_field :q, value: params[:q], placeholder: "palavra-chave…",
-            class: "border rounded px-2 py-1 text-sm w-full" %>
-    </div>
-    <div>
-      <%= f.label :trl, "TRL", class: "block text-xs font-medium text-gray-600 mb-1" %>
-      <%= f.select :trl, options_for_select([ [ "Qualquer", "" ] ] + (1..9).map { |n| [ "TRL #{n}", n ] }, params[:trl]),
-            {}, class: "border rounded px-2 py-1 text-sm w-full" %>
-    </div>
-    <div>
-      <%= f.label :data_ini, "De", class: "block text-xs font-medium text-gray-600 mb-1" %>
-      <%= f.date_field :data_ini, value: params[:data_ini], class: "border rounded px-2 py-1 text-sm w-full" %>
-    </div>
-    <div>
-      <%= f.label :data_fim, "Até", class: "block text-xs font-medium text-gray-600 mb-1" %>
-      <%= f.date_field :data_fim, value: params[:data_fim], class: "border rounded px-2 py-1 text-sm w-full" %>
-    </div>
-    <div class="col-span-2 md:col-span-4 flex gap-2">
-      <%= f.submit "Filtrar", class: "bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700" %>
-      <%= link_to "Limpar", admin_demands_path, class: "text-gray-500 text-sm hover:underline self-center" %>
-    </div>
+<% content_for :actions do %>
+  <%= link_to admin_metrics_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:chart, size: 12) %> Métricas
   <% end %>
+  <%= link_to admin_users_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:user, size: 12) %> Usuários
+  <% end %>
+  <%= link_to admin_demands_path(format: :xlsx, estado: params[:estado], q: params[:q], trl: params[:trl], data_ini: params[:data_ini], data_fim: params[:data_fim]),
+        class: "tsuru-btn-secondary !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:xls, size: 12) %> Exportar XLSX
+  <% end %>
+  <%= link_to admin_demands_path(format: :docx, estado: params[:estado], q: params[:q], trl: params[:trl], data_ini: params[:data_ini], data_fim: params[:data_fim]),
+        class: "tsuru-btn-secondary !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:doc, size: 12) %> Exportar DOCX
+  <% end %>
+<% end %>
 
-  <%# Filtro por estado %>
-  <div class="flex flex-wrap gap-2 mb-4">
-    <%= link_to "Todas", admin_demands_path(q: params[:q], trl: params[:trl], data_ini: params[:data_ini], data_fim: params[:data_fim]),
-          class: "#{params[:estado].blank? ? 'tsuru-btn-primary' : 'tsuru-btn-secondary'} text-xs py-1" %>
-    <% %w[rascunho submetida em_triagem n1_aprovada n1_reprovada n2_em_andamento n2_completa elegivel nao_elegivel cancelada].each do |estado| %>
-      <%= link_to estado.humanize, admin_demands_path(estado: estado, q: params[:q], trl: params[:trl], data_ini: params[:data_ini], data_fim: params[:data_fim]),
-            class: "#{params[:estado] == estado ? 'tsuru-btn-primary' : 'tsuru-btn-secondary'} text-xs py-1" %>
+<%
+  estados_list = %w[rascunho submetida em_triagem n1_aprovada n1_reprovada n2_em_andamento n2_completa elegivel nao_elegivel cancelada]
+  estados_counts = Demand.group(:aasm_state).count rescue {}
+  base_params = params.permit(:q, :trl, :data_ini, :data_fim, :estado).to_h
+%>
+
+<div class="flex-1 flex min-h-0">
+  <%# === SIDEBAR ESQUERDA — FILTROS === %>
+  <aside class="w-[240px] shrink-0 border-r border-gray-200 bg-white overflow-auto px-3 py-3">
+    <div class="flex items-center justify-between mb-2">
+      <div class="subhead">Filtros</div>
+      <%= link_to "Limpar", admin_demands_path, class: "text-[10.5px] text-gray-500 hover:text-gray-900" %>
+    </div>
+
+    <%= form_with url: admin_demands_path, method: :get, local: true, class: "space-y-3" do |f| %>
+
+      <%# --- Busca --- %>
+      <div class="py-2 border-b border-gray-100">
+        <%= f.label :q, "Buscar título", class: "block text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1.5" %>
+        <%= f.text_field :q, value: params[:q], placeholder: "palavra-chave…",
+              class: "tsuru-input !h-8 !text-[12px]" %>
+      </div>
+
+      <%# --- Estados --- %>
+      <div class="py-2 border-b border-gray-100">
+        <div class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1.5">Estado</div>
+        <div class="space-y-0.5">
+          <% sel_estado = params[:estado].to_s %>
+          <%= link_to admin_demands_path(base_params.except("estado")),
+                class: "flex items-center justify-between py-0.5 text-[12px] #{sel_estado.blank? ? 'text-gray-900 font-medium' : 'text-gray-600 hover:text-gray-900'}" do %>
+            <span class="truncate">Todas</span>
+            <span class="text-[10.5px] text-gray-400"><%= estados_counts.values.sum %></span>
+          <% end %>
+          <% estados_list.each do |estado| %>
+            <% count = estados_counts.fetch(estado, 0) %>
+            <%= link_to admin_demands_path(base_params.merge(estado: estado)),
+                  class: "flex items-center justify-between py-0.5 text-[12px] #{sel_estado == estado ? 'text-gray-900 font-medium' : 'text-gray-600 hover:text-gray-900'}" do %>
+              <span class="truncate"><%= UiHelper::STATUS_LABELS[estado] || estado.humanize %></span>
+              <span class="text-[10.5px] text-gray-400"><%= count %></span>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+
+      <%# --- TRL --- %>
+      <div class="py-2 border-b border-gray-100">
+        <%= f.label :trl, "Maturidade TRL", class: "block text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1.5" %>
+        <%= f.select :trl,
+              options_for_select([ [ "Qualquer", "" ] ] + (1..9).map { |n| [ "TRL #{n}", n ] }, params[:trl]),
+              {},
+              class: "tsuru-select !h-8 !text-[12px]" %>
+      </div>
+
+      <%# --- Datas --- %>
+      <div class="py-2 border-b border-gray-100">
+        <div class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1.5">Período de criação</div>
+        <div class="space-y-2">
+          <div>
+            <%= f.label :data_ini, "De", class: "block text-[10.5px] text-gray-500 mb-0.5" %>
+            <%= f.date_field :data_ini, value: params[:data_ini], class: "tsuru-input !h-8 !text-[12px]" %>
+          </div>
+          <div>
+            <%= f.label :data_fim, "Até", class: "block text-[10.5px] text-gray-500 mb-0.5" %>
+            <%= f.date_field :data_fim, value: params[:data_fim], class: "tsuru-input !h-8 !text-[12px]" %>
+          </div>
+        </div>
+      </div>
+
+      <%# --- Ações --- %>
+      <div class="pt-1 flex flex-col gap-1.5">
+        <%= f.hidden_field :estado, value: params[:estado] %>
+        <%= f.submit "Aplicar filtros", class: "tsuru-btn-primary w-full !h-8 !text-[12px]" %>
+      </div>
     <% end %>
-  </div>
+  </aside>
 
-  <p class="text-sm text-gray-500 mb-2">
-    <%= @pagy.count %> demanda(s) encontrada(s) — página <%= @pagy.page %> de <%= @pagy.last %>
-  </p>
+  <%# === PAINEL DIREITO — TABELA === %>
+  <div class="flex-1 overflow-auto">
+    <div class="px-6 py-5">
 
-  <div class="tsuru-card">
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="border-b border-gray-200 text-left text-gray-500">
-          <th class="pb-2 pr-3">ID</th>
-          <th class="pb-2 pr-3">Título</th>
-          <th class="pb-2 pr-3">Solicitante</th>
-          <th class="pb-2 pr-3">Estado</th>
-          <th class="pb-2">Criada</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @demands.each do |demand| %>
-          <tr class="border-b border-gray-100">
-            <td class="py-2 pr-3 text-gray-400">#<%= demand.id %></td>
-            <td class="py-2 pr-3">
-              <%= link_to demand.title.truncate(50), demand_path(demand),
-                    class: "text-primary-700 hover:underline" %>
-            </td>
-            <td class="py-2 pr-3 text-gray-600"><%= demand.user.display_name %></td>
-            <td class="py-2 pr-3">
-              <span class="tsuru-badge-<%= demand.aasm_state %>"><%= demand.aasm_state.humanize %></span>
-            </td>
-            <td class="py-2 text-gray-400"><%= l demand.created_at, format: :short %></td>
-          </tr>
+      <%# Header + meta %>
+      <div class="flex items-baseline justify-between mb-4">
+        <div>
+          <div class="text-[20px] font-semibold tracking-tight text-gray-900">Demandas</div>
+          <div class="text-[12px] text-gray-500 mt-0.5">
+            Painel administrativo · todos os autores e estados ·
+            <%= params[:estado].present? ? "filtrado por #{UiHelper::STATUS_LABELS[params[:estado]] || params[:estado].humanize}" : "sem filtro de estado" %>
+          </div>
+        </div>
+        <div class="text-[12px] text-gray-500"><%= @pagy.count %> resultado(s)</div>
+      </div>
+
+      <%# Tabela %>
+      <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <% if @demands.empty? %>
+          <div class="p-12 text-center">
+            <%= icon(:search, size: 32, class_name: "mx-auto text-gray-300 mb-3") %>
+            <div class="text-[13px] text-gray-700 font-medium">Nenhuma demanda encontrada</div>
+            <div class="text-[12px] text-gray-500 mt-1">Tente ajustar os filtros à esquerda.</div>
+          </div>
+        <% else %>
+          <div class="overflow-x-auto">
+            <table class="w-full text-[12.5px] min-w-[920px]">
+              <thead>
+                <tr class="bg-gray-50/60 text-[10.5px] uppercase tracking-wider text-gray-500 text-left">
+                  <th class="px-3 py-2 font-medium">Código</th>
+                  <th class="px-3 py-2 font-medium">Título</th>
+                  <th class="px-3 py-2 font-medium">Solicitante</th>
+                  <th class="px-3 py-2 font-medium">Estado</th>
+                  <th class="px-3 py-2 font-medium text-right">TRL</th>
+                  <th class="px-3 py-2 font-medium">ODS</th>
+                  <th class="px-3 py-2 font-medium">Criada</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @demands.each do |demand| %>
+                  <tr class="border-t border-gray-100 hover:bg-gray-50/60">
+                    <td class="px-3 py-2 font-mono text-[11px] text-gray-700 whitespace-nowrap">
+                      DEM-<%= demand.id.to_s.rjust(4, "0") %>
+                    </td>
+                    <td class="px-3 py-2 text-gray-900 max-w-md">
+                      <%= link_to demand.title.truncate(70), demand_path(demand),
+                            class: "font-medium text-gray-900 hover:underline" %>
+                    </td>
+                    <td class="px-3 py-2 text-gray-700">
+                      <div class="flex items-center gap-1.5">
+                        <%= avatar(demand.user, size: 20) %>
+                        <span class="truncate"><%= demand.user.display_name %></span>
+                      </div>
+                    </td>
+                    <td class="px-3 py-2"><%= status_pill(demand.aasm_state) %></td>
+                    <td class="px-3 py-2 text-right text-gray-900 font-medium tabular-nums">
+                      <%= demand.trl || "—" %>
+                    </td>
+                    <td class="px-3 py-2">
+                      <% if demand.ods_goals.present? %>
+                        <div class="flex flex-wrap gap-1">
+                          <% demand.ods_goals.first(3).each do |ods| %>
+                            <%= pill("ODS #{ods}", color: "teal") %>
+                          <% end %>
+                          <% if demand.ods_goals.size > 3 %>
+                            <span class="text-[10.5px] text-gray-400">+<%= demand.ods_goals.size - 3 %></span>
+                          <% end %>
+                        </div>
+                      <% else %>
+                        <span class="text-gray-400 text-[11px]">—</span>
+                      <% end %>
+                    </td>
+                    <td class="px-3 py-2 text-gray-500 whitespace-nowrap">
+                      <%= l demand.created_at, format: :short %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <%# Footer: contador + paginação + exports %>
+          <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50/40 flex items-center justify-between text-[11.5px] text-gray-600">
+            <div>
+              Mostrando <%= @demands.size %> de <%= @pagy.count %> ·
+              página <%= @pagy.page %> de <%= @pagy.last %>
+            </div>
+            <div class="flex items-center gap-2">
+              <%= link_to admin_demands_path(format: :csv, estado: params[:estado], q: params[:q], trl: params[:trl], data_ini: params[:data_ini], data_fim: params[:data_fim]),
+                    class: "tsuru-btn-ghost !h-7 !text-[11px] !px-2" do %>
+                <%= icon(:download, size: 11) %> CSV
+              <% end %>
+              <nav aria-label="paginação" class="flex items-center gap-1 text-[11.5px]">
+                <%== @pagy.series_nav %>
+              </nav>
+            </div>
+          </div>
         <% end %>
-      </tbody>
-    </table>
+      </div>
+    </div>
   </div>
-
-  <%# Pagy navigation %>
-  <nav aria-label="paginação" class="flex justify-center mt-4 gap-1 text-sm">
-    <%== @pagy.series_nav %>
-  </nav>
 </div>
