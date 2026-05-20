@@ -1,0 +1,12 @@
+<% content_for :title, "Adicionar parceria" %>
+<% content_for :nav_active, "elegibilidade" %>
+<% content_for :crumb, "DEM-#{@demand.id.to_s.rjust(4, '0')} · Lei do Bem · Parcerias" %>
+
+<div class="max-w-[720px] mx-auto px-7 py-6">
+  <div class="mb-4">
+    <div class="text-[20px] font-semibold tracking-tight text-gray-900">Nova parceria ICT</div>
+  </div>
+  <div class="tsuru-card p-5">
+    <%= render "form", partnership: @partnership, demand: @demand %>
+  </div>
+</div>

@@ -30,6 +30,22 @@ Rails.application.routes.draw do
 
     resources :comments, only: %i[create]
     resources :attachments, only: %i[destroy]
+
+    resource :lei_do_bem_record, only: %i[show new create edit update], path: "lei-do-bem" do
+      resources :expenses, only: %i[new create edit update destroy]
+      resources :team_members, only: %i[new create edit update destroy], path: "equipe"
+      resources :partnerships, only: %i[new create edit update destroy], path: "parcerias"
+    end
+  end
+
+  namespace :board do
+    resources :demands, only: %i[index show] do
+      member do
+        post :approve
+        post :reject
+        post :defer
+      end
+    end
   end
 
   namespace :admin do

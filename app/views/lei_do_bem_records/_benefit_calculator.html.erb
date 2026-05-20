@@ -1,0 +1,73 @@
+<%# Recebe `record`, `demand` %>
+<%
+  result = Calculators::LeiDoBemBenefit.call(record: record) rescue nil
+  payload = result&.success? ? result.payload : nil
+%>
+
+<%= turbo_frame_tag "benefit_calculator" do %>
+  <div class="tsuru-card p-4">
+    <div class="flex items-baseline justify-between">
+      <div class="subhead">Benefício fiscal estimado</div>
+      <%= pill("IRPJ + CSLL", color: "emerald") %>
+    </div>
+
+    <% if payload %>
+      <div class="mt-3">
+        <div class="text-[28px] font-semibold tracking-tight text-emerald-700 tabular-nums">
+          <%= number_to_currency(payload[:economia_tributaria], unit: "R$ ", separator: ",", delimiter: ".") %>
+        </div>
+        <div class="text-[11px] text-gray-500 mt-0.5">
+          <%= (payload[:percentual_aplicado] * 100).to_i %>% sobre dispêndios ·
+          alíquota efetiva 34%
+        </div>
+      </div>
+
+      <%# Breakdown %>
+      <div class="mt-4 pt-3 border-t border-gray-100 space-y-1.5 text-[11.5px]">
+        <div class="flex justify-between">
+          <span class="text-gray-600">Dispêndios PD&I</span>
+          <span class="font-medium text-gray-900 tabular-nums"><%= number_to_currency(payload[:dispendios], unit: "R$ ", separator: ",", delimiter: ".") %></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-600">Exclusão base (<%= (Calculators::LeiDoBemBenefit::PERCENTUAL_BASE rescue 0.6) * 100 %>%)</span>
+          <span class="text-gray-900 tabular-nums"><%= number_to_currency(payload[:exclusao_base], unit: "R$ ", separator: ",", delimiter: ".") %></span>
+        </div>
+        <% if payload[:adicional_pesquisadores].to_d > 0 %>
+          <div class="flex justify-between">
+            <span class="text-gray-600">+ adicional pesquisadores</span>
+            <span class="text-gray-900 tabular-nums"><%= number_to_currency(payload[:adicional_pesquisadores], unit: "R$ ", separator: ",", delimiter: ".") %></span>
+          </div>
+        <% end %>
+        <% if payload[:adicional_patente].to_d > 0 %>
+          <div class="flex justify-between">
+            <span class="text-gray-600">+ adicional patente</span>
+            <span class="text-gray-900 tabular-nums"><%= number_to_currency(payload[:adicional_patente], unit: "R$ ", separator: ",", delimiter: ".") %></span>
+          </div>
+        <% end %>
+        <div class="flex justify-between pt-1.5 border-t border-gray-100">
+          <span class="text-gray-700 font-medium">Exclusão total</span>
+          <span class="font-medium text-gray-900 tabular-nums"><%= number_to_currency(payload[:exclusao_total], unit: "R$ ", separator: ",", delimiter: ".") %></span>
+        </div>
+      </div>
+
+      <%# Toggles %>
+      <%= form_with url: demand_lei_do_bem_record_path(demand), method: :patch,
+            data: { turbo_frame: "benefit_calculator" }, class: "mt-4 pt-3 border-t border-gray-100 space-y-2" do |f| %>
+        <label class="flex items-center gap-2 text-[12px] text-gray-700 cursor-pointer">
+          <%= hidden_field_tag "lei_do_bem_record[tem_patente]", "0" %>
+          <%= check_box_tag "lei_do_bem_record[tem_patente]", "1", record.tem_patente,
+                class: "rounded border-gray-300", onchange: "this.form.requestSubmit()" %>
+          <span>Tem patente concedida (+20%)</span>
+        </label>
+        <label class="flex items-center gap-2 text-[12px] text-gray-700 cursor-pointer">
+          <%= hidden_field_tag "lei_do_bem_record[base_zero_pesquisadores]", "0" %>
+          <%= check_box_tag "lei_do_bem_record[base_zero_pesquisadores]", "1", record.base_zero_pesquisadores,
+                class: "rounded border-gray-300", onchange: "this.form.requestSubmit()" %>
+          <span>Pesquisadores contratados no ano-base (+20%)</span>
+        </label>
+      <% end %>
+    <% else %>
+      <div class="mt-3 text-[12px] text-gray-500">Cadastre dispêndios para ver a estimativa.</div>
+    <% end %>
+  </div>
+<% end %>

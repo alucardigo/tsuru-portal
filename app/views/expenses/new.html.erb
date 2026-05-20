@@ -1,0 +1,13 @@
+<% content_for :title, "Adicionar dispêndio" %>
+<% content_for :nav_active, "elegibilidade" %>
+<% content_for :crumb, "DEM-#{@demand.id.to_s.rjust(4, '0')} · Lei do Bem · Dispêndios" %>
+
+<div class="max-w-[680px] mx-auto px-7 py-6">
+  <div class="mb-4">
+    <div class="text-[20px] font-semibold tracking-tight text-gray-900">Novo dispêndio</div>
+    <p class="text-[12.5px] text-gray-500 mt-0.5">Adicione um custo PD&I (pessoal, materiais, serviços, depreciação, etc).</p>
+  </div>
+  <div class="tsuru-card p-5">
+    <%= render "form", expense: @expense, demand: @demand %>
+  </div>
+</div>

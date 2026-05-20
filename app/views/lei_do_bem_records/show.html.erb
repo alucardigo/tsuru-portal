@@ -1,0 +1,240 @@
+<% content_for :title, "Lei do Bem · DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :nav_active, "elegibilidade" %>
+<% content_for :crumb, "DEM-#{@demand.id.to_s.rjust(4, '0')} · #{@demand.title.truncate(40)}" %>
+<% content_for :subtitle, "· Mapeamento Lei do Bem" %>
+
+<% content_for :actions do %>
+  <%= link_to demand_path(@demand), class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:arrow, size: 12, class_name: "rotate-180") %> Voltar
+  <% end %>
+  <%= link_to edit_demand_lei_do_bem_record_path(@demand), class: "tsuru-btn-secondary !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:cog, size: 12) %> Editar configuração
+  <% end %>
+<% end %>
+
+<div class="max-w-[1180px] mx-auto px-7 py-6 grid grid-cols-3 gap-5">
+  <%# === COLUNA PRINCIPAL: 3 ABAS === %>
+  <div class="col-span-2 space-y-4">
+
+    <%# Header KPIs %>
+    <div class="grid grid-cols-3 gap-3">
+      <div class="tsuru-card p-4">
+        <div class="subhead">Total de dispêndios</div>
+        <div class="text-[22px] font-semibold tracking-tight mt-1 text-gray-900">
+          <%= number_to_currency(@record.expenses.sum(:valor), unit: "R$ ", separator: ",", delimiter: ".") %>
+        </div>
+        <div class="text-[11px] text-gray-500 mt-0.5"><%= @record.expenses.count %> registro(s)</div>
+      </div>
+      <div class="tsuru-card p-4">
+        <div class="subhead">Pesquisadores</div>
+        <div class="text-[22px] font-semibold tracking-tight mt-1 text-gray-900">
+          <%= @record.team_members.count %>
+        </div>
+        <div class="text-[11px] text-gray-500 mt-0.5">
+          <%= @record.team_members.where(titulacao: %w[doutor mestre]).count %> com pós-graduação
+        </div>
+      </div>
+      <div class="tsuru-card p-4">
+        <div class="subhead">Parcerias ICT</div>
+        <div class="text-[22px] font-semibold tracking-tight mt-1 text-gray-900">
+          <%= @record.partnerships.count %>
+        </div>
+        <div class="text-[11px] text-gray-500 mt-0.5">Universidades / institutos</div>
+      </div>
+    </div>
+
+    <%# Tabs %>
+    <div class="flex items-center gap-1 border-b border-gray-200">
+      <% [ [ "expenses", "Dispêndios", icon(:doc, size: 13), @record.expenses.count ],
+           [ "team",     "Equipe",     icon(:user, size: 13), @record.team_members.count ],
+           [ "partnerships", "Parcerias",  icon(:link, size: 13), @record.partnerships.count ] ].each do |key, label, ic, count| %>
+        <%= link_to demand_lei_do_bem_record_path(@demand, tab: key),
+              class: "flex items-center gap-1.5 px-3 h-9 text-[12.5px] border-b-2 -mb-px #{@tab == key ? 'border-gray-900 text-gray-900 font-medium' : 'border-transparent text-gray-600 hover:text-gray-900'}" do %>
+          <%= ic %>
+          <%= label %>
+          <span class="ml-1 text-[10.5px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600"><%= count %></span>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%# Tab content %>
+    <% case @tab when "expenses" %>
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[13px] text-gray-500">Despesas elegíveis (pessoal, materiais, serviços, depreciação, patente, parceria ICT)</div>
+          <%= link_to new_demand_lei_do_bem_record_expense_path(@demand),
+                class: "tsuru-btn-primary !h-7 !text-[11.5px] !px-2" do %>
+            <%= icon(:plus, size: 12) %> Adicionar dispêndio
+          <% end %>
+        </div>
+
+        <% if @record.expenses.empty? %>
+          <div class="tsuru-card p-10 text-center">
+            <%= icon(:doc, size: 28, class_name: "mx-auto text-gray-300 mb-2") %>
+            <div class="text-[13px] text-gray-700 font-medium">Nenhum dispêndio registrado</div>
+            <div class="text-[12px] text-gray-500 mt-1">Comece adicionando custos do projeto PD&I.</div>
+          </div>
+        <% else %>
+          <div class="tsuru-card overflow-hidden">
+            <table class="w-full text-[12.5px]">
+              <thead class="bg-gray-50/60 text-[10.5px] uppercase tracking-wider text-gray-500">
+                <tr>
+                  <th class="px-3 py-2 text-left font-medium">Categoria</th>
+                  <th class="px-3 py-2 text-left font-medium">Descrição</th>
+                  <th class="px-3 py-2 text-right font-medium">Valor</th>
+                  <th class="px-3 py-2 text-left font-medium">Data</th>
+                  <th class="px-3 py-2 text-left font-medium">Documento</th>
+                  <th class="px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @record.expenses.order(data_competencia: :desc).each do |e| %>
+                  <tr class="border-t border-gray-100 hover:bg-gray-50/40">
+                    <td class="px-3 py-2"><%= pill(e.categoria.humanize, color: "blue") %></td>
+                    <td class="px-3 py-2 text-gray-900"><%= e.descricao %></td>
+                    <td class="px-3 py-2 text-right font-medium text-gray-900 tabular-nums"><%= number_to_currency(e.valor, unit: "R$ ", separator: ",", delimiter: ".") %></td>
+                    <td class="px-3 py-2 text-gray-700"><%= l e.data_competencia, format: :short %></td>
+                    <td class="px-3 py-2 text-gray-500 font-mono text-[11px]"><%= e.documento_fiscal.presence || "—" %></td>
+                    <td class="px-3 py-2 text-right whitespace-nowrap">
+                      <%= link_to "Editar", edit_demand_lei_do_bem_record_expense_path(@demand, e), class: "text-[11px] text-gray-600 hover:text-gray-900" %>
+                      <%= button_to "Excluir", demand_lei_do_bem_record_expense_path(@demand, e), method: :delete,
+                            form: { class: "inline", data: { turbo_confirm: "Remover este dispêndio?" } },
+                            class: "text-[11px] text-rose-600 hover:text-rose-800 ml-2" %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+
+    <% when "team" %>
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[13px] text-gray-500">Pesquisadores / técnicos alocados (CPF, titulação, dedicação)</div>
+          <%= link_to new_demand_lei_do_bem_record_team_member_path(@demand),
+                class: "tsuru-btn-primary !h-7 !text-[11.5px] !px-2" do %>
+            <%= icon(:plus, size: 12) %> Adicionar pesquisador
+          <% end %>
+        </div>
+
+        <% if @record.team_members.empty? %>
+          <div class="tsuru-card p-10 text-center">
+            <%= icon(:user, size: 28, class_name: "mx-auto text-gray-300 mb-2") %>
+            <div class="text-[13px] text-gray-700 font-medium">Nenhum pesquisador na equipe</div>
+          </div>
+        <% else %>
+          <div class="tsuru-card overflow-hidden">
+            <table class="w-full text-[12.5px]">
+              <thead class="bg-gray-50/60 text-[10.5px] uppercase tracking-wider text-gray-500">
+                <tr>
+                  <th class="px-3 py-2 text-left font-medium">Nome</th>
+                  <th class="px-3 py-2 text-left font-medium">CPF</th>
+                  <th class="px-3 py-2 text-left font-medium">Titulação</th>
+                  <th class="px-3 py-2 text-left font-medium">Vínculo</th>
+                  <th class="px-3 py-2 text-right font-medium">Dedicação</th>
+                  <th class="px-3 py-2 text-right font-medium">Custo anual</th>
+                  <th class="px-3 py-2"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @record.team_members.each do |m| %>
+                  <tr class="border-t border-gray-100 hover:bg-gray-50/40">
+                    <td class="px-3 py-2 text-gray-900 font-medium"><%= m.nome %></td>
+                    <td class="px-3 py-2 text-gray-500 font-mono text-[11px]"><%= m.cpf.presence || "—" %></td>
+                    <td class="px-3 py-2"><%= pill(m.titulacao.to_s.humanize, color: m.titulacao.in?(%w[doutor mestre]) ? "emerald" : "gray") if m.titulacao %></td>
+                    <td class="px-3 py-2"><%= pill(m.vinculo.to_s.upcase, color: "blue") if m.vinculo %></td>
+                    <td class="px-3 py-2 text-right tabular-nums"><%= m.dedicacao_percentual ? "#{m.dedicacao_percentual}%" : "—" %></td>
+                    <td class="px-3 py-2 text-right font-medium text-gray-900 tabular-nums"><%= number_to_currency(m.custo_anual || 0, unit: "R$ ", separator: ",", delimiter: ".") %></td>
+                    <td class="px-3 py-2 text-right whitespace-nowrap">
+                      <%= link_to "Editar", edit_demand_lei_do_bem_record_team_member_path(@demand, m), class: "text-[11px] text-gray-600 hover:text-gray-900" %>
+                      <%= button_to "Excluir", demand_lei_do_bem_record_team_member_path(@demand, m), method: :delete,
+                            form: { class: "inline", data: { turbo_confirm: "Remover este pesquisador?" } },
+                            class: "text-[11px] text-rose-600 hover:text-rose-800 ml-2" %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+
+    <% when "partnerships" %>
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[13px] text-gray-500">ICTs e universidades parceiras (Art. 19-A)</div>
+          <%= link_to new_demand_lei_do_bem_record_partnership_path(@demand),
+                class: "tsuru-btn-primary !h-7 !text-[11.5px] !px-2" do %>
+            <%= icon(:plus, size: 12) %> Adicionar parceria
+          <% end %>
+        </div>
+
+        <% if @record.partnerships.empty? %>
+          <div class="tsuru-card p-10 text-center">
+            <%= icon(:link, size: 28, class_name: "mx-auto text-gray-300 mb-2") %>
+            <div class="text-[13px] text-gray-700 font-medium">Nenhuma parceria registrada</div>
+          </div>
+        <% else %>
+          <div class="space-y-2">
+            <% @record.partnerships.each do |p| %>
+              <div class="tsuru-card p-4 flex items-start justify-between gap-3">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[13.5px] font-medium text-gray-900"><%= p.ict_nome %></span>
+                    <%= pill(p.tipo.humanize, color: "teal") %>
+                  </div>
+                  <div class="text-[11.5px] text-gray-500 mt-0.5">
+                    CNPJ <%= p.ict_cnpj.presence || "—" %>
+                    <% if p.data_inicio || p.data_fim %>
+                      <span class="text-gray-300">·</span>
+                      <%= p.data_inicio&.strftime("%m/%Y") %><%= " a #{p.data_fim&.strftime('%m/%Y')}" if p.data_fim %>
+                    <% end %>
+                  </div>
+                  <% if p.descricao_parceria.present? %>
+                    <p class="text-[12.5px] text-gray-700 mt-1.5 leading-relaxed"><%= p.descricao_parceria %></p>
+                  <% end %>
+                </div>
+                <div class="text-right shrink-0">
+                  <div class="text-[14px] font-semibold text-gray-900 tabular-nums"><%= number_to_currency(p.valor_contrato || 0, unit: "R$ ", separator: ",", delimiter: ".") %></div>
+                  <div class="flex gap-2 mt-2">
+                    <%= link_to "Editar", edit_demand_lei_do_bem_record_partnership_path(@demand, p), class: "text-[11px] text-gray-600 hover:text-gray-900" %>
+                    <%= button_to "Excluir", demand_lei_do_bem_record_partnership_path(@demand, p), method: :delete,
+                          form: { class: "inline", data: { turbo_confirm: "Remover parceria?" } },
+                          class: "text-[11px] text-rose-600 hover:text-rose-800" %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# === RAIL DIREITO: CALCULADORA + INFO === %>
+  <aside class="space-y-4">
+    <%= render "benefit_calculator", record: @record, demand: @demand %>
+
+    <div class="tsuru-card p-4">
+      <div class="subhead">Configuração do projeto</div>
+      <div class="mt-3 space-y-2 text-[12px]">
+        <div class="flex justify-between"><span class="text-gray-500">Ano-base</span><span class="font-medium text-gray-900"><%= @record.ano_base %></span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Natureza</span><span class="text-gray-900"><%= @record.natureza_projeto.humanize %></span></div>
+        <div class="flex justify-between"><span class="text-gray-500">TRL inicial → final</span><span class="text-gray-900"><%= @record.trl_inicial || "—" %> → <%= @record.trl_final || "—" %></span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Regime</span><span class="text-gray-900"><%= @record.regime_tributacao.humanize %></span></div>
+        <% if @record.ods_projeto.present? %>
+          <div class="pt-2 border-t border-gray-100">
+            <div class="text-gray-500 mb-1">ODS associados</div>
+            <div class="flex flex-wrap gap-1">
+              <% @record.ods_projeto.each do |o| %>
+                <%= pill("ODS #{o}", color: "teal") %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </aside>
+</div>

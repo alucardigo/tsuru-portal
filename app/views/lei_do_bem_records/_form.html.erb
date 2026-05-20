@@ -1,0 +1,82 @@
+<%= form_with model: record, url: record.persisted? ? demand_lei_do_bem_record_path(demand) : demand_lei_do_bem_record_path(demand), local: true, class: "space-y-4" do |f| %>
+  <% if record.errors.any? %>
+    <div class="rounded-md bg-rose-50 ring-1 ring-rose-200 p-3 text-[12.5px] text-rose-800">
+      <strong>Não foi possível salvar:</strong>
+      <ul class="list-disc pl-5 mt-1">
+        <% record.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-2 gap-3">
+    <div>
+      <%= f.label :ano_base, class: "tsuru-label" %>
+      <%= f.number_field :ano_base, class: "tsuru-input mt-1", min: 2020, max: 2030 %>
+    </div>
+    <div>
+      <%= f.label :natureza_projeto, "Natureza do projeto", class: "tsuru-label" %>
+      <%= f.select :natureza_projeto,
+            options_for_select(LeiDoBemRecord::NATUREZAS.map { |n| [ n.humanize, n ] }, record.natureza_projeto),
+            {}, class: "tsuru-select mt-1" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3">
+    <div>
+      <%= f.label :trl_inicial, "TRL inicial (1-9)", class: "tsuru-label" %>
+      <%= f.number_field :trl_inicial, class: "tsuru-input mt-1", min: 1, max: 9 %>
+    </div>
+    <div>
+      <%= f.label :trl_final, "TRL final (1-9)", class: "tsuru-label" %>
+      <%= f.number_field :trl_final, class: "tsuru-input mt-1", min: 1, max: 9 %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :regime_tributacao, "Regime tributário", class: "tsuru-label" %>
+    <%= f.select :regime_tributacao,
+          options_for_select(LeiDoBemRecord::REGIMES.map { |r| [ r.humanize, r ] }, record.regime_tributacao),
+          {}, class: "tsuru-select mt-1" %>
+  </div>
+
+  <div>
+    <label class="tsuru-label">ODS (Objetivos Desenvolvimento Sustentável)</label>
+    <p class="tsuru-hint">Selecione 1 ou mais ODS impactados pelo projeto (1 a 17).</p>
+    <div class="flex flex-wrap gap-1.5 mt-1">
+      <% (1..17).each do |ods| %>
+        <% checked = record.ods_projeto&.map(&:to_i)&.include?(ods) %>
+        <label class="cursor-pointer">
+          <%= check_box_tag "lei_do_bem_record[ods_projeto][]", ods.to_s, checked, class: "sr-only peer" %>
+          <span class="inline-flex items-center px-2 py-1 rounded text-[11px] font-medium bg-gray-100 text-gray-700 peer-checked:bg-teal-600 peer-checked:text-white hover:bg-gray-200">ODS <%= ods %></span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3">
+    <label class="flex items-start gap-2 p-3 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer">
+      <%= f.check_box :tem_patente, class: "rounded border-gray-300 mt-0.5" %>
+      <div>
+        <div class="text-[12.5px] font-medium text-gray-900">Tem patente concedida</div>
+        <div class="text-[11px] text-gray-500">Adiciona +20% sobre os dispêndios.</div>
+      </div>
+    </label>
+    <label class="flex items-start gap-2 p-3 rounded-md border border-gray-200 hover:bg-gray-50 cursor-pointer">
+      <%= f.check_box :base_zero_pesquisadores, class: "rounded border-gray-300 mt-0.5" %>
+      <div>
+        <div class="text-[12.5px] font-medium text-gray-900">Pesquisadores contratados no ano-base</div>
+        <div class="text-[11px] text-gray-500">Adiciona +20% (base zero exclusiva).</div>
+      </div>
+    </label>
+  </div>
+
+  <div>
+    <%= f.label :parecer_consolidado, "Parecer técnico consolidado (opcional)", class: "tsuru-label" %>
+    <%= f.text_area :parecer_consolidado, rows: 4, class: "tsuru-textarea mt-1" %>
+  </div>
+
+  <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+    <%= link_to "Cancelar", demand_path(demand), class: "text-[12.5px] text-gray-600 hover:text-gray-900" %>
+    <%= f.submit (record.persisted? ? "Salvar alterações" : "Criar registro"), class: "tsuru-btn-primary" %>
+  </div>
+<% end %>

@@ -1,0 +1,69 @@
+<%= form_with model: member, url: member.persisted? ?
+        demand_lei_do_bem_record_team_member_path(demand, member) :
+        demand_lei_do_bem_record_team_members_path(demand),
+      local: true, class: "space-y-3" do |f| %>
+  <% if member.errors.any? %>
+    <div class="rounded-md bg-rose-50 ring-1 ring-rose-200 p-3 text-[12.5px] text-rose-800">
+      <ul class="list-disc pl-5">
+        <% member.errors.full_messages.each do |m| %><li><%= m %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-2 gap-3">
+    <div>
+      <%= f.label :nome, class: "tsuru-label" %>
+      <%= f.text_field :nome, class: "tsuru-input mt-1" %>
+    </div>
+    <div>
+      <%= f.label :cpf, "CPF", class: "tsuru-label" %>
+      <%= f.text_field :cpf, class: "tsuru-input mt-1 font-mono", placeholder: "000.000.000-00" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-3">
+    <div>
+      <%= f.label :titulacao, "Titulação", class: "tsuru-label" %>
+      <%= f.select :titulacao,
+            options_for_select(TeamMember::TITULACOES.map { |t| [ t.humanize, t ] }, member.titulacao),
+            { include_blank: "Selecione…" }, class: "tsuru-select mt-1" %>
+    </div>
+    <div>
+      <%= f.label :vinculo, "Vínculo", class: "tsuru-label" %>
+      <%= f.select :vinculo,
+            options_for_select(TeamMember::VINCULOS.map { |v| [ v.upcase, v ] }, member.vinculo),
+            { include_blank: "Selecione…" }, class: "tsuru-select mt-1" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-3">
+    <div>
+      <%= f.label :dedicacao_percentual, "Dedicação (%)", class: "tsuru-label" %>
+      <%= f.number_field :dedicacao_percentual, class: "tsuru-input mt-1", min: 0, max: 100, step: 0.1 %>
+    </div>
+    <div>
+      <%= f.label :horas_anuais, "Horas/ano", class: "tsuru-label" %>
+      <%= f.number_field :horas_anuais, class: "tsuru-input mt-1", min: 0, step: 1 %>
+    </div>
+    <div>
+      <%= f.label :custo_anual, "Custo anual (R$)", class: "tsuru-label" %>
+      <%= f.number_field :custo_anual, class: "tsuru-input mt-1", min: 0, step: 0.01 %>
+    </div>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <label class="flex items-center gap-2 text-[12px] text-gray-700">
+      <%= f.check_box :dedicacao_exclusiva, class: "rounded border-gray-300" %>
+      Dedicação exclusiva
+    </label>
+    <label class="flex items-center gap-2 text-[12px] text-gray-700">
+      <%= f.check_box :contratado_no_ano_base, class: "rounded border-gray-300" %>
+      Contratado no ano-base (base zero)
+    </label>
+  </div>
+
+  <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+    <%= link_to "Cancelar", demand_lei_do_bem_record_path(demand, tab: "team"), class: "text-[12.5px] text-gray-600 hover:text-gray-900" %>
+    <%= f.submit (member.persisted? ? "Salvar" : "Adicionar pesquisador"), class: "tsuru-btn-primary" %>
+  </div>
+<% end %>

@@ -1,0 +1,56 @@
+<%= form_with model: partnership, url: partnership.persisted? ?
+        demand_lei_do_bem_record_partnership_path(demand, partnership) :
+        demand_lei_do_bem_record_partnerships_path(demand),
+      local: true, class: "space-y-3" do |f| %>
+  <% if partnership.errors.any? %>
+    <div class="rounded-md bg-rose-50 ring-1 ring-rose-200 p-3 text-[12.5px] text-rose-800">
+      <ul class="list-disc pl-5">
+        <% partnership.errors.full_messages.each do |m| %><li><%= m %></li><% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-2 gap-3">
+    <div>
+      <%= f.label :ict_nome, "Nome da ICT / Universidade", class: "tsuru-label" %>
+      <%= f.text_field :ict_nome, class: "tsuru-input mt-1", placeholder: "Ex: USP, Embrapa, IPT…" %>
+    </div>
+    <div>
+      <%= f.label :ict_cnpj, "CNPJ", class: "tsuru-label" %>
+      <%= f.text_field :ict_cnpj, class: "tsuru-input mt-1 font-mono", placeholder: "00.000.000/0000-00" %>
+    </div>
+  </div>
+
+  <div>
+    <%= f.label :tipo, "Tipo de parceria", class: "tsuru-label" %>
+    <%= f.select :tipo,
+          options_for_select(Partnership::TIPOS.map { |t| [ t.humanize, t ] }, partnership.tipo),
+          { include_blank: "Selecione…" }, class: "tsuru-select mt-1" %>
+  </div>
+
+  <div>
+    <%= f.label :descricao_parceria, "Descrição da parceria", class: "tsuru-label" %>
+    <%= f.text_area :descricao_parceria, rows: 3, class: "tsuru-textarea mt-1",
+          placeholder: "Cooperação técnica para pesquisa em análise espectral aplicada a motores…" %>
+  </div>
+
+  <div class="grid grid-cols-3 gap-3">
+    <div>
+      <%= f.label :valor_contrato, "Valor do contrato (R$)", class: "tsuru-label" %>
+      <%= f.number_field :valor_contrato, class: "tsuru-input mt-1", step: 0.01, min: 0 %>
+    </div>
+    <div>
+      <%= f.label :data_inicio, "Início", class: "tsuru-label" %>
+      <%= f.date_field :data_inicio, class: "tsuru-input mt-1" %>
+    </div>
+    <div>
+      <%= f.label :data_fim, "Fim previsto", class: "tsuru-label" %>
+      <%= f.date_field :data_fim, class: "tsuru-input mt-1" %>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+    <%= link_to "Cancelar", demand_lei_do_bem_record_path(demand, tab: "partnerships"), class: "text-[12.5px] text-gray-600 hover:text-gray-900" %>
+    <%= f.submit (partnership.persisted? ? "Salvar" : "Adicionar parceria"), class: "tsuru-btn-primary" %>
+  </div>
+<% end %>

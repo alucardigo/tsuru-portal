@@ -1,0 +1,18 @@
+<% content_for :title, "Novo registro Lei do Bem" %>
+<% content_for :nav_active, "elegibilidade" %>
+<% content_for :crumb, "DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :subtitle, "· Iniciar mapeamento Lei do Bem" %>
+
+<div class="max-w-[720px] mx-auto px-7 py-6">
+  <div class="mb-5">
+    <div class="text-[22px] font-semibold tracking-tight text-gray-900">Iniciar mapeamento Lei do Bem</div>
+    <p class="text-[13px] text-gray-500 mt-1">
+      Esta tela define o "envelope" do projeto PD&I para fins de Lei do Bem. Depois você cadastra
+      dispêndios, equipe e parcerias separadamente.
+    </p>
+  </div>
+
+  <div class="tsuru-card p-6">
+    <%= render "form", record: @record, demand: @demand %>
+  </div>
+</div>

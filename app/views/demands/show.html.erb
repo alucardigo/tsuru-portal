@@ -176,6 +176,26 @@
         </div>
       <% end %>
 
+      <%# === BANNER LEI DO BEM (quando estado elegível) ==================== %>
+      <% if @demand.aasm_state.in?(%w[n2_em_andamento n2_completa elegivel in_execution board_review concluida]) %>
+        <div class="mt-6 rounded-lg p-4 ring-1 ring-emerald-200 bg-emerald-50/40 flex items-start gap-3">
+          <div class="w-9 h-9 rounded-md bg-emerald-600 text-white flex items-center justify-center shrink-0">
+            <%= icon(:sparkle, size: 18) %>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13px] font-semibold text-emerald-900">Esta demanda pode gerar benefício fiscal</div>
+            <div class="text-[12px] text-emerald-800/80 mt-0.5">
+              Cadastre dispêndios, equipe e parcerias para calcular o valor de IRPJ/CSLL economizado via Lei do Bem.
+            </div>
+          </div>
+          <% if @demand.lei_do_bem_record %>
+            <%= link_to "Acessar painel →", demand_lei_do_bem_record_path(@demand), class: "tsuru-btn-primary !h-7 !text-[11.5px] !px-2.5 shrink-0" %>
+          <% else %>
+            <%= link_to "Iniciar Lei do Bem →", new_demand_lei_do_bem_record_path(@demand), class: "tsuru-btn-primary !h-7 !text-[11.5px] !px-2.5 shrink-0" %>
+          <% end %>
+        </div>
+      <% end %>
+
       <%# === SEÇÕES COLAPSÁVEIS ============================================== %>
       <details open class="mt-8 group">
         <summary class="flex items-center gap-2 cursor-pointer list-none -ml-5">
