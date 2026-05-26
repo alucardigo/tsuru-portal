@@ -35,6 +35,7 @@ gem "caracal"
 gem "caracal-rails"
 gem "prawn"
 gem "prawn-table"
+gem "matrix" # dependência do prawn; saiu das default gems no Ruby 3.4+
 
 # JSON Schema validation (FORMP&D)
 gem "json-schema"

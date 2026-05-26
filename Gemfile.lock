@@ -584,6 +584,7 @@ DEPENDENCIES
   importmap-rails
   json-schema
   kamal
+  matrix
   oauth2
   pagy
   paper_trail
