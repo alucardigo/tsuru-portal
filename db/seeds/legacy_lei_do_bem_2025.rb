@@ -20,6 +20,30 @@ AUTOR_EMAIL  = "admin@tsuru.local"
 FONTE_IMPORT = "import_lei_do_bem_2025"
 DRY_RUN      = ENV["DRY_RUN"] == "true"
 
+# Estados conforme análise REAL da coluna "Análise de Elegibilidade (Exclusivo FI)"
+# e "Declaração de elegibilidade FI Group" da planilha MCTI.
+#  - "Elegível" explícito da FI Group → :elegivel
+#  - "A definir" / sem declaração formal → :n2_em_andamento (avaliação ainda em curso)
+ESTADO_POR_CODIGO = {
+  "INOVA BEL-001"     => "elegivel",         # FI: Elegível
+  "INOVA BEL 001/2"   => "elegivel",         # FI: Elegível ("Após análise técnica...")
+  "INOVA BEL-003"     => "elegivel",         # FI: Elegível
+  "INOVA BEL-004"     => "elegivel",         # FI: Elegível
+  "INOVA BEL-005"     => "elegivel",         # Considerações: "enquadrado como P&D aplicado, elegível"
+  "INOVA BEL-005.1"   => "n2_em_andamento",  # FI: A definir / A definir
+  "INOVA BEL-006"     => "elegivel",         # FI: continuação consolidada (ano anterior elegível)
+  "INOVA BEL-007"     => "elegivel",         # FI: Elegível
+  "INOVA BEL-008"     => "elegivel",         # FI: Elegível
+  "INOVA BEL-009"     => "elegivel",         # FI: Elegível
+  "INOVA BEL-010"     => "elegivel",         # FI: Elegível
+  "INOVA BEL-012"     => "elegivel",         # FI: Elegível
+  "INOVA BEL-013"     => "n2_em_andamento",  # FI: sem decl. formal (MVP validado)
+  "INOVA BEL-014"     => "n2_em_andamento",  # FI: "Não informado no relatório"
+  "INOVA BEL-015"     => "elegivel",         # FI: Elegível
+  "INOVA BEL-016"     => "n2_em_andamento",  # FI: A definir / A definir
+  "INOVA BEL-017"     => "elegivel"          # Considerações: "projeto ativo, elegível"
+}.freeze
+
 # Helper: triagem N1 padrão para projetos JÁ aprovados pela FI Group
 # (todos os flags = false = nenhuma das exclusões; passou N1).
 N1_OK = {
@@ -296,7 +320,9 @@ ActiveRecord::Base.transaction do
       "parecer_fi_group"  => p[:parecer],
       "importado_em"      => Time.current.iso8601
     }
-    demand.aasm_state = "elegivel"
+    estado_real = ESTADO_POR_CODIGO[p[:codigo]] || "n2_em_andamento"
+    demand.aasm_state = estado_real
+    demand.n2_assessment["estado_origem_fi"] = estado_real
     unless demand.valid?
       puts "\n  !! Demand inválida (#{p[:codigo]}):"
       demand.errors.each { |e| puts "     - #{e.attribute}: #{e.type} | #{e.message.to_s[0..200]}" }
@@ -344,9 +370,10 @@ end
 puts
 puts "=" * 70
 puts "Resultado:"
-puts "  Demandas elegíveis    : #{Demand.where(aasm_state: 'elegivel').count}"
-puts "  LeiDoBemRecord 2025   : #{LeiDoBemRecord.where(ano_base: ANO_BASE).count}"
-puts "  Partnerships criadas  : #{Partnership.count}"
-puts "  Importados (n2 fonte) : #{Demand.where("n2_assessment->>'fonte' = ?", FONTE_IMPORT).count}"
+puts "  Demandas elegíveis      : #{Demand.where(aasm_state: 'elegivel').count}"
+puts "  Demandas N2 em curso    : #{Demand.where(aasm_state: 'n2_em_andamento').count}"
+puts "  LeiDoBemRecord 2025     : #{LeiDoBemRecord.where(ano_base: ANO_BASE).count}"
+puts "  Partnerships criadas    : #{Partnership.count}"
+puts "  Importados (n2 fonte)   : #{Demand.where("n2_assessment->>'fonte' = ?", FONTE_IMPORT).count}"
 puts "=" * 70
 puts DRY_RUN ? "[DRY RUN] Nenhuma mudança persistida — rode sem DRY_RUN=true para gravar." : "[OK] Import concluído."
