@@ -1,0 +1,78 @@
+<%= turbo_frame_tag "modal" do %>
+  <div class="fixed inset-0 bg-black/40 z-40 flex items-start justify-center pt-16" data-controller="modal" data-action="click->modal#backdropClose">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 mx-4" data-modal-target="dialog">
+      <div class="flex items-start justify-between mb-4">
+        <div>
+          <div class="text-[12px] uppercase tracking-wider text-gray-400 font-medium">Tarefa do projeto</div>
+          <h2 class="text-[20px] font-semibold text-gray-900">
+            <%= task.new_record? ? "Nova tarefa" : "Editar tarefa" %>
+          </h2>
+        </div>
+        <%= link_to kanban_demand_tasks_path(@demand), class: "text-gray-400 hover:text-gray-700 text-2xl leading-none" do %>×<% end %>
+      </div>
+
+      <%= form_with model: [@demand, task], url: task.new_record? ? demand_tasks_path(@demand) : demand_task_path(@demand, task),
+              class: "space-y-4" do |f| %>
+
+        <% if task.errors.any? %>
+          <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-[13px] text-red-700">
+            <% task.errors.full_messages.each do |msg| %>
+              <div>• <%= msg %></div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div>
+          <%= f.label :title, "Título", class: "tsuru-label" %>
+          <%= f.text_field :title, class: "tsuru-input mt-1", required: true, placeholder: "Ex: Implementar API de cotação Megleo" %>
+        </div>
+
+        <div>
+          <%= f.label :description, "Descrição", class: "tsuru-label" %>
+          <%= f.text_area :description, class: "tsuru-input mt-1", rows: 3, placeholder: "Contexto, requisitos, critérios de aceite…" %>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <%= f.label :kanban_status, "Coluna do kanban", class: "tsuru-label" %>
+            <%= f.select :kanban_status,
+                ProjectTask::KANBAN_STATUSES.map { |s| [ProjectTask.new(kanban_status: s).kanban_status_label, s] },
+                {}, class: "tsuru-select mt-1" %>
+          </div>
+          <div>
+            <%= f.label :priority, "Prioridade", class: "tsuru-label" %>
+            <%= f.select :priority,
+                ProjectTask::PRIORITIES.map { |p| [ProjectTask.new(priority: p).priority_label, p] },
+                {}, class: "tsuru-select mt-1" %>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <%= f.label :estimated_hours, "Estimativa (horas)", class: "tsuru-label" %>
+            <%= f.number_field :estimated_hours, step: 0.5, min: 0, class: "tsuru-input mt-1", placeholder: "8.0" %>
+          </div>
+          <div>
+            <%= f.label :spent_hours, "Horas gastas", class: "tsuru-label" %>
+            <%= f.number_field :spent_hours, step: 0.5, min: 0, class: "tsuru-input mt-1", placeholder: "0.0" %>
+          </div>
+          <div>
+            <%= f.label :due_date, "Prazo", class: "tsuru-label" %>
+            <%= f.date_field :due_date, class: "tsuru-input mt-1" %>
+          </div>
+        </div>
+
+        <div>
+          <%= f.label :assignee_id, "Responsável", class: "tsuru-label" %>
+          <%= f.collection_select :assignee_id, User.order(:name), :id, :name,
+                { include_blank: "— sem responsável —" }, class: "tsuru-select mt-1" %>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+          <%= link_to "Cancelar", kanban_demand_tasks_path(@demand), class: "tsuru-btn-ghost" %>
+          <%= f.submit (task.new_record? ? "Criar tarefa" : "Salvar"), class: "tsuru-btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

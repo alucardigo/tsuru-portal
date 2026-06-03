@@ -1,0 +1,67 @@
+<% content_for :title, "Documentos — #{@demand.title.truncate(40)}" %>
+<% content_for :crumb, "Documentos · DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :title, "Documentos do projeto" %>
+<% content_for :subtitle, "· biblioteca interna" %>
+<% content_for :actions do %>
+  <%= link_to "← Voltar ao projeto", demand_path(@demand), class: "tsuru-btn-ghost" %>
+<% end %>
+
+<div class="px-10 py-6 max-w-[1200px] mx-auto space-y-6">
+
+  <%# Upload area %>
+  <div class="tsuru-card p-6">
+    <h2 class="text-[16px] font-semibold text-gray-900 mb-3">Enviar documentos</h2>
+    <p class="text-[13px] text-gray-500 mb-4">
+      PDF, DOCX, XLSX, PPTX, imagens (PNG/JPG/WEBP), CSV/TXT ou ZIP. Máximo 25 MB por arquivo.
+      Aceita múltiplos arquivos por vez.
+    </p>
+    <%= form_with url: demand_documentos_path(@demand), multipart: true, local: true, class: "flex items-center gap-3" do |f| %>
+      <%= f.file_field :documentos, multiple: true, class: "tsuru-input flex-1" %>
+      <%= f.submit "Enviar", class: "tsuru-btn-primary" %>
+    <% end %>
+  </div>
+
+  <%# Lista %>
+  <div class="tsuru-card overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h2 class="text-[16px] font-semibold text-gray-900">Arquivos enviados</h2>
+      <span class="text-[12px] text-gray-500"><%= @documentos.size %> documento(s)</span>
+    </div>
+
+    <% if @documentos.empty? %>
+      <div class="px-6 py-10 text-center text-gray-500">
+        Nenhum documento enviado ainda.
+      </div>
+    <% else %>
+      <table class="w-full text-[13px]">
+        <thead class="bg-gray-50 text-left text-[11px] uppercase tracking-wider text-gray-500">
+          <tr>
+            <th class="px-6 py-3">Arquivo</th>
+            <th class="px-6 py-3">Tipo</th>
+            <th class="px-6 py-3">Tamanho</th>
+            <th class="px-6 py-3">Enviado</th>
+            <th class="px-6 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @documentos.each do |doc| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-3">
+                <%= link_to doc.filename.to_s, rails_blob_path(doc, disposition: "attachment"),
+                      class: "text-indigo-700 hover:underline font-medium" %>
+              </td>
+              <td class="px-6 py-3 text-gray-600 text-[12px]"><%= doc.content_type %></td>
+              <td class="px-6 py-3 text-gray-600"><%= number_to_human_size(doc.byte_size) %></td>
+              <td class="px-6 py-3 text-gray-600"><%= doc.created_at.strftime("%d/%m/%Y %H:%M") %></td>
+              <td class="px-6 py-3 text-right">
+                <%= button_to demand_documento_path(@demand, doc), method: :delete,
+                      data: { turbo_confirm: "Remover este documento?" },
+                      class: "text-gray-400 hover:text-red-600 text-[12px]" do %>Remover<% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+</div>

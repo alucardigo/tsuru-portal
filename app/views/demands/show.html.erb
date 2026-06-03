@@ -7,6 +7,12 @@
   <%= link_to demands_path, class: "tsuru-btn-ghost" do %>
     Voltar
   <% end %>
+  <%= link_to kanban_demand_tasks_path(@demand), class: "tsuru-btn-ghost" do %>
+    Tarefas
+  <% end %>
+  <%= link_to demand_documentos_path(@demand), class: "tsuru-btn-ghost" do %>
+    Documentos
+  <% end %>
   <% if policy(@demand).versions? %>
     <%= link_to versions_demand_path(@demand), class: "tsuru-btn-ghost" do %>
       Histórico

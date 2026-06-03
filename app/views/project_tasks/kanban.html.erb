@@ -1,0 +1,59 @@
+<% content_for :title, "Tarefas — #{@demand.title.truncate(40)}" %>
+<% content_for :crumb, "Tarefas · DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :title, "Quadro de tarefas" %>
+<% content_for :subtitle, "· kanban interno do projeto" %>
+<% content_for :actions do %>
+  <%= link_to demand_path(@demand), class: "tsuru-btn-ghost" do %>← Voltar ao projeto<% end %>
+  <%= link_to "Nova tarefa", new_demand_task_path(@demand), class: "tsuru-btn-primary",
+        data: { turbo_frame: "modal" } %>
+<% end %>
+
+<div class="px-10 py-6 max-w-[1600px] mx-auto" data-controller="kanban-drag" data-kanban-drag-move-url-value="<%= move_demand_task_path(@demand, ':id') %>" data-kanban-drag-csrf-value="<%= form_authenticity_token %>">
+  <%# Metricas %>
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+    <% [
+      ["Total", @metricas[:total], "gray-900"],
+      ["Concluídas", @metricas[:concluidas], "green-600"],
+      ["Em andamento", @metricas[:em_andamento], "indigo-600"],
+      ["Atrasadas", @metricas[:atrasadas], "danger-500"],
+      ["Horas est. / gastas", "#{@metricas[:horas_estimadas].round(1)}h / #{@metricas[:horas_gastas].round(1)}h", "accent-700"]
+    ].each do |label, value, color| %>
+      <div class="tsuru-card p-4">
+        <div class="text-[11px] uppercase tracking-wider text-gray-500 font-medium"><%= label %></div>
+        <div class="text-[24px] font-semibold text-<%= color %> mt-1"><%= value %></div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# 5 colunas %>
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <% @statuses.each do |status| %>
+      <% tasks_da_coluna = (@tasks_by_status[status] || []) %>
+      <% label = ProjectTask.new(kanban_status: status).kanban_status_label %>
+      <div class="bg-gray-50 rounded-xl p-3 border border-gray-200 flex flex-col min-h-[500px]"
+           data-kanban-drag-target="column" data-status="<%= status %>">
+        <div class="flex items-center justify-between mb-3 px-1">
+          <div class="flex items-center gap-2">
+            <span class="text-[12px] uppercase tracking-wider text-gray-600 font-semibold"><%= label %></span>
+            <span class="bg-white text-gray-700 text-[11px] px-2 py-0.5 rounded-full border border-gray-200"><%= tasks_da_coluna.size %></span>
+          </div>
+          <%= link_to new_demand_task_path(@demand, kanban_status: status),
+                class: "text-gray-400 hover:text-gray-700 text-lg leading-none",
+                title: "Nova tarefa em #{label}",
+                data: { turbo_frame: "modal" } do %>+<% end %>
+        </div>
+        <div class="flex flex-col gap-2" data-kanban-drag-target="list">
+          <% tasks_da_coluna.each do |task| %>
+            <%= render "card", task: task %>
+          <% end %>
+        </div>
+        <% if tasks_da_coluna.empty? %>
+          <div class="text-center text-[12px] text-gray-400 py-6 italic">vazio</div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<%# Modal frame pra new/edit %>
+<%= turbo_frame_tag "modal" %>

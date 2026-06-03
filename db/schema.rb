@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_20_162955) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_03_145121) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -161,6 +161,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_162955) do
     t.index ["lei_do_bem_record_id"], name: "index_partnerships_on_lei_do_bem_record_id"
   end
 
+  create_table "project_tasks", force: :cascade do |t|
+    t.bigint "assignee_id"
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.bigint "creator_id", null: false
+    t.bigint "demand_id", null: false
+    t.text "description"
+    t.date "due_date"
+    t.decimal "estimated_hours", precision: 8, scale: 2
+    t.string "kanban_status", default: "backlog", null: false
+    t.integer "position", default: 0, null: false
+    t.string "priority", default: "media", null: false
+    t.decimal "spent_hours", precision: 8, scale: 2, default: "0.0", null: false
+    t.datetime "started_at"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assignee_id"], name: "index_project_tasks_on_assignee_id"
+    t.index ["creator_id"], name: "index_project_tasks_on_creator_id"
+    t.index ["demand_id", "kanban_status", "position"], name: "index_project_tasks_kanban_order"
+    t.index ["demand_id"], name: "index_project_tasks_on_demand_id"
+    t.index ["kanban_status"], name: "index_project_tasks_on_kanban_status"
+  end
+
   create_table "team_members", force: :cascade do |t|
     t.boolean "contratado_no_ano_base", default: false
     t.string "cpf"
@@ -226,6 +249,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_20_162955) do
   add_foreign_key "notifications", "demands"
   add_foreign_key "notifications", "users", column: "recipient_id"
   add_foreign_key "partnerships", "lei_do_bem_records"
+  add_foreign_key "project_tasks", "demands"
+  add_foreign_key "project_tasks", "users", column: "assignee_id"
+  add_foreign_key "project_tasks", "users", column: "creator_id"
   add_foreign_key "team_members", "lei_do_bem_records"
   add_foreign_key "team_members", "users"
 end

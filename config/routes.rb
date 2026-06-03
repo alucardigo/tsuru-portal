@@ -32,6 +32,13 @@ Rails.application.routes.draw do
     resources :comments, only: %i[create]
     resources :attachments, only: %i[destroy]
 
+    # Sprint 14 — tarefas + kanban interno + documentos
+    resources :tasks, controller: "project_tasks", except: [:show] do
+      member { patch :move }
+      collection { get :kanban }
+    end
+    resources :documentos, only: %i[index create destroy], controller: "demand_documentos"
+
     resource :lei_do_bem_record, only: %i[show new create edit update], path: "lei-do-bem" do
       resources :expenses, only: %i[new create edit update destroy]
       resources :team_members, only: %i[new create edit update destroy], path: "equipe"

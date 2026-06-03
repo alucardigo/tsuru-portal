@@ -1,0 +1,61 @@
+<% content_for :title, "Tarefas do projeto" %>
+<% content_for :subtitle, "· lista tabular" %>
+<% content_for :actions do %>
+  <%= link_to "← Voltar", demand_path(@demand), class: "tsuru-btn-ghost" %>
+  <%= link_to "Quadro Kanban", kanban_demand_tasks_path(@demand), class: "tsuru-btn-ghost" %>
+  <%= link_to "Nova tarefa", new_demand_task_path(@demand), class: "tsuru-btn-primary",
+        data: { turbo_frame: "modal" } %>
+<% end %>
+
+<div class="px-10 py-6 max-w-[1400px] mx-auto">
+  <% if @tasks.empty? %>
+    <div class="tsuru-card p-10 text-center">
+      <p class="text-gray-500">Nenhuma tarefa registrada ainda.</p>
+      <%= link_to "Criar primeira tarefa", new_demand_task_path(@demand), class: "tsuru-btn-primary mt-4 inline-block",
+            data: { turbo_frame: "modal" } %>
+    </div>
+  <% else %>
+    <div class="tsuru-card overflow-hidden">
+      <table class="w-full text-[13px]">
+        <thead class="bg-gray-50 border-b border-gray-200 text-left text-[11px] uppercase tracking-wider text-gray-500">
+          <tr>
+            <th class="px-4 py-3">Tarefa</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3">Responsável</th>
+            <th class="px-4 py-3">Estimativa / Gastas</th>
+            <th class="px-4 py-3">Prazo</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <% @tasks.each do |t| %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3">
+                <%= link_to t.title, edit_demand_task_path(@demand, t),
+                      class: "text-gray-900 font-medium hover:underline",
+                      data: { turbo_frame: "modal" } %>
+                <% if t.description.present? %>
+                  <div class="text-gray-500 text-[12px] truncate max-w-md"><%= t.description.truncate(80) %></div>
+                <% end %>
+              </td>
+              <td class="px-4 py-3"><span class="status-pill"><%= t.kanban_status_label %></span></td>
+              <td class="px-4 py-3"><%= t.assignee&.name || "—" %></td>
+              <td class="px-4 py-3 text-gray-600">
+                <%= t.estimated_hours.present? ? "#{t.estimated_hours}h" : "—" %> /
+                <%= t.spent_hours %>h
+              </td>
+              <td class="px-4 py-3 <%= 'text-red-600 font-medium' if t.atrasada? %>">
+                <%= t.due_date&.strftime("%d/%m/%Y") || "—" %>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <%= button_to demand_task_path(@demand, t), method: :delete,
+                      data: { turbo_confirm: "Excluir esta tarefa?" },
+                      class: "text-gray-400 hover:text-red-600" do %>Excluir<% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>
