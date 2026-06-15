@@ -397,7 +397,11 @@
             <% end %>
           <% end %>
 
-          <% if policy(@demand).iniciar_triagem? && @demand.submetida? %>
+          <% if policy(@demand).aprovar_supervisor? && @demand.submetida? %>
+            <%= link_to "Aprovar como supervisor →", gestor_demand_path(@demand), class: "tsuru-btn-secondary" %>
+          <% end %>
+
+          <% if policy(@demand).iniciar_triagem? && (@demand.submetida? || @demand.aprovada_supervisor?) %>
             <%= button_to "Iniciar triagem N1", iniciar_triagem_demand_path(@demand), method: :patch,
                   class: "tsuru-btn-secondary" %>
           <% end %>
