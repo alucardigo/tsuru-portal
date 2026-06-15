@@ -1,8 +1,19 @@
 class DemandsController < ApplicationController
-  before_action :set_demand, only: %i[show edit update destroy submeter retomar iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade versions]
+  before_action :set_demand, only: %i[show edit update destroy submeter retomar iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade tornar_projeto versions]
 
   def index
-    @pagy, @demands = pagy(policy_scope(Demand).order(created_at: :desc))
+    scope = policy_scope(Demand)
+            .busca_titulo(params[:q])
+            .por_trl(params[:trl])
+            .de(params[:data_ini])
+            .ate(params[:data_fim])
+    scope = scope.where(aasm_state: params[:estado]) if params[:estado].present?
+    if params[:etapa].present?
+      estados = Demand::ETAPAS_FUNIL.key?(params[:etapa].to_i) ? estados_da_etapa(params[:etapa].to_i) : []
+      scope = scope.where(aasm_state: estados)
+    end
+    scope = scope.order(created_at: :desc)
+    @pagy, @demands = pagy(scope)
   end
 
   def show
@@ -137,6 +148,16 @@ class DemandsController < ApplicationController
     end
   end
 
+  def tornar_projeto
+    authorize @demand, :tornar_projeto?
+
+    if @demand.tornar_projeto && @demand.save
+      redirect_to @demand, notice: "Sugestão promovida a Projeto INOVA BEL oficial (#{@demand.codigo_display})."
+    else
+      redirect_to @demand, alert: "Não foi possível promover a projeto — estado atual: #{@demand.aasm_state}."
+    end
+  end
+
   def versions
     authorize @demand, :versions?
     @versions = @demand.versions.order(created_at: :desc).includes(:item)
@@ -150,6 +171,18 @@ class DemandsController < ApplicationController
   end
 
   private
+
+  # Estados pertencentes a cada macro-etapa do funil (espelha Demand#etapa_funil)
+  def estados_da_etapa(etapa)
+    {
+      1 => %w[rascunho awaiting_requester],
+      2 => %w[submetida],
+      3 => %w[aprovada_supervisor em_triagem n1_aprovada n1_reprovada n2_em_andamento n2_completa],
+      4 => %w[board_review],
+      5 => %w[em_avaliacao_fi],
+      6 => %w[elegivel projeto in_execution concluida]
+    }[etapa] || []
+  end
 
   def broadcast_state_change(demand)
     Turbo::StreamsChannel.broadcast_replace_later_to(

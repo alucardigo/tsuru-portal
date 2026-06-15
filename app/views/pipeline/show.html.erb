@@ -50,7 +50,7 @@
             <% col[:demands].each do |demand| %>
               <%= link_to demand_path(demand), class: "block bg-white rounded-md border border-gray-200 p-2.5 hover:border-gray-300 transition-colors" do %>
                 <div class="flex items-center gap-1.5 text-[10.5px] text-gray-500">
-                  <span class="font-mono text-gray-700">DEM-<%= demand.id.to_s.rjust(4, "0") %></span>
+                  <span class="font-mono text-gray-700"><%= demand.codigo_display %></span>
                   <span class="text-gray-300">·</span>
                   <span class="truncate"><%= demand.user.display_name.split.first %></span>
                 </div>

@@ -1,0 +1,189 @@
+<% content_for :title, "#{@demand.codigo_display} · Parecer FI" %>
+<% content_for :nav_active, "fi" %>
+<% content_for :crumb, "FI Group · Parecer de elegibilidade" %>
+<% content_for :subtitle, "· #{@demand.title.truncate(50)}" %>
+
+<% content_for :actions do %>
+  <%= link_to fi_demands_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:arrow, size: 12, class_name: "rotate-180") %> Voltar
+  <% end %>
+<% end %>
+
+<div class="max-w-[820px] mx-auto px-7 py-6">
+
+  <%# === Resumo da demanda === %>
+  <div class="flex items-center justify-between text-[11.5px] text-gray-500">
+    <div class="flex items-center gap-2">
+      <span class="font-mono text-gray-700"><%= @demand.codigo_display %></span>
+      <span class="text-gray-300">·</span>
+      <%= status_pill(@demand.aasm_state) %>
+      <span class="text-gray-300">·</span>
+      <span><%= @demand.etapa_label %></span>
+    </div>
+    <div>Enviada <%= time_ago_in_words(@demand.created_at) %> atrás</div>
+  </div>
+
+  <h1 class="mt-2.5 text-[24px] font-semibold tracking-tight text-gray-900 leading-tight"><%= @demand.title %></h1>
+
+  <div class="mt-1.5 flex items-center gap-2 text-[12px] text-gray-600">
+    <%= avatar(@demand.user, size: 20) %>
+    <span class="font-medium text-gray-800"><%= @demand.user.display_name %></span>
+    <% if @demand.area_impactada.present? %>
+      <span class="text-gray-400">·</span>
+      <span><%= @demand.area_impactada %></span>
+    <% end %>
+  </div>
+
+  <%# Metadados rápidos: TRL + ODS %>
+  <div class="mt-3 flex flex-wrap items-center gap-2 text-[11.5px]">
+    <span class="inline-flex items-center gap-1.5 px-2.5 h-6 rounded-md bg-gray-50 ring-1 ring-gray-100 text-gray-700">
+      TRL <span class="font-medium text-gray-900"><%= @demand.trl.presence || "—" %></span>
+    </span>
+    <% if @demand.ods_goals.present? && @demand.ods_goals.any? %>
+      <span class="text-gray-400">ODS</span>
+      <% @demand.ods_goals.each do |g| %>
+        <%= pill("ODS #{g}", color: "gray") %>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# === Avaliação Interna (T&I) === %>
+  <div class="mt-7">
+    <div class="subhead">Avaliação Interna (T&I)</div>
+    <div class="mt-3 space-y-5">
+      <div>
+        <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Barreira técnica</div>
+        <p class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line"><%= @demand.barreira_tecnica.presence || "—" %></p>
+      </div>
+      <div>
+        <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Motivação</div>
+        <p class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line"><%= @demand.motivacao.presence || "—" %></p>
+      </div>
+      <div>
+        <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Metodologia</div>
+        <p class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line"><%= @demand.metodologia.presence || "—" %></p>
+      </div>
+      <div>
+        <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Resultado obtido</div>
+        <p class="mt-1.5 text-[13.5px] text-gray-800 leading-relaxed whitespace-pre-line"><%= @demand.resultado_obtido.presence || "—" %></p>
+      </div>
+    </div>
+  </div>
+
+  <%# === Registro Lei do Bem === %>
+  <% if @record.present? %>
+    <div class="mt-7">
+      <div class="subhead">Registro Lei do Bem</div>
+      <div class="tsuru-card p-4 mt-3">
+        <div class="grid grid-cols-2 gap-x-6 gap-y-3 text-[12px]">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Ano-base</span>
+            <span class="text-gray-900 font-medium tabular-nums"><%= @record.ano_base %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Natureza</span>
+            <span class="text-gray-900 font-medium"><%= @record.natureza_projeto&.humanize || "—" %></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">TRL</span>
+            <span class="text-gray-900 font-medium tabular-nums">
+              <%= @record.trl_inicial.presence || "—" %> → <%= @record.trl_final.presence || "—" %>
+            </span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Parcerias (ICT)</span>
+            <span class="text-gray-900 font-medium tabular-nums"><%= @record.partnerships.size %></span>
+          </div>
+          <div class="flex justify-between col-span-2 pt-3 border-t border-gray-100">
+            <span class="text-gray-700 font-medium">Total de dispêndios</span>
+            <span class="text-emerald-700 font-semibold tabular-nums">
+              <%= number_to_currency(@record.total_dispendios, unit: "R$ ", separator: ",", delimiter: ".") %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# === Parecer técnico anterior, se houver === %>
+  <% if @demand.parecer_tecnico.present? %>
+    <div class="mt-7">
+      <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Parecer registrado</div>
+      <p class="mt-1.5 text-[13px] text-gray-700 leading-relaxed whitespace-pre-line"><%= @demand.parecer_tecnico %></p>
+    </div>
+  <% end %>
+
+  <%# === Painel de parecer FI === %>
+  <div class="mt-9 pt-5 border-t border-gray-200">
+    <div class="text-[14px] font-semibold text-gray-900">Parecer da FI Group</div>
+    <p class="text-[12px] text-gray-500 mt-0.5">
+      Registre o parecer técnico-tributário de elegibilidade à Lei do Bem. Mínimo de 30 caracteres.
+    </p>
+
+    <div class="mt-4 grid grid-cols-2 gap-4">
+      <%# Elegível %>
+      <%= form_with url: aprovar_fi_demand_path(@demand), method: :post, class: "tsuru-card p-4 flex flex-col" do %>
+        <div class="flex items-center gap-2 text-emerald-700">
+          <%= icon(:check, size: 14) %>
+          <span class="text-[13px] font-medium">Marcar ELEGÍVEL</span>
+        </div>
+        <p class="text-[11px] text-gray-600 mt-1 leading-snug">Projeto enquadrado — segue como elegível Lei do Bem.</p>
+        <textarea name="parecer" rows="4"
+          class="tsuru-input mt-3"
+          placeholder="Parecer técnico-tributário da FI Group (mín. 30 caracteres)…"></textarea>
+        <button type="submit" class="tsuru-btn-primary !bg-emerald-600 hover:!bg-emerald-700 mt-3 w-full justify-center">
+          <%= icon(:check, size: 13) %> Confirmar elegível
+        </button>
+      <% end %>
+
+      <%# Não elegível %>
+      <%= form_with url: reprovar_fi_demand_path(@demand), method: :post, class: "tsuru-card p-4 flex flex-col" do %>
+        <div class="flex items-center gap-2 text-rose-700">
+          <%= icon(:x, size: 14) %>
+          <span class="text-[13px] font-medium">Marcar NÃO elegível</span>
+        </div>
+        <p class="text-[11px] text-gray-600 mt-1 leading-snug">Não enquadrado — registra justificativa de não elegibilidade.</p>
+        <textarea name="parecer" rows="4"
+          class="tsuru-input mt-3"
+          placeholder="Parecer técnico-tributário da FI Group (mín. 30 caracteres)…"></textarea>
+        <button type="submit" class="tsuru-btn-primary !bg-rose-600 hover:!bg-rose-700 mt-3 w-full justify-center">
+          <%= icon(:x, size: 13) %> Confirmar não elegível
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <%# === Linha do tempo === %>
+  <% if @transitions.present? && @transitions.any? %>
+    <div class="mt-9 pt-5 border-t border-gray-200">
+      <div class="subhead mb-3">Linha do tempo</div>
+      <ol class="space-y-2">
+        <% @transitions.each do |t| %>
+          <% bullet_class =
+               if %w[elegivel n1_aprovada n2_completa].include?(t.to_state)
+                 "bg-emerald-500"
+               elsif %w[n1_reprovada nao_elegivel cancelada].include?(t.to_state)
+                 "bg-rose-500"
+               else
+                 "bg-blue-400"
+               end %>
+          <li class="flex gap-2.5 items-start">
+            <div class="w-2 h-2 rounded-full mt-1.5 shrink-0 <%= bullet_class %>"></div>
+            <div class="flex-1 min-w-0">
+              <div class="text-[12px] text-gray-900">
+                <%= UiHelper::STATUS_LABELS[t.from_state] || t.from_state&.humanize || "início" %>
+                <span class="text-gray-400">→</span>
+                <%= UiHelper::STATUS_LABELS[t.to_state] || t.to_state.humanize %>
+                <span class="text-gray-400 text-[11px]">(<%= t.event.humanize %>)</span>
+              </div>
+              <div class="text-[10.5px] text-gray-500">
+                <%= time_ago_in_words(t.created_at) %> atrás
+                <% if t.actor %> · <%= t.actor.display_name %><% end %>
+              </div>
+            </div>
+          </li>
+        <% end %>
+      </ol>
+    </div>
+  <% end %>
+</div>

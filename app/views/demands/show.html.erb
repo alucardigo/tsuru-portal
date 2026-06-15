@@ -1,4 +1,4 @@
-<% content_for :title, "DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :title, @demand.codigo_display %>
 <% content_for :nav_active, "demandas" %>
 <% content_for :crumb, "Minhas demandas" %>
 <% content_for :subtitle, "· Workspace" %>
@@ -70,7 +70,7 @@
               <span>Código</span>
             </div>
             <div class="prop-value font-mono text-[12px]">
-              DEM-<%= @demand.id.to_s.rjust(4, "0") %>
+              <%= @demand.codigo_display %>
             </div>
           </div>
 
@@ -417,6 +417,23 @@
 
           <% if policy(@demand).update? %>
             <%= link_to "Editar", edit_demand_path(@demand), class: "tsuru-btn-ghost" %>
+          <% end %>
+
+          <% if @demand.em_avaliacao_fi? && (current_user.fi? || current_user.admin?) %>
+            <%= link_to "Avaliar como FI →", fi_demand_path(@demand), class: "tsuru-btn-primary" %>
+          <% end %>
+
+          <%# Etapa 6 — promover sugestão elegível a Projeto INOVA BEL oficial %>
+          <% if policy(@demand).tornar_projeto? && @demand.elegivel? %>
+            <%= button_to tornar_projeto_demand_path(@demand), method: :patch,
+                  class: "tsuru-btn-primary",
+                  data: { turbo_confirm: "Promover #{@demand.codigo_display} a Projeto INOVA BEL oficial?" } do %>
+              🚀 Virar Projeto INOVA BEL
+            <% end %>
+          <% end %>
+
+          <% if @demand.projeto? %>
+            <span class="tsuru-btn-ghost !text-emerald-700 !cursor-default">✓ Projeto INOVA BEL ativo</span>
           <% end %>
         </div>
       </div>

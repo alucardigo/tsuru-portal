@@ -1,0 +1,113 @@
+<% content_for :title, "Incluir usuário" %>
+<% content_for :nav_active, "usuarios" %>
+<% content_for :crumb, "Administração" %>
+<% content_for :subtitle, "· novo cadastro" %>
+
+<% content_for :actions do %>
+  <%= link_to admin_users_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    ← Voltar
+  <% end %>
+<% end %>
+
+<div class="max-w-[680px] mx-auto px-7 py-6">
+  <%# === Cabeçalho da página === %>
+  <div class="mb-5">
+    <div class="subhead">Administração</div>
+    <h1 class="mt-1 text-[22px] font-semibold tracking-tight text-gray-900">Incluir usuário</h1>
+    <p class="text-[12.5px] text-gray-500 mt-1 leading-relaxed max-w-2xl">
+      Crie um acesso ao portal. O papel define quais módulos a pessoa enxerga e pode operar.
+    </p>
+  </div>
+
+  <%= form_with model: @user, url: admin_users_path do |f| %>
+    <div class="bg-white rounded-lg border border-gray-200">
+      <%# === HEADER ====================================================== %>
+      <div class="px-5 py-4 border-b border-gray-100 flex items-start justify-between">
+        <div>
+          <div class="text-[14px] font-semibold text-gray-900 tracking-tight">Dados do usuário</div>
+          <div class="text-[12px] text-gray-500 mt-0.5">
+            Preencha os campos abaixo. A senha é opcional — se ficar em branco, geramos uma automática.
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          Novo cadastro
+        </div>
+      </div>
+
+      <%# === ERROS ======================================================= %>
+      <% if @user.errors.any? %>
+        <div class="mx-5 mt-4 rounded-md p-3 bg-rose-50 ring-1 ring-rose-100">
+          <div class="text-[12px] font-semibold text-rose-800 mb-1">
+            Não foi possível salvar (<%= @user.errors.count %>):
+          </div>
+          <ul class="text-[12px] text-rose-700 list-disc list-inside space-y-0.5">
+            <% @user.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%# === BODY ======================================================== %>
+      <div class="p-5 space-y-4">
+        <%# Nome %>
+        <div>
+          <%= f.label :name, "Nome", class: "tsuru-label" %>
+          <%= f.text_field :name, class: "tsuru-input mt-1",
+                placeholder: "Ex: Maria Oliveira" %>
+        </div>
+
+        <%# E-mail %>
+        <div>
+          <%= f.label :email, "E-mail", class: "tsuru-label" %>
+          <%= f.email_field :email, class: "tsuru-input mt-1",
+                placeholder: "maria.oliveira@bellube.com.br" %>
+        </div>
+
+        <%# Grid 2 col: Papel + Área %>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <%= f.label :role, "Papel", class: "tsuru-label" %>
+            <%= f.select :role,
+                  User.roles.keys.map { |r| [ role_label(r), r ] },
+                  { selected: @user.role },
+                  class: "tsuru-select mt-1" %>
+          </div>
+          <div>
+            <%= f.label :area, "Área", class: "tsuru-label" %>
+            <%= f.text_field :area, class: "tsuru-input mt-1",
+                  placeholder: "Opcional — ex: Operações" %>
+          </div>
+        </div>
+
+        <%# Superior %>
+        <div>
+          <%= f.label :supervisor_id, "Superior", class: "tsuru-label" %>
+          <%= f.collection_select :supervisor_id, @supervisores, :id, :display_name,
+                { include_blank: "— sem superior —" },
+                class: "tsuru-select mt-1" %>
+        </div>
+
+        <%# Senha inicial %>
+        <div>
+          <%= f.label :password, "Senha inicial", class: "tsuru-label" %>
+          <p class="tsuru-hint">Deixe em branco para gerar uma senha automática.</p>
+          <%= f.password_field :password, autocomplete: "new-password", class: "tsuru-input mt-1",
+                placeholder: "••••••••" %>
+        </div>
+      </div>
+
+      <%# === FOOTER ====================================================== %>
+      <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-end gap-1.5 bg-gray-50/40 rounded-b-lg">
+        <%= link_to admin_users_path, class: "tsuru-btn-ghost" do %>
+          Cancelar
+        <% end %>
+        <button type="submit" class="tsuru-btn-primary">
+          Incluir
+          <%= icon(:arrow, size: 12) %>
+        </button>
+      </div>
+    </div>
+  <% end %>
+</div>

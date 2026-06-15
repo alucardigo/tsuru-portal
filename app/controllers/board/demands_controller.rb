@@ -1,6 +1,6 @@
 module Board
   class DemandsController < BaseController
-    before_action :set_demand, only: %i[show approve reject defer]
+    before_action :set_demand, only: %i[show approve reject defer encaminhar_fi]
 
     def index
       scope = Demand.where(aasm_state: "board_review").includes(:user, :lei_do_bem_record).order(updated_at: :desc)
@@ -28,13 +28,19 @@ module Board
       apply_decision!(outcome: "deferred", event: nil)
     end
 
+    # Etapa 4 -> 5: diretoria aprova e encaminha à FI Group
+    def encaminhar_fi
+      apply_decision!(outcome: "approved", event: :aprovar_diretoria,
+                      notice_ok: "Aprovado pela diretoria e encaminhado à FI Group.")
+    end
+
     private
 
     def set_demand
       @demand = Demand.find(params[:id])
     end
 
-    def apply_decision!(outcome:, event:)
+    def apply_decision!(outcome:, event:, notice_ok: nil)
       justification = params[:justification].to_s
 
       decision = @demand.board_decisions.build(
@@ -59,9 +65,10 @@ module Board
       end
 
       redirect_to board_demands_path,
-                  notice: outcome == "approved" ? "Projeto aprovado pela diretoria." :
-                          outcome == "rejected" ? "Projeto rejeitado." :
-                          "Decisão adiada — registrada no histórico."
+                  notice: notice_ok ||
+                          (outcome == "approved" ? "Projeto aprovado pela diretoria." :
+                           outcome == "rejected" ? "Projeto rejeitado." :
+                           "Decisão adiada — registrada no histórico.")
     end
 
     def estimated_benefit_for(demand)

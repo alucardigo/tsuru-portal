@@ -2,49 +2,97 @@
 <% content_for :nav_active, "demandas" %>
 <% content_for :crumb, "Início" %>
 
-<% if current_user.colaborador? %>
-  <% content_for :actions do %>
-    <%= link_to new_demand_path, class: "tsuru-btn-primary" do %>
-      <%= icon(:plus, size: 14) %>
-      <span>Nova demanda</span>
-    <% end %>
+<% content_for :actions do %>
+  <%= link_to new_demand_path, class: "tsuru-btn-primary" do %>
+    <%= icon(:plus, size: 14) %>
+    <span>Incluir</span>
   <% end %>
 <% end %>
 
-<% enviadas_count = @demands.reject { |d| d.aasm_state == "rascunho" }.size %>
-<% andamento_count = @demands.count { |d| %w[em_triagem n1_aprovada n2_em_andamento n2_completa awaiting_requester board_review].include?(d.aasm_state) } %>
-<% elegiveis_count = @demands.count { |d| %w[elegivel in_execution concluida].include?(d.aasm_state) } %>
+<% andamento_count = @demands.count { |d| %w[aprovada_supervisor em_triagem n1_aprovada n2_em_andamento n2_completa awaiting_requester board_review em_avaliacao_fi].include?(d.aasm_state) } %>
+<% projetos_count = @demands.count { |d| %w[elegivel projeto in_execution concluida].include?(d.aasm_state) } %>
+<% filtros_ativos = params[:q].present? || params[:etapa].present? || params[:estado].present? || params[:trl].present? || params[:data_ini].present? || params[:data_fim].present? %>
 
 <div class="max-w-[1180px] mx-auto px-7 py-6">
-  <div class="flex items-center justify-between mb-5">
+  <div class="flex items-center justify-between mb-4">
     <div>
-      <div class="text-[13.5px] font-semibold text-gray-900">Minhas demandas</div>
+      <div class="text-[13.5px] font-semibold text-gray-900">
+        <%= current_user.colaborador? ? "Minhas demandas" : "Demandas" %>
+      </div>
       <div class="text-[11.5px] text-gray-500 mt-0.5">
-        <%= pluralize(@pagy.count, "demanda enviada", plural: "demandas enviadas") %>
+        <%= pluralize(@pagy.count, "registro", plural: "registros") %>
         <span class="text-gray-300">·</span>
         <%= andamento_count %> em andamento
         <span class="text-gray-300">·</span>
-        <%= elegiveis_count %> elegíveis
+        <%= projetos_count %> viraram projeto
       </div>
     </div>
-    <% if @demands.any? %>
-      <button class="text-[12px] text-gray-600 hover:text-gray-900 flex items-center gap-1.5">
-        <%= icon(:filter, size: 12) %>
-        Filtrar
-      </button>
-    <% end %>
   </div>
+
+  <%# === PAINEL DE FILTROS === %>
+  <%= form_with url: demands_path, method: :get, data: { turbo_frame: "_top" },
+        class: "tsuru-card p-4 mb-4" do %>
+    <div class="flex items-center justify-between mb-3">
+      <div class="subhead flex items-center gap-1.5"><%= icon(:filter, size: 12) %> Filtros</div>
+      <% if filtros_ativos %>
+        <%= link_to "Limpar", demands_path, class: "text-[11.5px] text-gray-500 hover:text-gray-900" %>
+      <% end %>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+      <div class="md:col-span-2">
+        <label class="tsuru-label">Buscar título</label>
+        <%= text_field_tag :q, params[:q], placeholder: "palavra-chave…", class: "tsuru-input mt-1" %>
+      </div>
+      <div>
+        <label class="tsuru-label">Etapa do fluxo</label>
+        <%= select_tag :etapa,
+              options_for_select([["Todas", ""]] + Demand::ETAPAS_FUNIL.map { |n, l| ["#{n}. #{l}", n] }, params[:etapa]),
+              class: "tsuru-select mt-1" %>
+      </div>
+      <div>
+        <label class="tsuru-label">Maturidade TRL</label>
+        <%= select_tag :trl,
+              options_for_select([["Qualquer", ""]] + (1..9).map { |n| ["TRL #{n}", n] }, params[:trl]),
+              class: "tsuru-select mt-1" %>
+      </div>
+      <div class="flex items-end">
+        <%= submit_tag "Aplicar", class: "tsuru-btn-primary w-full" %>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+      <div>
+        <label class="tsuru-label">Estado detalhado</label>
+        <%= select_tag :estado,
+              options_for_select([["Todos", ""]] + UiHelper::STATUS_LABELS.map { |k, v| [v, k] }, params[:estado]),
+              class: "tsuru-select mt-1" %>
+      </div>
+      <div>
+        <label class="tsuru-label">Criada de</label>
+        <%= date_field_tag :data_ini, params[:data_ini], class: "tsuru-input mt-1" %>
+      </div>
+      <div>
+        <label class="tsuru-label">Criada até</label>
+        <%= date_field_tag :data_fim, params[:data_fim], class: "tsuru-input mt-1" %>
+      </div>
+    </div>
+  <% end %>
 
   <% if @pagy.count.zero? %>
     <div class="bg-white rounded-lg border border-gray-200 py-14 px-6 text-center">
       <div class="w-12 h-12 mx-auto rounded-full bg-gray-100 flex items-center justify-center text-gray-400 mb-3">
         <%= icon(:bulb, size: 22) %>
       </div>
-      <div class="text-[14px] font-semibold text-gray-900">Nenhuma ideia registrada ainda</div>
+      <div class="text-[14px] font-semibold text-gray-900">
+        <%= filtros_ativos ? "Nenhum resultado para os filtros" : "Nenhuma ideia registrada ainda" %>
+      </div>
       <p class="text-[12.5px] text-gray-500 mt-1 max-w-[340px] mx-auto leading-relaxed">
-        Quando você identificar um problema ou oportunidade que poderia virar projeto de inovação, registre aqui. O time T&amp;I ajuda a refinar.
+        <% if filtros_ativos %>
+          Tente ampliar os critérios ou <%= link_to "limpar os filtros", demands_path, class: "text-indigo-600 hover:underline" %>.
+        <% else %>
+          Quando você identificar um problema ou oportunidade que poderia virar projeto de inovação, registre aqui. O time T&amp;I ajuda a refinar.
+        <% end %>
       </p>
-      <% if current_user.colaborador? %>
+      <% unless filtros_ativos %>
         <div class="mt-5">
           <%= link_to new_demand_path, class: "tsuru-btn-primary" do %>
             <%= icon(:plus, size: 14) %>
@@ -60,27 +108,42 @@
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
-                <span class="font-mono text-gray-700">DEM-<%= demand.id.to_s.rjust(4, "0") %></span>
+                <span class="font-mono text-gray-700"><%= demand.codigo_display %></span>
                 <span class="text-gray-300">·</span>
                 <span><%= demand.user.display_name %></span>
                 <span class="text-gray-300">·</span>
-                <span>Enviada <%= l demand.created_at.to_date, format: :short %></span>
+                <span><%= l demand.created_at.to_date, format: :short %></span>
+                <span class="text-gray-300">·</span>
+                <span class="text-gray-600"><%= demand.etapa_funil %>. <%= demand.etapa_label %></span>
               </div>
               <div class="mt-0.5 text-[13.5px] font-medium text-gray-900 truncate"><%= demand.title %></div>
             </div>
             <%= status_pill(demand.aasm_state) %>
           </div>
           <div class="mt-3"><%= flow_track(demand.aasm_state) %></div>
-          <div class="mt-2.5 text-[11.5px] text-gray-500 flex items-center justify-between gap-3">
-            <span class="truncate flex-1">
+          <div class="mt-2.5 flex items-center justify-between gap-3">
+            <span class="truncate flex-1 text-[11.5px] text-gray-500">
               <%= UiHelper::STATUS_LABELS[demand.aasm_state] || demand.aasm_state.humanize %>
               <% if demand.parecer_tecnico.present? %>
-                <span class="text-gray-300">·</span> parecer técnico registrado
+                <span class="text-gray-300">·</span> parecer registrado
               <% end %>
             </span>
-            <%= link_to demand_path(demand), class: "text-gray-600 hover:text-gray-900 shrink-0 flex items-center gap-1" do %>
-              Abrir <%= icon(:arrow, size: 12) %>
-            <% end %>
+            <%# === BOTÕES DE AÇÃO === %>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <% if policy(demand).update? %>
+                <%= link_to "Alterar", edit_demand_path(demand), class: "tsuru-btn-ghost !h-7 !text-[11px] !px-2.5" %>
+              <% end %>
+              <% if policy(demand).destroy? && !%w[cancelada arquivada projeto concluida].include?(demand.aasm_state) %>
+                <%= button_to demand_path(demand), method: :delete,
+                      form: { data: { turbo_confirm: "Inativar esta demanda? Ela será cancelada." } },
+                      class: "tsuru-btn-ghost !h-7 !text-[11px] !px-2.5 !text-rose-600" do %>
+                  Inativar
+                <% end %>
+              <% end %>
+              <%= link_to demand_path(demand), class: "tsuru-btn-secondary !h-7 !text-[11px] !px-2.5" do %>
+                Abrir <%= icon(:arrow, size: 12) %>
+              <% end %>
+            </div>
           </div>
         </div>
       <% end %>

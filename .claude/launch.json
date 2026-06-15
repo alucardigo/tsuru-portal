@@ -1,0 +1,36 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Rails Web Server",
+      "runtimeExecutable": "ruby",
+      "runtimeArgs": ["bin/rails", "server", "-b", "0.0.0.0"],
+      "port": 3000,
+      "cwd": "X:/tsuru-portal",
+      "env": {
+        "DB_USER": "postgres",
+        "DB_PASSWORD": "postgres",
+        "RAILS_ENV": "development"
+      }
+    },
+    {
+      "name": "Tailwind CSS Watcher",
+      "runtimeExecutable": "ruby",
+      "runtimeArgs": ["bin/rails", "tailwindcss:watch"],
+      "port": null,
+      "cwd": "X:/tsuru-portal"
+    },
+    {
+      "name": "Foreman (web + css)",
+      "runtimeExecutable": "ruby",
+      "runtimeArgs": ["bin/dev"],
+      "port": 3000,
+      "cwd": "X:/tsuru-portal",
+      "env": {
+        "DB_USER": "postgres",
+        "DB_PASSWORD": "postgres",
+        "PORT": "3000"
+      }
+    }
+  ]
+}

@@ -7,8 +7,11 @@
   <%= link_to admin_demands_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
     <%= icon(:triage, size: 12) %> Esteira
   <% end %>
-  <%= link_to admin_metrics_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
-    <%= icon(:chart, size: 12) %> Métricas
+  <%= link_to admin_auditoria_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:shield, size: 12) %> Auditoria
+  <% end %>
+  <%= link_to new_admin_user_path, class: "tsuru-btn-primary !h-7 !text-[11.5px] !px-2.5" do %>
+    <%= icon(:plus, size: 12) %> Incluir
   <% end %>
 <% end %>
 
@@ -64,10 +67,11 @@
           <thead>
             <tr class="bg-gray-50/60 text-[10.5px] uppercase tracking-wider text-gray-500 text-left">
               <th class="px-4 py-2.5 font-medium">Nome</th>
-              <th class="px-3 py-2.5 font-medium">Papel atual</th>
-              <th class="px-3 py-2.5 font-medium text-center">Confirmado</th>
-              <th class="px-3 py-2.5 font-medium whitespace-nowrap">Cadastrado em</th>
+              <th class="px-3 py-2.5 font-medium">Papel</th>
+              <th class="px-3 py-2.5 font-medium">Superior</th>
+              <th class="px-3 py-2.5 font-medium text-center">Status</th>
               <th class="px-3 py-2.5 font-medium">Alterar papel</th>
+              <th class="px-3 py-2.5 font-medium text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -94,19 +98,21 @@
                   %>
                   <%= pill(role_label(user.role), color: role_color) %>
                 </td>
-                <td class="px-3 py-2.5 text-center">
-                  <% if user.confirmed_at.present? %>
-                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-50 text-emerald-600" title="Confirmado em <%= l(user.confirmed_at, format: :short) %>">
-                      <%= icon(:check, size: 12) %>
-                    </span>
-                  <% else %>
-                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-gray-400" title="Pendente de confirmação">
-                      <%= icon(:x, size: 12) %>
-                    </span>
+                <td class="px-3 py-2.5">
+                  <%= form_with url: vincular_superior_admin_user_path(user), method: :patch, local: true, class: "inline-flex items-center gap-1.5" do |f| %>
+                    <%= f.select "user[supervisor_id]",
+                          @supervisores.reject { |s| s.id == user.id }.map { |s| [ s.display_name, s.id ] },
+                          { include_blank: "— nenhum —", selected: user.supervisor_id },
+                          class: "tsuru-select !h-8 !text-[12px] !py-0 !px-2 min-w-[150px]",
+                          onchange: "this.form.requestSubmit()" %>
                   <% end %>
                 </td>
-                <td class="px-3 py-2.5 text-gray-500 whitespace-nowrap tabular-nums">
-                  <%= l(user.created_at, format: :short) %>
+                <td class="px-3 py-2.5 text-center">
+                  <% if user.active %>
+                    <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-medium">Ativo</span>
+                  <% else %>
+                    <span class="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 font-medium">Inativo</span>
+                  <% end %>
                 </td>
                 <td class="px-3 py-2.5">
                   <%= form_with url: admin_user_path(user), method: :patch, local: true, class: "inline-flex items-center gap-1.5" do |f| %>
@@ -115,6 +121,15 @@
                           { selected: user.role },
                           class: "tsuru-select !h-8 !text-[12px] !py-0 !px-2 min-w-[140px]" %>
                     <%= f.submit "Salvar", class: "tsuru-btn-secondary !h-8 !text-[11.5px] !px-2.5" %>
+                  <% end %>
+                </td>
+                <td class="px-3 py-2.5 text-right whitespace-nowrap">
+                  <% unless user == current_user %>
+                    <%= button_to toggle_active_admin_user_path(user), method: :patch,
+                          form: { data: { turbo_confirm: user.active ? "Inativar #{user.display_name}?" : "Reativar #{user.display_name}?" } },
+                          class: "tsuru-btn-ghost !h-8 !text-[11.5px] !px-2.5 #{user.active ? '!text-rose-600' : '!text-emerald-600'}" do %>
+                      <%= user.active ? "Inativar" : "Reativar" %>
+                    <% end %>
                   <% end %>
                 </td>
               </tr>

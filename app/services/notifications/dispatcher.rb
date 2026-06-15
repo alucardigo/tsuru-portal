@@ -5,7 +5,8 @@ module Notifications
     Result = Struct.new(:success?, :payload, :reason, :errors, keyword_init: true)
 
     EVENT_MAP = {
-      "submeter"          => { kind: "demand_submetida",    audience: :gestores,  title: "Nova demanda submetida" },
+      "submeter"          => { kind: "demand_submetida",    audience: :supervisores, title: "Nova sugestão aguardando sua aprovação" },
+      "aprovar_supervisor" => { kind: "demand_aprovada_supervisor", audience: :analistas, title: "Supervisor aprovou — pronta para Análise Interna" },
       "iniciar_triagem"   => { kind: "demand_em_triagem",   audience: :owner,     title: "Sua demanda entrou em triagem" },
       "aprovar_n1"        => { kind: "demand_n1_aprovada",  audience: :owner,     title: "Triagem N1 aprovada — vai para avaliação técnica" },
       "reprovar_n1"       => { kind: "demand_n1_reprovada", audience: :owner,     title: "Triagem N1 não aprovada" },
@@ -13,8 +14,12 @@ module Notifications
       "iniciar_n2"        => { kind: "demand_n2_iniciada",  audience: :owner,     title: "Avaliação N2 iniciada" },
       "concluir_n2"       => { kind: "demand_n2_completa", audience: :analistas, title: "N2 concluída — aguarda decisão" },
       "enviar_para_board" => { kind: "demand_board_review", audience: :board,     title: "Demanda enviada para diretoria" },
+      "aprovar_diretoria" => { kind: "demand_em_avaliacao_fi", audience: :fi,     title: "Diretoria aprovou — aguarda parecer da FI" },
+      "fi_aprovar"        => { kind: "demand_elegivel",     audience: :owner,     title: "FI Group avaliou: elegível Lei do Bem 🎉" },
+      "fi_reprovar"       => { kind: "demand_nao_elegivel", audience: :owner,     title: "FI Group avaliou: não elegível" },
       "marcar_elegivel"   => { kind: "demand_elegivel",     audience: :owner,     title: "Sua demanda é elegível Lei do Bem 🎉" },
       "marcar_nao_elegivel" => { kind: "demand_nao_elegivel", audience: :owner,   title: "Decisão final: não elegível" },
+      "tornar_projeto"    => { kind: "demand_projeto",      audience: :owner,     title: "Sua ideia virou Projeto INOVA BEL oficial 🚀" },
       "cancelar"          => { kind: "demand_arquivada",    audience: :owner,     title: "Sua demanda foi arquivada" }
     }.freeze
 
@@ -53,19 +58,24 @@ module Notifications
     private
 
     def build_body
-      "DEM-#{@demand.id.to_s.rjust(4, '0')} — #{@demand.title.truncate(80)}"
+      "#{@demand.codigo_display} — #{@demand.title.truncate(80)}"
     end
 
     def recipients_for(audience)
       case audience
       when :owner
         [ @demand.user ]
+      when :supervisores
+        # Notifica o supervisor direto do autor (se houver) + gestores/admins
+        [ @demand.user.supervisor ].compact + User.where(role: %i[gestor admin]).to_a
       when :gestores
         User.where(role: %i[gestor admin])
       when :analistas
         User.where(role: %i[analista_pdi admin])
       when :board
         User.where(role: %i[board admin])
+      when :fi
+        User.where(role: %i[fi admin])
       else
         []
       end

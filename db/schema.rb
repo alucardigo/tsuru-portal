@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_03_145121) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_15_175201) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,10 +81,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_03_145121) do
   create_table "demands", force: :cascade do |t|
     t.string "aasm_state", default: "rascunho", null: false
     t.string "area_impactada"
+    t.string "codigo"
     t.datetime "created_at", null: false
     t.text "description", null: false
     t.jsonb "n1_flags", default: {}, null: false
     t.jsonb "n2_assessment", default: {}
+    t.integer "numero_inova"
     t.integer "ods_goals", default: [], array: true
     t.text "parecer_tecnico"
     t.text "solucao_proposta"
@@ -94,6 +96,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_03_145121) do
     t.string "urgencia"
     t.bigint "user_id", null: false
     t.index ["aasm_state"], name: "index_demands_on_aasm_state"
+    t.index ["codigo"], name: "index_demands_on_codigo", unique: true
+    t.index ["numero_inova"], name: "index_demands_on_numero_inova", unique: true
     t.index ["user_id"], name: "index_demands_on_user_id"
   end
 
@@ -203,6 +207,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_03_145121) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "area"
     t.datetime "confirmation_sent_at"
     t.string "confirmation_token"
     t.datetime "confirmed_at"
@@ -217,11 +223,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_03_145121) do
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
     t.integer "role", default: 0, null: false
+    t.bigint "supervisor_id"
     t.string "unconfirmed_email"
     t.datetime "updated_at", null: false
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["supervisor_id"], name: "index_users_on_supervisor_id"
   end
 
   create_table "versions", force: :cascade do |t|
@@ -254,4 +262,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_03_145121) do
   add_foreign_key "project_tasks", "users", column: "creator_id"
   add_foreign_key "team_members", "lei_do_bem_records"
   add_foreign_key "team_members", "users"
+  add_foreign_key "users", "users", column: "supervisor_id"
 end

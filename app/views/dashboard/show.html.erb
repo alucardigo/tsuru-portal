@@ -27,13 +27,14 @@
     <% end %>
   </div>
 
-  <%# === KPI CARDS === %>
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+  <%# === KPI CARDS (fluxo INOVA BEL) === %>
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
     <% [
-      [ "Total",       @stats[:total],      "Demandas registradas",       "text-gray-900" ],
-      [ "Em curso",    @stats[:submetidas] + @stats[:em_triagem], "Aguardando ação",   "text-blue-700" ],
-      [ "Aprovadas N1", @stats[:aprovadas], "Avançaram à avaliação",      "text-violet-700" ],
-      [ "Elegíveis Lei do Bem", @stats[:elegiveis], "Geram benefício fiscal", "text-emerald-700" ]
+      [ "Total",        @stats[:total],      "Sugestões registradas",      "text-gray-900" ],
+      [ "Em análise",   @stats[:submetidas] + @stats[:em_triagem] + @stats[:aprovadas], "Supervisor + T&I", "text-blue-700" ],
+      [ "Na FI Group",  @stats[:em_fi],      "Aguardando parecer",         "text-amber-700" ],
+      [ "Elegíveis",    @stats[:elegiveis],  "Parecer FI positivo",        "text-violet-700" ],
+      [ "Projetos INOVA BEL", @stats[:projetos], "Viraram projeto de fato", "text-emerald-700" ]
     ].each do |label, value, sub, color| %>
       <div class="tsuru-card p-4">
         <div class="subhead"><%= label %></div>
@@ -83,7 +84,7 @@
                 <div class="flex items-start justify-between gap-3">
                   <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
-                      <span class="font-mono text-gray-700">DEM-<%= demand.id.to_s.rjust(4, '0') %></span>
+                      <span class="font-mono text-gray-700"><%= demand.codigo_display %></span>
                       <span class="text-gray-300">·</span>
                       <span><%= demand.user.display_name %></span>
                       <span class="text-gray-300">·</span>
@@ -100,20 +101,42 @@
         <% end %>
       </div>
 
-      <%# Filas (gestores e analistas) %>
-      <% if current_user.gestor_or_above? && @pending_triagem&.any? %>
+      <%# Fila Supervisor (etapa 2) %>
+      <% if @pending_supervisor&.any? %>
         <div>
           <div class="text-[13.5px] font-semibold text-gray-900 mb-2.5 flex items-center gap-2">
             <%= icon(:inbox, size: 16, class_name: "text-amber-600") %>
-            Aguardando triagem N1
-            <span class="text-[10.5px] px-1.5 py-0.5 rounded font-medium bg-amber-100 text-amber-800"><%= @pending_triagem.count %></span>
+            Aguardando sua aprovação (Supervisor)
+            <span class="text-[10.5px] px-1.5 py-0.5 rounded font-medium bg-amber-100 text-amber-800"><%= @pending_supervisor.count %></span>
+          </div>
+          <div class="space-y-2">
+            <% @pending_supervisor.each do |d| %>
+              <div class="bg-white rounded-md border border-gray-200 p-3 flex items-center justify-between">
+                <div class="min-w-0 flex-1">
+                  <%= link_to d.title, gestor_demand_path(d), class: "text-[13px] font-medium text-gray-900 hover:underline truncate block" %>
+                  <div class="text-[11px] text-gray-500 mt-0.5"><%= d.codigo_display %> · por <%= d.user.display_name %> · há <%= time_ago_in_words(d.created_at) %></div>
+                </div>
+                <%= link_to "Analisar", gestor_demand_path(d), class: "tsuru-btn-primary !h-7 !text-[11px] !px-2.5" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Fila Análise Interna — pronta para triagem (etapa 3) %>
+      <% if @pending_triagem&.any? %>
+        <div>
+          <div class="text-[13.5px] font-semibold text-gray-900 mb-2.5 flex items-center gap-2">
+            <%= icon(:triage, size: 16, class_name: "text-blue-600") %>
+            Aprovadas pelo supervisor — iniciar triagem
+            <span class="text-[10.5px] px-1.5 py-0.5 rounded font-medium bg-blue-100 text-blue-800"><%= @pending_triagem.count %></span>
           </div>
           <div class="space-y-2">
             <% @pending_triagem.each do |d| %>
               <div class="bg-white rounded-md border border-gray-200 p-3 flex items-center justify-between">
                 <div class="min-w-0 flex-1">
                   <%= link_to d.title, demand_path(d), class: "text-[13px] font-medium text-gray-900 hover:underline truncate block" %>
-                  <div class="text-[11px] text-gray-500 mt-0.5">por <%= d.user.display_name %> · há <%= time_ago_in_words(d.created_at) %></div>
+                  <div class="text-[11px] text-gray-500 mt-0.5"><%= d.codigo_display %> · por <%= d.user.display_name %></div>
                 </div>
                 <%= button_to iniciar_triagem_demand_path(d), method: :patch, class: "tsuru-btn-primary !h-7 !text-[11px] !px-2.5" do %>
                   Iniciar triagem
@@ -146,6 +169,28 @@
           </div>
         </div>
       <% end %>
+
+      <%# Fila FI (etapa 5) %>
+      <% if @pending_fi&.any? %>
+        <div>
+          <div class="text-[13.5px] font-semibold text-gray-900 mb-2.5 flex items-center gap-2">
+            <%= icon(:shield, size: 16, class_name: "text-amber-600") %>
+            Aguardando parecer da FI Group
+            <span class="text-[10.5px] px-1.5 py-0.5 rounded font-medium bg-amber-100 text-amber-800"><%= @pending_fi.count %></span>
+          </div>
+          <div class="space-y-2">
+            <% @pending_fi.each do |d| %>
+              <div class="bg-white rounded-md border border-gray-200 p-3 flex items-center justify-between">
+                <div class="min-w-0 flex-1">
+                  <%= link_to d.title, fi_demand_path(d), class: "text-[13px] font-medium text-gray-900 hover:underline truncate block" %>
+                  <div class="text-[11px] text-gray-500 mt-0.5"><%= d.codigo_display %> · por <%= d.user.display_name %></div>
+                </div>
+                <%= link_to "Avaliar", fi_demand_path(d), class: "tsuru-btn-primary !h-7 !text-[11px] !px-2.5" %>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
     </div>
 
     <%# === COLUNA LATERAL === %>
@@ -155,11 +200,12 @@
         <div class="subhead">Por onde sua ideia passa</div>
         <ol class="mt-3 space-y-2.5 text-[12px] text-gray-700">
           <% [
-            [ "Seu superior aprova",                 "Em até 3 dias úteis" ],
-            [ "Time T&I avalia elegibilidade (N1)",  "5 perguntas de triagem" ],
-            [ "Refinamento técnico se necessário",   "Você pode ser chamado" ],
-            [ "Vira projeto PD&I formal",            "Recebe código e workspace" ],
-            [ "Defesa anual para o MCTI",            "Time cuida da documentação" ]
+            [ "Você registra a sugestão",       "Recebe código INOVA BEL" ],
+            [ "Seu supervisor aprova",          "Encaminha à Análise Interna" ],
+            [ "Time T&I analisa (N1 + N2)",     "Triagem + avaliação técnica" ],
+            [ "Diretoria valida",               "Decide encaminhar à FI" ],
+            [ "FI Group dá o parecer",          "Elegibilidade Lei do Bem" ],
+            [ "Vira Projeto de Fato",           "Projeto INOVA BEL oficial" ]
           ].each_with_index do |(t, d), i| %>
             <li class="flex gap-2.5">
               <span class="w-5 h-5 shrink-0 rounded-full bg-gray-100 text-gray-700 text-[10.5px] font-semibold flex items-center justify-center"><%= i + 1 %></span>

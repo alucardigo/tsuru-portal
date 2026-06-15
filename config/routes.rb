@@ -26,6 +26,7 @@ Rails.application.routes.draw do
       get   :n2
       patch :n2, action: :update_n2
       patch :decidir_elegibilidade
+      patch :tornar_projeto
       get   :versions
     end
 
@@ -52,6 +53,7 @@ Rails.application.routes.draw do
         post :approve
         post :reject
         post :defer
+        post :encaminhar_fi
       end
     end
   end
@@ -66,12 +68,26 @@ Rails.application.routes.draw do
     end
   end
 
+  namespace :fi do
+    resources :demands, only: %i[index show] do
+      member do
+        post :aprovar
+        post :reprovar
+      end
+    end
+  end
+
   post "validators/linus", to: "validators#linus", as: :linus_validator
 
   get "pipeline", to: "pipeline#show", as: :pipeline
 
   namespace :admin do
-    resources :users, only: %i[index update]
+    resources :users, only: %i[index new create update] do
+      member do
+        patch :toggle_active
+        patch :vincular_superior
+      end
+    end
     resources :demands, only: %i[index] do
       member do
         get :formpd
@@ -80,6 +96,7 @@ Rails.application.routes.draw do
       end
     end
     get "metrics", to: "metrics#show", as: :metrics
+    get "auditoria", to: "audits#index", as: :auditoria
   end
 
   resources :notifications, only: %i[index] do

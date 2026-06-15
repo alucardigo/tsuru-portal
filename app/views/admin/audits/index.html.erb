@@ -1,0 +1,212 @@
+<% content_for :title, "Auditoria do Sistema" %>
+<% content_for :nav_active, "esteira" %>
+<% content_for :crumb, "Auditoria · Painel Admin" %>
+<% content_for :subtitle, "· trilha completa de alterações de estado" %>
+
+<% content_for :actions do %>
+  <%= link_to admin_demands_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:list, size: 12) %> Demandas
+  <% end %>
+  <%= link_to admin_metrics_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:chart, size: 12) %> Métricas
+  <% end %>
+<% end %>
+
+<% base_params = params.permit(:event, :actor_id, :data_ini, :data_fim).to_h %>
+
+<div class="flex-1 flex min-h-0">
+  <%# === SIDEBAR ESQUERDA — FILTROS === %>
+  <aside class="w-[240px] shrink-0 border-r border-gray-200 bg-white overflow-auto px-3 py-3">
+    <div class="flex items-center justify-between mb-2">
+      <div class="subhead">Filtros</div>
+      <%= link_to "Limpar", admin_auditoria_path, class: "text-[10.5px] text-gray-500 hover:text-gray-900" %>
+    </div>
+
+    <%= form_with url: admin_auditoria_path, method: :get, local: true, class: "space-y-3" do |f| %>
+
+      <%# --- Evento --- %>
+      <div class="py-2 border-b border-gray-100">
+        <%= f.label :event, "Evento", class: "block text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1.5" %>
+        <%= f.select :event,
+              options_for_select([ [ "Todos os eventos", "" ] ] + @eventos.map { |e| [ e.to_s.humanize, e ] }, params[:event]),
+              {},
+              class: "tsuru-select !h-8 !text-[12px]" %>
+      </div>
+
+      <%# --- Responsável --- %>
+      <div class="py-2 border-b border-gray-100">
+        <%= f.label :actor_id, "Responsável", class: "block text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1.5" %>
+        <%= f.select :actor_id,
+              options_for_select([ [ "Qualquer responsável", "" ] ] + @atores.map { |u| [ u.display_name, u.id ] }, params[:actor_id]),
+              {},
+              class: "tsuru-select !h-8 !text-[12px]" %>
+      </div>
+
+      <%# --- Período --- %>
+      <div class="py-2 border-b border-gray-100">
+        <div class="text-[10px] uppercase tracking-wider text-gray-400 font-semibold mb-1.5">Período</div>
+        <div class="space-y-2">
+          <div>
+            <%= f.label :data_ini, "De", class: "block text-[10.5px] text-gray-500 mb-0.5" %>
+            <%= f.date_field :data_ini, value: params[:data_ini], class: "tsuru-input !h-8 !text-[12px]" %>
+          </div>
+          <div>
+            <%= f.label :data_fim, "Até", class: "block text-[10.5px] text-gray-500 mb-0.5" %>
+            <%= f.date_field :data_fim, value: params[:data_fim], class: "tsuru-input !h-8 !text-[12px]" %>
+          </div>
+        </div>
+      </div>
+
+      <%# --- Ações --- %>
+      <div class="pt-1 flex flex-col gap-1.5">
+        <%= f.submit "Aplicar filtros", class: "tsuru-btn-primary w-full !h-8 !text-[12px]" %>
+      </div>
+    <% end %>
+  </aside>
+
+  <%# === PAINEL DIREITO === %>
+  <div class="flex-1 overflow-auto">
+    <div class="px-6 py-5 space-y-6">
+
+      <%# Header + meta %>
+      <div class="flex items-baseline justify-between">
+        <div>
+          <div class="text-[20px] font-semibold tracking-tight text-gray-900">Auditoria do Sistema</div>
+          <div class="text-[12px] text-gray-500 mt-0.5">
+            Trilha completa de alterações de estado das demandas ·
+            <%= params[:event].present? ? "filtrado por #{params[:event].to_s.humanize}" : "todos os eventos" %>
+          </div>
+        </div>
+        <div class="text-[12px] text-gray-500"><%= @total %> transição(ões) registrada(s)</div>
+      </div>
+
+      <%# === SEÇÃO 1 — TRANSIÇÕES DE ESTADO === %>
+      <div class="tsuru-card !p-0 overflow-hidden">
+        <div class="px-4 py-2.5 border-b border-gray-100 flex items-baseline justify-between">
+          <div class="text-[13px] font-semibold text-gray-900">
+            <%= icon(:history, size: 13, class_name: "inline-block align-[-1px] text-gray-400 mr-1") %>
+            Transições de estado
+          </div>
+          <div class="text-[11.5px] text-gray-500"><%= @total %> registradas</div>
+        </div>
+
+        <% if @transitions.empty? %>
+          <div class="p-12 text-center">
+            <%= icon(:search, size: 32, class_name: "mx-auto text-gray-300 mb-3") %>
+            <div class="text-[13px] text-gray-700 font-medium">Nenhuma transição encontrada</div>
+            <div class="text-[12px] text-gray-500 mt-1">Tente ajustar os filtros à esquerda.</div>
+          </div>
+        <% else %>
+          <div class="overflow-x-auto">
+            <table class="w-full text-[12.5px] min-w-[920px]">
+              <thead>
+                <tr class="bg-gray-50/60 text-[10.5px] uppercase tracking-wider text-gray-500 text-left">
+                  <th class="px-3 py-2 font-medium">Quando</th>
+                  <th class="px-3 py-2 font-medium">Responsável</th>
+                  <th class="px-3 py-2 font-medium">Demanda</th>
+                  <th class="px-3 py-2 font-medium">Evento</th>
+                  <th class="px-3 py-2 font-medium">De → Para</th>
+                  <th class="px-3 py-2 font-medium">Justificativa</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @transitions.each do |transition| %>
+                  <tr class="border-t border-gray-100 hover:bg-gray-50/60 align-top">
+                    <td class="px-3 py-2 text-gray-500 whitespace-nowrap">
+                      <%= l transition.created_at, format: :short %>
+                    </td>
+                    <td class="px-3 py-2 text-gray-700">
+                      <% if transition.actor %>
+                        <div class="flex items-center gap-1.5">
+                          <%= avatar(transition.actor, size: 20) %>
+                          <span class="truncate"><%= transition.actor.display_name %></span>
+                        </div>
+                      <% else %>
+                        <span class="text-gray-400 italic">sistema</span>
+                      <% end %>
+                    </td>
+                    <td class="px-3 py-2">
+                      <%= link_to transition.demand.codigo_display, demand_path(transition.demand),
+                            class: "font-mono text-[11px] text-gray-700 hover:underline whitespace-nowrap" %>
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                      <%= pill(transition.event.to_s.humanize, color: "gray") %>
+                    </td>
+                    <td class="px-3 py-2 whitespace-nowrap">
+                      <div class="flex items-center gap-1.5 text-[11.5px]">
+                        <span class="text-gray-600"><%= UiHelper::STATUS_LABELS[transition.from_state] || transition.from_state %></span>
+                        <%= icon(:arrow_right, size: 11, class_name: "text-gray-400") %>
+                        <span class="text-gray-900 font-medium"><%= UiHelper::STATUS_LABELS[transition.to_state] || transition.to_state %></span>
+                      </div>
+                    </td>
+                    <td class="px-3 py-2 text-gray-600 max-w-xs">
+                      <% if transition.justification.present? %>
+                        <span class="line-clamp-2"><%= transition.justification %></span>
+                      <% else %>
+                        <span class="text-gray-400 text-[11px]">—</span>
+                      <% end %>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <%# Footer: contador + paginação %>
+          <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50/40 flex items-center justify-between text-[11.5px] text-gray-600">
+            <div>
+              Mostrando <%= @transitions.size %> de <%= @pagy.count %> ·
+              página <%= @pagy.page %> de <%= @pagy.last %>
+            </div>
+            <nav aria-label="paginação" class="flex items-center gap-1 text-[11.5px]">
+              <%== @pagy.series_nav %>
+            </nav>
+          </div>
+        <% end %>
+      </div>
+
+      <%# === SEÇÃO 2 — ALTERAÇÕES DE REGISTROS (PaperTrail) === %>
+      <div class="tsuru-card !p-0 overflow-hidden">
+        <div class="px-4 py-2.5 border-b border-gray-100 flex items-baseline justify-between">
+          <div class="text-[13px] font-semibold text-gray-900">
+            <%= icon(:layers, size: 13, class_name: "inline-block align-[-1px] text-gray-400 mr-1") %>
+            Alterações de registros (PaperTrail)
+          </div>
+          <div class="text-[11.5px] text-gray-500"><%= @versions.size %> recentes</div>
+        </div>
+
+        <% if @versions.empty? %>
+          <div class="p-8 text-center">
+            <div class="text-[12px] text-gray-500">Nenhuma alteração de registro encontrada.</div>
+          </div>
+        <% else %>
+          <div class="overflow-x-auto">
+            <table class="w-full text-[12px] min-w-[640px]">
+              <thead>
+                <tr class="bg-gray-50/60 text-[10.5px] uppercase tracking-wider text-gray-500 text-left">
+                  <th class="px-3 py-2 font-medium">Registro</th>
+                  <th class="px-3 py-2 font-medium text-right">ID</th>
+                  <th class="px-3 py-2 font-medium">Operação</th>
+                  <th class="px-3 py-2 font-medium">Responsável</th>
+                  <th class="px-3 py-2 font-medium">Quando</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @versions.each do |version| %>
+                  <tr class="border-t border-gray-100 hover:bg-gray-50/60">
+                    <td class="px-3 py-2 text-gray-900 font-medium"><%= version.item_type %></td>
+                    <td class="px-3 py-2 text-right text-gray-700 font-mono text-[11px] tabular-nums"><%= version.item_id %></td>
+                    <td class="px-3 py-2 whitespace-nowrap"><%= pill(version.event.to_s.humanize, color: "gray") %></td>
+                    <td class="px-3 py-2 text-gray-600"><%= version.whodunnit.presence || "—" %></td>
+                    <td class="px-3 py-2 text-gray-500 whitespace-nowrap"><%= l version.created_at, format: :short %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+
+    </div>
+  </div>
+</div>

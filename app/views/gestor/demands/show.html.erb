@@ -1,4 +1,4 @@
-<% content_for :title, "DEM-#{@demand.id.to_s.rjust(4, '0')} · Decisão" %>
+<% content_for :title, "#{@demand.codigo_display} · Decisão" %>
 <% content_for :nav_active, "aprovar" %>
 <% content_for :crumb, "Para aprovar" %>
 <% content_for :subtitle, "· #{@demand.title.truncate(50)}" %>
@@ -17,7 +17,7 @@
   <%# === Header da demanda === %>
   <div class="flex items-center justify-between text-[11.5px] text-gray-500">
     <div class="flex items-center gap-2">
-      <span class="font-mono text-gray-700">DEM-<%= @demand.id.to_s.rjust(4, "0") %></span>
+      <span class="font-mono text-gray-700"><%= @demand.codigo_display %></span>
       <span class="text-gray-300">·</span>
       <%= status_pill(@demand.aasm_state) %>
       <% if @demand.urgencia.present? %>
@@ -76,7 +76,7 @@
         <div class="mt-2 space-y-1.5 text-[12px]">
           <% @similar.each do |s| %>
             <div class="flex items-center gap-2">
-              <span class="font-mono text-gray-500 text-[11px]">DEM-<%= s.id.to_s.rjust(4, "0") %></span>
+              <span class="font-mono text-gray-500 text-[11px]"><%= s.codigo_display %></span>
               <%= link_to s.title.truncate(60), demand_path(s), class: "text-gray-800 hover:underline truncate" %>
               <span class="ml-auto"><%= status_pill(s.aasm_state) %></span>
             </div>

@@ -9,16 +9,19 @@ module UiHelper
     "n2_completa"        => "N2 completa",
     "awaiting_requester" => "Aguardando autor",
     "board_review"       => "Em revisão diretoria",
+    "em_avaliacao_fi"    => "Em avaliação FI",
     "elegivel"           => "Elegível Lei do Bem",
     "nao_elegivel"       => "Não elegível",
+    "aprovada_supervisor" => "Aprovada pelo supervisor",
+    "projeto"            => "Projeto INOVA BEL",
     "in_execution"       => "PD&I em execução",
     "concluida"          => "Concluída",
     "arquivada"          => "Arquivada",
     "cancelada"          => "Cancelada"
   }.freeze
 
-  # FlowTrack: maps aasm_state -> 0..4 step index
-  FLOW_STEPS = [ "Submetida", "Triagem", "Avaliação N2", "PD&I", "Defesa" ].freeze
+  # FlowTrack: 6 macro-etapas do fluxo INOVA BEL (maps aasm_state -> 0..5)
+  FLOW_STEPS = [ "Sugestão", "Supervisor", "Análise", "Diretoria", "FI", "Projeto" ].freeze
 
   def status_pill(state, klass: "")
     label = STATUS_LABELS[state.to_s] || state.to_s.humanize
@@ -27,19 +30,20 @@ module UiHelper
 
   def flow_step_for(state)
     case state.to_s
-    when "rascunho" then -1
-    when "submetida" then 0
-    when "em_triagem", "n1_aprovada", "n1_reprovada" then 1
-    when "n2_em_andamento", "n2_completa", "awaiting_requester" then 2
-    when "board_review", "elegivel", "in_execution" then 3
-    when "concluida", "arquivada" then 4
+    when "rascunho", "awaiting_requester" then 0
+    when "submetida" then 1
+    when "aprovada_supervisor", "em_triagem", "n1_aprovada", "n1_reprovada",
+         "n2_em_andamento", "n2_completa" then 2
+    when "board_review" then 3
+    when "em_avaliacao_fi" then 4
+    when "elegivel", "projeto", "in_execution", "concluida" then 5
     else -1
     end
   end
 
   def flow_track(state)
     step = flow_step_for(state)
-    blocked = %w[n1_reprovada nao_elegivel cancelada].include?(state.to_s)
+    blocked = %w[n1_reprovada nao_elegivel cancelada arquivada].include?(state.to_s)
     content_tag(:div, class: "flow-track") do
       FLOW_STEPS.each_with_index.map do |label, i|
         bar_cls = if blocked && i == step
@@ -79,7 +83,8 @@ module UiHelper
       "gestor"       => "Superior da área",
       "analista_pdi" => "Analista T&I",
       "admin"        => "Administrador",
-      "board"        => "Diretoria"
+      "board"        => "Diretoria",
+      "fi"           => "FI Group"
     }[role.to_s] || role.to_s.humanize
   end
 
@@ -128,6 +133,12 @@ module UiHelper
         { key: "decisoes",   label: "Decisões pendentes", icon: :flag,    path: board_demands_path, badge: board_pending_count },
         { key: "exportar",   label: "Exportar",          icon: :download, path: "#" }
       ]
+    when "fi"
+      [
+        { key: "fila-fi",    label: "Fila de avaliação", icon: :triage,  path: fi_demands_path, badge: fi_pending_count },
+        { key: "projetos",   label: "Projetos avaliados", icon: :folder, path: demands_path },
+        { key: "biblioteca", label: "Biblioteca PD&I",   icon: :book,    path: "#" }
+      ]
     else
       []
     end
@@ -149,6 +160,12 @@ module UiHelper
 
   def gestor_pending_count
     Demand.where(aasm_state: "submetida").count
+  rescue StandardError
+    nil
+  end
+
+  def fi_pending_count
+    Demand.where(aasm_state: "em_avaliacao_fi").count
   rescue StandardError
     nil
   end

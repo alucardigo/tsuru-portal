@@ -33,7 +33,7 @@
           <div class="flex items-start justify-between gap-3">
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
-                <span class="font-mono text-gray-700">DEM-<%= demand.id.to_s.rjust(4, "0") %></span>
+                <span class="font-mono text-gray-700"><%= demand.codigo_display %></span>
                 <span class="text-gray-300">·</span>
                 <span><%= demand.user.display_name %></span>
                 <% if demand.area_impactada.present? %>

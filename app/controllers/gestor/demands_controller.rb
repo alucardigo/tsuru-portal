@@ -19,11 +19,11 @@ module Gestor
 
     def encaminhar
       comment_body = params[:comentario].to_s.strip
-      if @demand.iniciar_triagem
+      if @demand.aprovar_supervisor
         registrar_comentario(comment_body) if comment_body.present?
         @demand.save!
         redirect_to gestor_demands_path,
-                    notice: "Demanda encaminhada para análise técnica."
+                    notice: "Sugestão aprovada e encaminhada à Análise Interna (T&I)."
       else
         redirect_to gestor_demand_path(@demand),
                     alert: "Não foi possível encaminhar — estado atual: #{@demand.aasm_state}."

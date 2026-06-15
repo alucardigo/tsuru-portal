@@ -1,4 +1,4 @@
-<% content_for :title, "DEM-#{@demand.id.to_s.rjust(4, '0')} · Decisão" %>
+<% content_for :title, "#{@demand.codigo_display} · Decisão" %>
 <% content_for :nav_active, "decisoes" %>
 <% content_for :crumb, "Diretoria · Decisões pendentes" %>
 <% content_for :subtitle, "· #{@demand.title.truncate(50)}" %>
@@ -19,7 +19,7 @@
     <%# Header %>
     <div>
       <div class="flex items-center gap-2 text-[11.5px] text-gray-500">
-        <span class="font-mono text-gray-700">DEM-<%= @demand.id.to_s.rjust(4, "0") %></span>
+        <span class="font-mono text-gray-700"><%= @demand.codigo_display %></span>
         <span class="text-gray-300">·</span>
         <%= status_pill(@demand.aasm_state) %>
         <span class="text-gray-300">·</span>
@@ -88,11 +88,11 @@
         </div>
 
         <div class="grid grid-cols-3 gap-2 pt-3 border-t border-gray-100">
-          <%= button_to approve_board_demand_path(@demand), method: :post,
+          <%= button_to encaminhar_fi_board_demand_path(@demand), method: :post,
                 form: { class: "w-full" },
                 class: "rounded-md border border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50 p-3 text-left w-full" do %>
-            <div class="flex items-center gap-2 text-emerald-700"><%= icon(:check, size: 14) %><span class="text-[13px] font-medium">Aprovar</span></div>
-            <div class="text-[11px] text-gray-600 mt-1 leading-snug">Projeto aprovado → entra em execução PD&I.</div>
+            <div class="flex items-center gap-2 text-emerald-700"><%= icon(:check, size: 14) %><span class="text-[13px] font-medium">Aprovar → FI</span></div>
+            <div class="text-[11px] text-gray-600 mt-1 leading-snug">Aprovado pela diretoria → encaminha à FI Group para parecer.</div>
             <input type="hidden" name="justification" value="">
           <% end %>
 

@@ -49,13 +49,22 @@ class Demand < ApplicationRecord
     state :concluida
     state :arquivada
     state :cancelada
+    # Sprint 15 — fluxo INOVA BEL de 6 etapas
+    state :aprovada_supervisor   # Supervisor aprovou; aguarda Análise Interna
+    state :em_avaliacao_fi       # Diretoria aprovou; aguarda parecer da FI
+    state :projeto               # Projeto de Fato (INOVA BEL oficial)
 
     event :submeter do
       transition rascunho: :submetida
     end
 
+    # Etapa 2 — Supervisor aprova a sugestão e encaminha à Análise Interna
+    event :aprovar_supervisor do
+      transition submetida: :aprovada_supervisor
+    end
+
     event :iniciar_triagem do
-      transition submetida: :em_triagem
+      transition %i[submetida aprovada_supervisor] => :em_triagem
     end
 
     event :aprovar_n1 do
@@ -75,7 +84,7 @@ class Demand < ApplicationRecord
     end
 
     event :solicitar_revisao do
-      transition %i[submetida em_triagem n2_em_andamento n2_completa board_review] => :awaiting_requester
+      transition %i[submetida aprovada_supervisor em_triagem n2_em_andamento n2_completa board_review em_avaliacao_fi] => :awaiting_requester
     end
 
     event :retomar do
@@ -86,12 +95,31 @@ class Demand < ApplicationRecord
       transition n2_completa: :board_review, if: :parecer_presente?
     end
 
+    # Etapa 4 — Diretoria aprova e encaminha à FI Group
+    event :aprovar_diretoria do
+      transition board_review: :em_avaliacao_fi
+    end
+
+    # Etapa 5 — FI Group dá o parecer de elegibilidade
+    event :fi_aprovar do
+      transition em_avaliacao_fi: :elegivel
+    end
+
+    event :fi_reprovar do
+      transition em_avaliacao_fi: :nao_elegivel
+    end
+
     event :marcar_elegivel do
-      transition %i[n2_completa board_review] => :elegivel, if: :parecer_presente?
+      transition %i[n2_completa board_review em_avaliacao_fi] => :elegivel, if: :parecer_presente?
     end
 
     event :marcar_nao_elegivel do
-      transition %i[n2_completa board_review] => :nao_elegivel, if: :parecer_presente?
+      transition %i[n2_completa board_review em_avaliacao_fi] => :nao_elegivel, if: :parecer_presente?
+    end
+
+    # Etapa 6 — Sugestão elegível vira Projeto de Fato (INOVA BEL oficial)
+    event :tornar_projeto do
+      transition %i[elegivel in_execution] => :projeto
     end
 
     event :iniciar_execucao do
@@ -99,7 +127,7 @@ class Demand < ApplicationRecord
     end
 
     event :concluir_execucao do
-      transition in_execution: :concluida
+      transition %i[in_execution projeto] => :concluida
     end
 
     event :arquivar do
@@ -107,7 +135,12 @@ class Demand < ApplicationRecord
     end
 
     event :cancelar do
-      transition %i[rascunho submetida em_triagem n1_aprovada n2_em_andamento awaiting_requester board_review] => :cancelada
+      transition %i[rascunho submetida aprovada_supervisor em_triagem n1_aprovada n2_em_andamento awaiting_requester board_review em_avaliacao_fi] => :cancelada
+    end
+
+    # Atribui o código INOVA BEL na submissão (etapa 1 -> 2)
+    before_transition rascunho: :submetida do |demand|
+      demand.assign_inova_codigo
     end
 
     # Registro append-only de cada transição (ADR-011)
@@ -151,6 +184,52 @@ class Demand < ApplicationRecord
 
   def parecer_presente?
     parecer_tecnico.present?
+  end
+
+  # === INOVA BEL — código atribuído desde a submissão ===
+  # Sequência simples max+1; formato "INOVA BEL-XXX".
+  def assign_inova_codigo
+    return if codigo.present?
+
+    proximo = (Demand.maximum(:numero_inova) || 0) + 1
+    self.numero_inova = proximo
+    self.codigo = format("INOVA BEL-%03d", proximo)
+  end
+
+  # Código exibível: INOVA BEL-XXX se já submetida, senão SUG-XXXX (rascunho)
+  def codigo_display
+    codigo.presence || "SUG-#{id.to_s.rjust(4, '0')}"
+  end
+
+  # === Macro-etapa do funil (1..6) ===
+  ETAPAS_FUNIL = {
+    1 => "Sugestão",
+    2 => "Supervisor",
+    3 => "Análise Interna",
+    4 => "Diretoria",
+    5 => "FI Group",
+    6 => "Projeto de Fato"
+  }.freeze
+
+  def etapa_funil
+    case aasm_state
+    when "rascunho", "awaiting_requester" then 1
+    when "submetida" then 2
+    when "aprovada_supervisor", "em_triagem", "n1_aprovada", "n1_reprovada",
+         "n2_em_andamento", "n2_completa" then 3
+    when "board_review" then 4
+    when "em_avaliacao_fi" then 5
+    when "elegivel", "projeto", "in_execution", "concluida" then 6
+    else 0
+    end
+  end
+
+  def etapa_label
+    ETAPAS_FUNIL[etapa_funil] || "—"
+  end
+
+  def bloqueada?
+    %w[n1_reprovada nao_elegivel cancelada arquivada].include?(aasm_state)
   end
 
   def to_formpd
