@@ -1,6 +1,6 @@
 <% content_for :title, "Histórico de versões" %>
 <% content_for :nav_active, "demandas" %>
-<% content_for :crumb, "DEM-#{@demand.id.to_s.rjust(4, '0')} · #{@demand.title.truncate(60)}" %>
+<% content_for :crumb, "#{@demand.codigo_display} · #{@demand.title.truncate(60)}" %>
 <% content_for :subtitle, "· Histórico de alterações" %>
 
 <%

@@ -1,6 +1,6 @@
-<% content_for :title, "Lei do Bem · DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :title, "Lei do Bem · #{@demand.codigo_display}" %>
 <% content_for :nav_active, "elegibilidade" %>
-<% content_for :crumb, "DEM-#{@demand.id.to_s.rjust(4, '0')} · #{@demand.title.truncate(40)}" %>
+<% content_for :crumb, "#{@demand.codigo_display} · #{@demand.title.truncate(40)}" %>
 <% content_for :subtitle, "· Mapeamento Lei do Bem" %>
 
 <% content_for :actions do %>

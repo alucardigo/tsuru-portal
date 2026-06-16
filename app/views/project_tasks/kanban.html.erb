@@ -1,5 +1,5 @@
 <% content_for :title, "Tarefas — #{@demand.title.truncate(40)}" %>
-<% content_for :crumb, "Tarefas · DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :crumb, "Tarefas · #{@demand.codigo_display}" %>
 <% content_for :title, "Quadro de tarefas" %>
 <% content_for :subtitle, "· kanban interno do projeto" %>
 <% content_for :actions do %>

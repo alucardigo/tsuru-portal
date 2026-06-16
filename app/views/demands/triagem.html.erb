@@ -1,6 +1,6 @@
-<% content_for :title, "Triagem N1 — DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :title, "Triagem N1 — #{@demand.codigo_display}" %>
 <% content_for :nav_active, "elegibilidade" %>
-<% content_for :crumb, "Esteira do comitê · DEM-#{@demand.id.to_s.rjust(4, '0')} · #{@demand.title}" %>
+<% content_for :crumb, "Esteira do comitê · #{@demand.codigo_display} · #{@demand.title}" %>
 <% content_for :subtitle, "· Triagem de elegibilidade Lei do Bem" %>
 
 <%
@@ -151,7 +151,7 @@
     <div class="bg-white rounded-lg border border-gray-200 p-4">
       <div class="subhead">Contexto da demanda</div>
       <div class="mt-2.5 space-y-2 text-[12px]">
-        <div class="flex justify-between"><span class="text-gray-500">Código</span><span class="font-mono text-gray-900">DEM-<%= @demand.id.to_s.rjust(4, '0') %></span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Código</span><span class="font-mono text-gray-900"><%= @demand.codigo_display %></span></div>
         <div class="flex justify-between"><span class="text-gray-500">Autor</span><span class="text-gray-900"><%= @demand.user.respond_to?(:display_name) ? @demand.user.display_name : @demand.user.email %></span></div>
         <div class="flex justify-between"><span class="text-gray-500">Estado</span><span><%= status_pill(@demand.aasm_state) %></span></div>
         <div class="flex justify-between"><span class="text-gray-500">Há</span><span class="text-gray-900"><%= time_ago_in_words(@demand.created_at) %></span></div>

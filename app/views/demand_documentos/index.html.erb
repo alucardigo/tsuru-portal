@@ -1,5 +1,5 @@
 <% content_for :title, "Documentos — #{@demand.title.truncate(40)}" %>
-<% content_for :crumb, "Documentos · DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :crumb, "Documentos · #{@demand.codigo_display}" %>
 <% content_for :title, "Documentos do projeto" %>
 <% content_for :subtitle, "· biblioteca interna" %>
 <% content_for :actions do %>

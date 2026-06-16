@@ -138,7 +138,7 @@
                 <% @demands.each do |demand| %>
                   <tr class="border-t border-gray-100 hover:bg-gray-50/60">
                     <td class="px-3 py-2 font-mono text-[11px] text-gray-700 whitespace-nowrap">
-                      DEM-<%= demand.id.to_s.rjust(4, "0") %>
+                      <%= demand.codigo_display %>
                     </td>
                     <td class="px-3 py-2 text-gray-900 max-w-md">
                       <%= link_to demand.title.truncate(70), demand_path(demand),

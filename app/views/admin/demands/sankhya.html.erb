@@ -1,6 +1,6 @@
-<% content_for :title, "Consulta Sankhya — DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :title, "Consulta Sankhya — #{@demand.codigo_display}" %>
 <% content_for :nav_active, "elegibilidade" %>
-<% content_for :crumb, "Esteira · DEM-#{@demand.id.to_s.rjust(4, '0')}" %>
+<% content_for :crumb, "Esteira · #{@demand.codigo_display}" %>
 <% content_for :subtitle, "· Notas fiscais por parceiro" %>
 
 <% content_for :actions do %>
@@ -16,7 +16,7 @@
   <%# === Cabeçalho === %>
   <div class="mb-5">
     <div class="flex items-baseline gap-2 text-[11.5px] text-gray-500">
-      <span class="font-mono text-gray-700">DEM-<%= @demand.id.to_s.rjust(4, "0") %></span>
+      <span class="font-mono text-gray-700"><%= @demand.codigo_display %></span>
       <span class="text-gray-300">·</span>
       <%= status_pill(@demand.aasm_state) %>
     </div>
