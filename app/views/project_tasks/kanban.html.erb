@@ -35,21 +35,19 @@
         <div class="flex items-center justify-between mb-3 px-1">
           <div class="flex items-center gap-2">
             <span class="text-[12px] uppercase tracking-wider text-gray-600 font-semibold"><%= label %></span>
-            <span class="bg-white text-gray-700 text-[11px] px-2 py-0.5 rounded-full border border-gray-200"><%= tasks_da_coluna.size %></span>
+            <span class="bg-white text-gray-700 text-[11px] px-2 py-0.5 rounded-full border border-gray-200" data-kanban-count><%= tasks_da_coluna.size %></span>
           </div>
           <%= link_to new_demand_task_path(@demand, kanban_status: status),
                 class: "text-gray-400 hover:text-gray-700 text-lg leading-none",
                 title: "Nova tarefa em #{label}",
                 data: { turbo_frame: "modal" } do %>+<% end %>
         </div>
-        <div class="flex flex-col gap-2" data-kanban-drag-target="list">
+        <div class="flex flex-col gap-2 flex-1 min-h-[120px]"
+             data-kanban-drag-target="list" data-status="<%= status %>">
           <% tasks_da_coluna.each do |task| %>
             <%= render "card", task: task %>
           <% end %>
         </div>
-        <% if tasks_da_coluna.empty? %>
-          <div class="text-center text-[12px] text-gray-400 py-6 italic">vazio</div>
-        <% end %>
       </div>
     <% end %>
   </div>

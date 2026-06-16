@@ -7,8 +7,8 @@
 
 <div class="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm p-3 cursor-grab transition"
      data-task-id="<%= task.id %>"
-     data-kanban-drag-target="card"
-     draggable="true">
+     data-kanban-card
+     data-move-url="<%= move_demand_task_path(task.demand_id, task) %>">
   <div class="flex items-start justify-between gap-2 mb-2">
     <span class="text-[11px] px-2 py-0.5 rounded-full font-medium <%= priority_class %>">
       <%= task.priority_label %>

@@ -1,64 +1,63 @@
 import { Controller } from "@hotwired/stimulus"
+import Sortable from "sortablejs"
 
-// Drag-and-drop nativo HTML5 entre colunas do kanban interno do projeto.
-// Backend recebe PATCH /demands/:demand_id/tasks/:id/move com kanban_status + position.
+// Drag-and-drop dos cards do kanban via SortableJS (robusto, multi-coluna).
+// Cada lista de coluna vira um Sortable do mesmo grupo; ao soltar, persiste via PATCH.
 export default class extends Controller {
-  static targets = ["column", "list", "card"]
-  static values  = { moveUrl: String, csrf: String }
+  static targets = ["list"]
+  static values  = { csrf: String }
 
   connect() {
-    this.cardTargets.forEach(card => this.wireCard(card))
-    this.columnTargets.forEach(col => this.wireColumn(col))
+    this.sortables = this.listTargets.map((list) =>
+      Sortable.create(list, {
+        group: "kanban-tasks",
+        animation: 150,
+        ghostClass: "ring-2",
+        chosenClass: "opacity-60",
+        // não inicia arraste ao clicar em elementos interativos do card
+        filter: "a, button, select, input, textarea, [data-no-drag]",
+        preventOnFilter: false,
+        onEnd: (evt) => this.persist(evt)
+      })
+    )
   }
 
-  wireCard(card) {
-    card.addEventListener("dragstart", (e) => {
-      this.draggedId = card.dataset.taskId
-      card.classList.add("opacity-50")
-      e.dataTransfer.effectAllowed = "move"
-    })
-    card.addEventListener("dragend", () => {
-      card.classList.remove("opacity-50")
-    })
+  disconnect() {
+    (this.sortables || []).forEach((s) => s.destroy())
+    this.sortables = []
   }
 
-  wireColumn(column) {
-    const list = column.querySelector("[data-kanban-drag-target='list']") || column
+  async persist(evt) {
+    const card = evt.item
+    const url = card.dataset.moveUrl
+    const status = evt.to.dataset.status
+    if (!url || !status) return
 
-    column.addEventListener("dragover", (e) => {
-      e.preventDefault()
-      column.classList.add("ring-2", "ring-indigo-300")
-    })
-    column.addEventListener("dragleave", () => {
-      column.classList.remove("ring-2", "ring-indigo-300")
-    })
-    column.addEventListener("drop", async (e) => {
-      e.preventDefault()
-      column.classList.remove("ring-2", "ring-indigo-300")
-      if (!this.draggedId) return
-
-      const status = column.dataset.status
-      const position = list.children.length  // append no fim
-
-      const url = this.moveUrlValue.replace(":id", this.draggedId)
-      try {
-        const r = await fetch(url, {
-          method: "PATCH",
-          headers: {
-            "X-CSRF-Token": this.csrfValue,
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ kanban_status: status, position })
-        })
-        if (r.ok) {
-          window.location.reload()  // reload simples; futuramente Turbo Stream
-        } else {
-          console.error("Move failed", r.status)
-        }
-      } catch (err) {
-        console.error(err)
+    try {
+      const resp = await fetch(url, {
+        method: "PATCH",
+        headers: {
+          "X-CSRF-Token": this.csrfValue,
+          "Accept": "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ kanban_status: status, position: evt.newIndex })
+      })
+      if (!resp.ok) {
+        window.location.reload() // reverte para o estado do servidor
+        return
       }
+      this.refreshCounts()
+    } catch (_e) {
+      window.location.reload()
+    }
+  }
+
+  // Atualiza os contadores no topo de cada coluna
+  refreshCounts() {
+    this.listTargets.forEach((list) => {
+      const badge = list.parentElement.querySelector("[data-kanban-count]")
+      if (badge) badge.textContent = list.querySelectorAll("[data-kanban-card]").length
     })
   }
 }
