@@ -15,11 +15,12 @@ module Admin
         scope = scope.where("name ILIKE :q OR email ILIKE :q", q: like)
       end
       @users = scope.order(:name, :email)
-      @supervisores = User.where(role: %i[gestor admin]).ativos.order(:name)
+      @supervisores = supervisores_disponiveis
     end
 
     def new
       @user = User.new
+      @supervisores = supervisores_disponiveis
     end
 
     def create
@@ -29,7 +30,7 @@ module Admin
       if @user.save
         redirect_to admin_users_path, notice: "Usuário #{@user.display_name} incluído."
       else
-        @supervisores = User.where(role: %i[gestor admin]).ativos.order(:name)
+        @supervisores = supervisores_disponiveis
         render :new, status: :unprocessable_content
       end
     end
@@ -61,6 +62,10 @@ module Admin
 
     def set_user
       @user = User.find(params[:id])
+    end
+
+    def supervisores_disponiveis
+      User.where(role: %i[gestor admin]).ativos.order(:name)
     end
 
     def create_params
