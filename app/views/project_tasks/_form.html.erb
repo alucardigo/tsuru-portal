@@ -1,6 +1,6 @@
 <%= turbo_frame_tag "modal" do %>
-  <div class="fixed inset-0 bg-black/40 z-40 flex items-start justify-center pt-16" data-controller="modal" data-action="click->modal#backdropClose">
-    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 mx-4" data-modal-target="dialog">
+  <div class="fixed inset-0 bg-black/40 z-40 flex items-start justify-center pt-10 pb-10 overflow-y-auto" data-controller="modal" data-action="click->modal#backdropClose">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full p-6 mx-4 my-auto max-h-[88vh] overflow-y-auto" data-modal-target="dialog">
       <div class="flex items-start justify-between mb-4">
         <div>
           <div class="text-[12px] uppercase tracking-wider text-gray-400 font-medium">Tarefa do projeto</div>
@@ -12,7 +12,7 @@
       </div>
 
       <%= form_with model: [@demand, task], url: task.new_record? ? demand_tasks_path(@demand) : demand_task_path(@demand, task),
-              class: "space-y-4" do |f| %>
+              data: { turbo: false }, class: "space-y-4" do |f| %>
 
         <% if task.errors.any? %>
           <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-[13px] text-red-700">

@@ -28,10 +28,7 @@ class ProjectTasksController < ApplicationController
     @task.creator = current_user
     @task.position = next_position_for(@task.kanban_status)
     if @task.save
-      respond_to do |fmt|
-        fmt.html { redirect_to kanban_demand_tasks_path(@demand), notice: "Tarefa criada." }
-        fmt.turbo_stream
-      end
+      redirect_to kanban_demand_tasks_path(@demand), notice: "Tarefa criada."
     else
       render :new, status: :unprocessable_content
     end
@@ -41,10 +38,7 @@ class ProjectTasksController < ApplicationController
 
   def update
     if @task.update(task_params)
-      respond_to do |fmt|
-        fmt.html { redirect_to kanban_demand_tasks_path(@demand), notice: "Tarefa atualizada." }
-        fmt.turbo_stream
-      end
+      redirect_to kanban_demand_tasks_path(@demand), notice: "Tarefa atualizada."
     else
       render :edit, status: :unprocessable_content
     end
