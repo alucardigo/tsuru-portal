@@ -80,6 +80,7 @@ Rails.application.routes.draw do
   post "validators/linus", to: "validators#linus", as: :linus_validator
 
   get "pipeline", to: "pipeline#show", as: :pipeline
+  post "pipeline/:id/mover", to: "pipeline#mover", as: :pipeline_mover
 
   namespace :admin do
     resources :users, only: %i[index new create update] do

@@ -1,7 +1,7 @@
 <% content_for :title, "Pipeline PD&I" %>
 <% content_for :nav_active, "pipeline" %>
 <% content_for :crumb, "Esteira do comitê · Pipeline" %>
-<% content_for :subtitle, "· Kanban visual" %>
+<% content_for :subtitle, "· Kanban do fluxo INOVA BEL" %>
 
 <% content_for :actions do %>
   <%= link_to demands_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>
@@ -12,11 +12,12 @@
   <% end %>
 <% end %>
 
-<div class="px-7 py-6">
+<div class="px-7 py-6" data-controller="pipeline-drag" data-pipeline-drag-csrf-value="<%= form_authenticity_token %>">
   <div class="mb-4">
     <div class="text-[22px] font-semibold tracking-tight text-gray-900">Pipeline PD&amp;I</div>
     <p class="text-[13px] text-gray-500 mt-1">
-      Visão Kanban das demandas em cada fase do funil Lei do Bem.
+      Arraste um card para a próxima fase para avançar no fluxo. Etapas que exigem formulário
+      (triagem N1, avaliação N2 + parecer) continuam pelo botão da demanda — o sistema avisa quando o arraste não é permitido.
     </p>
   </div>
 
@@ -24,11 +25,12 @@
     <% @columns.each do |col| %>
       <% accent =
            case col[:key]
-           when "triagem"   then "bg-blue-500"
-           when "n2"        then "bg-violet-500"
-           when "decisao"   then "bg-teal-500"
-           when "execucao"  then "bg-emerald-500"
-           when "concluido" then "bg-gray-900"
+           when 1 then "bg-gray-400"
+           when 2 then "bg-amber-500"
+           when 3 then "bg-blue-500"
+           when 4 then "bg-teal-500"
+           when 5 then "bg-violet-500"
+           when 6 then "bg-emerald-500"
            else "bg-rose-400"
            end %>
 
@@ -38,39 +40,45 @@
           <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full <%= accent %>"></div>
             <div class="text-[12.5px] font-semibold text-gray-900"><%= col[:label] %></div>
-            <span class="ml-auto text-[10.5px] px-1.5 py-0.5 rounded font-medium bg-gray-100 text-gray-600"><%= col[:total] %></span>
+            <% if col[:drop] %>
+              <span class="text-[9px] uppercase tracking-wider text-gray-400" title="aceita arraste">⇄</span>
+            <% end %>
+            <span class="ml-auto text-[10.5px] px-1.5 py-0.5 rounded font-medium bg-gray-100 text-gray-600" data-pipeline-count><%= col[:total] %></span>
           </div>
         </div>
 
-        <%# Cards %>
-        <div class="flex-1 overflow-auto p-2 space-y-2">
+        <%# Lista (drop-zone Sortable) %>
+        <div class="flex-1 overflow-auto p-2 space-y-2 min-h-[120px]"
+             data-pipeline-drag-target="list"
+             data-etapa="<%= col[:key] %>"
+             data-drop="<%= col[:drop] %>">
+          <% col[:demands].each do |demand| %>
+            <div class="bg-white rounded-md border border-gray-200 p-2.5 hover:border-gray-300 transition-colors cursor-grab"
+                 data-pipeline-card
+                 data-move-url="<%= pipeline_mover_path(demand) %>">
+              <div class="flex items-center gap-1.5 text-[10.5px] text-gray-500">
+                <span class="font-mono text-gray-700"><%= demand.codigo_display %></span>
+                <span class="text-gray-300">·</span>
+                <span class="truncate"><%= demand.user.display_name.split.first %></span>
+              </div>
+              <%= link_to demand.title, demand_path(demand),
+                    class: "mt-0.5 block text-[12px] font-medium text-gray-900 leading-snug line-clamp-2 hover:underline" %>
+              <div class="mt-2 flex items-center justify-between gap-2 text-[10.5px]">
+                <%= status_pill(demand.aasm_state) %>
+                <% if demand.trl.present? %>
+                  <span class="text-gray-500">TRL <%= demand.trl %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
           <% if col[:demands].empty? %>
             <div class="text-[11px] text-gray-400 italic text-center py-6">Vazio</div>
-          <% else %>
-            <% col[:demands].each do |demand| %>
-              <%= link_to demand_path(demand), class: "block bg-white rounded-md border border-gray-200 p-2.5 hover:border-gray-300 transition-colors" do %>
-                <div class="flex items-center gap-1.5 text-[10.5px] text-gray-500">
-                  <span class="font-mono text-gray-700"><%= demand.codigo_display %></span>
-                  <span class="text-gray-300">·</span>
-                  <span class="truncate"><%= demand.user.display_name.split.first %></span>
-                </div>
-                <div class="mt-0.5 text-[12px] font-medium text-gray-900 leading-snug line-clamp-2">
-                  <%= demand.title %>
-                </div>
-                <div class="mt-2 flex items-center justify-between gap-2 text-[10.5px]">
-                  <%= status_pill(demand.aasm_state) %>
-                  <% if demand.trl.present? %>
-                    <span class="text-gray-500">TRL <%= demand.trl %></span>
-                  <% end %>
-                </div>
-              <% end %>
-            <% end %>
-
-            <% if col[:total] > col[:demands].size %>
-              <div class="text-[10.5px] text-gray-400 text-center py-1">
-                + <%= col[:total] - col[:demands].size %> não exibidas
-              </div>
-            <% end %>
+          <% end %>
+          <% if col[:total] > col[:demands].size %>
+            <div class="text-[10.5px] text-gray-400 text-center py-1">
+              + <%= col[:total] - col[:demands].size %> não exibidas
+            </div>
           <% end %>
         </div>
       </div>

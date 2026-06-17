@@ -91,11 +91,12 @@
       <div class="text-[10.5px] uppercase tracking-wider text-white/40 mb-4 font-medium">O ciclo PD&amp;I no portal</div>
       <ol class="space-y-2">
         <% [
-          [ "Colaborador",  "Registra a ideia ou necessidade" ],
-          [ "Superior",     "Aprova encaminhamento" ],
-          [ "Time T&I",     "Triagem · Nível 1 de elegibilidade" ],
-          [ "Projeto PD&I", "Documentação · Nível 2 e Nível 3" ],
-          [ "Defesa MCTI",  "Composição anual" ]
+          [ "Colaborador",     "Registra a ideia — recebe código INOVA BEL" ],
+          [ "Supervisor",      "Aprova e encaminha à Análise Interna" ],
+          [ "Analista Interno", "Triagem N1 + avaliação técnica N2" ],
+          [ "Diretoria",       "Valida e encaminha à FI Group" ],
+          [ "FI Group",        "Parecer de elegibilidade Lei do Bem" ],
+          [ "Projeto de Fato", "Vira Projeto INOVA BEL oficial" ]
         ].each_with_index do |(k, d), i| %>
           <li class="flex items-start gap-3">
             <div class="mt-1 w-5 h-5 rounded-full bg-white/10 ring-1 ring-white/20 text-[10px] flex items-center justify-center font-medium"><%= i + 1 %></div>
