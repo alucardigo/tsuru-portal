@@ -5,7 +5,9 @@ class DashboardController < ApplicationController
 
     # Filas por papel (fluxo INOVA BEL de 6 etapas)
     if current_user.gestor? || current_user.admin?
-      @pending_supervisor = Demand.where(aasm_state: "submetida").order(created_at: :asc).limit(10)
+      sup = Demand.where(aasm_state: "submetida").order(created_at: :asc)
+      sup = sup.where(area_impactada: current_user.area) if current_user.gestor?
+      @pending_supervisor = sup.limit(10)
     end
     if current_user.analista_pdi? || current_user.admin?
       @pending_triagem = Demand.where(aasm_state: "aprovada_supervisor").order(created_at: :asc).limit(10)

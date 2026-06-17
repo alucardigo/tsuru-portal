@@ -75,9 +75,12 @@
                   class: "tsuru-select mt-1" %>
           </div>
           <div>
-            <%= f.label :area, "Área", class: "tsuru-label" %>
-            <%= f.text_field :area, class: "tsuru-input mt-1",
-                  placeholder: "Opcional — ex: Operações" %>
+            <%= f.label :area, "Área (superior)", class: "tsuru-label" %>
+            <%= f.select :area,
+                  options_for_select(Demand::AREAS, @user.area),
+                  { include_blank: "— sem área —" },
+                  class: "tsuru-select mt-1" %>
+            <p class="tsuru-hint">Superiores só aprovam demandas da sua área.</p>
           </div>
         </div>
 

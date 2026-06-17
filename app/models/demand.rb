@@ -21,6 +21,13 @@ class Demand < ApplicationRecord
   ].freeze
   MAX_ATTACHMENT_SIZE = 10.megabytes
 
+  # Áreas canônicas — usadas tanto em area_impactada (demanda) quanto em users.area
+  # (área do superior). É a chave do roteamento: o superior só aprova a sua área.
+  AREAS = [
+    "Operacional", "Comercial", "Financeiro", "Administrativo", "TI / Sistemas",
+    "Atendimento", "Logística / Suprimentos", "Qualidade", "RH", "Projetos / P&D"
+  ].freeze
+
   validates :title, presence: true, length: { maximum: 200 }
   validates :description, presence: true
   validates :trl, inclusion: { in: 1..9 }, allow_nil: true

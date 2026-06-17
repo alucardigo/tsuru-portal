@@ -21,9 +21,16 @@ class User < ApplicationRecord
   scope :ativos,    -> { where(active: true) }
   scope :inativos,  -> { where(active: false) }
   scope :supervisores, -> { where(role: %i[gestor admin]) }
+  scope :gestores_da_area, ->(area) { where(role: :gestor, area: area).ativos }
 
   def gestor_or_above?
     gestor? || analista_pdi? || admin? || board?
+  end
+
+  # Superior só aprova demandas da SUA área; admin aprova qualquer uma.
+  def aprova_area?(area)
+    return true if admin?
+    gestor? && self.area.present? && self.area == area
   end
 
   def ativo?

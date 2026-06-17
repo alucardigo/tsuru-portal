@@ -66,8 +66,11 @@ module Notifications
       when :owner
         [ @demand.user ]
       when :supervisores
-        # Notifica o supervisor direto do autor (se houver) + gestores/admins
-        [ @demand.user.supervisor ].compact + User.where(role: %i[gestor admin]).to_a
+        # Notifica o superior responsável pela ÁREA da demanda + admins (fallback).
+        # Inclui também o superior direto do autor, se houver.
+        da_area = User.gestores_da_area(@demand.area_impactada).to_a
+        da_area = User.where(role: :gestor).to_a if da_area.empty? # sem superior na área -> todos gestores
+        (da_area + [ @demand.user.supervisor ].compact + User.where(role: :admin).to_a).uniq
       when :gestores
         User.where(role: %i[gestor admin])
       when :analistas

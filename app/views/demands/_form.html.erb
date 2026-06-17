@@ -53,11 +53,12 @@
             <%= f.label :area_impactada, "Área impactada", class: "tsuru-label" %>
             <%= f.select :area_impactada,
                   options_for_select(
-                    [ [ "Selecione…", "" ] ] + [ "Operacional", "Comercial", "Financeiro", "Administrativo", "TI / Sistemas", "Atendimento", "Logística / Suprimentos", "Qualidade", "RH", "Projetos / P&D", "Outra" ],
+                    [ [ "Selecione…", "" ] ] + Demand::AREAS + [ "Outra" ],
                     demand.area_impactada
                   ),
                   {},
                   class: "tsuru-select mt-1" %>
+            <p class="tsuru-hint">A demanda vai para o superior responsável por esta área.</p>
           </div>
           <div>
             <%= f.label :urgencia, "Urgência percebida", class: "tsuru-label" %>

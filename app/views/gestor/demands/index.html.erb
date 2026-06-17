@@ -5,12 +5,24 @@
 
 <div class="max-w-[1180px] mx-auto px-7 py-6">
   <div class="mb-5">
-    <div class="text-[22px] font-semibold tracking-tight text-gray-900">Caixa de entrada</div>
+    <div class="text-[22px] font-semibold tracking-tight text-gray-900">
+      Caixa de entrada
+      <% if current_user.gestor? && current_user.area.present? %>
+        <span class="text-[13px] font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full align-middle ml-1"><%= current_user.area %></span>
+      <% end %>
+    </div>
     <p class="text-[13px] text-gray-500 mt-1">
-      Ideias enviadas pela equipe aguardando sua decisão: <strong>Encaminhar para análise técnica</strong>,
+      Ideias da sua área aguardando decisão: <strong>Encaminhar para análise técnica</strong>,
       <strong>Devolver pedindo esclarecimento</strong> ou <strong>Arquivar</strong>.
     </p>
   </div>
+
+  <% if @sem_area %>
+    <div class="mb-4 rounded-md p-3 bg-amber-50 ring-1 ring-amber-200 text-[12.5px] text-amber-800">
+      Você ainda não tem uma <strong>área</strong> definida — por isso não vê demandas para aprovar.
+      Peça a um administrador para definir sua área em Usuários.
+    </div>
+  <% end %>
 
   <% if @demands.empty? %>
     <div class="tsuru-card p-12 text-center">

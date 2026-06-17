@@ -98,6 +98,7 @@ Rails.application.routes.draw do
     end
     get "metrics", to: "metrics#show", as: :metrics
     get "auditoria", to: "audits#index", as: :auditoria
+    get "organograma", to: "organograma#index", as: :organograma
   end
 
   resources :notifications, only: %i[index] do

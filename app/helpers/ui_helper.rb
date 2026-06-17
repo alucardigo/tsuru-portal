@@ -159,7 +159,9 @@ module UiHelper
   end
 
   def gestor_pending_count
-    Demand.where(aasm_state: "submetida").count
+    scope = Demand.where(aasm_state: "submetida")
+    scope = scope.where(area_impactada: current_user.area) if current_user&.gestor?
+    scope.count
   rescue StandardError
     nil
   end

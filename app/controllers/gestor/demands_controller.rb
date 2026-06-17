@@ -3,10 +3,11 @@ module Gestor
     before_action :set_demand, only: %i[show encaminhar devolver arquivar]
 
     def index
-      scope = Demand.where(aasm_state: "submetida")
-                    .includes(:user)
-                    .order(created_at: :asc)
+      scope = Demand.where(aasm_state: "submetida").includes(:user).order(created_at: :asc)
+      # Superior só vê a SUA área; admin vê todas.
+      scope = scope.where(area_impactada: current_user.area) if current_user.gestor?
       @pagy, @demands = pagy(scope)
+      @sem_area = current_user.gestor? && current_user.area.blank?
     end
 
     def show
@@ -18,6 +19,12 @@ module Gestor
     end
 
     def encaminhar
+      unless current_user.aprova_area?(@demand.area_impactada)
+        redirect_to gestor_demand_path(@demand),
+                    alert: "Você só pode aprovar demandas da sua área (#{current_user.area.presence || 'sem área definida'})."
+        return
+      end
+
       comment_body = params[:comentario].to_s.strip
       if @demand.aprovar_supervisor
         registrar_comentario(comment_body) if comment_body.present?
