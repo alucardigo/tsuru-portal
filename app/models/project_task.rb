@@ -11,8 +11,7 @@ class ProjectTask < ApplicationRecord
   belongs_to :assignee, class_name: "User", optional: true
   belongs_to :creator,  class_name: "User"
 
-  has_many :versions, class_name: "PaperTrail::Version", as: :item, dependent: :destroy if defined?(PaperTrail)
-  has_paper_trail if respond_to?(:has_paper_trail)
+  has_paper_trail
 
   validates :title,         presence: true, length: { maximum: 200 }
   validates :kanban_status, inclusion: { in: KANBAN_STATUSES }
