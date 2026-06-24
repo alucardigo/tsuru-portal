@@ -35,12 +35,12 @@ Rails.application.routes.draw do
 
     # Sprint 14 — tarefas + kanban interno + documentos
     resources :tasks, controller: "project_tasks", except: [:show] do
-      member { patch :move }
-      collection { get :kanban }
-      scope module: nil, controller: "project_task_timers" do
-        post "timer/start", action: :start, as: :start_timer
-        post "timer/stop",  action: :stop,  as: :stop_timer
+      member do
+        patch :move
+        post "timer/start", to: "project_task_timers#start", as: :start_timer
+        post "timer/stop",  to: "project_task_timers#stop",  as: :stop_timer
       end
+      collection { get :kanban }
     end
     resources :documentos, only: %i[index create destroy], controller: "demand_documentos"
 
@@ -49,6 +49,10 @@ Rails.application.routes.draw do
       resources :team_members, only: %i[new create edit update destroy], path: "equipe"
       resources :partnerships, only: %i[new create edit update destroy], path: "parcerias"
     end
+  end
+
+  namespace :me do
+    resources :tasks, only: %i[index]
   end
 
   namespace :board do

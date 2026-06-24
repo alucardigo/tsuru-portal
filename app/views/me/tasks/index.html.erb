@@ -1,0 +1,91 @@
+<% content_for :title, "Minhas tarefas" %>
+<% content_for :crumb, "Tarefas atribuídas a você" %>
+<% content_for :subtitle, "· #{@metricas[:total]} no total" %>
+
+<div class="px-7 py-6 max-w-[1600px] mx-auto">
+  <%# Métricas no topo %>
+  <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+    <% [
+      ["Total",          @metricas[:total],          "gray-900"],
+      ["Concluídas",     @metricas[:concluidas],     "green-600"],
+      ["Em andamento",   @metricas[:em_andamento],   "indigo-600"],
+      ["Atrasadas",      @metricas[:atrasadas],      "red-600"],
+      ["Horas est./gas", "#{@metricas[:horas_estimadas].round(1)}h / #{@metricas[:horas_gastas].round(1)}h", "amber-700"],
+      ["Rodando agora",  @metricas[:rodando_agora],  "emerald-700"]
+    ].each do |label, value, color| %>
+      <div class="tsuru-card p-4">
+        <div class="text-[11px] uppercase tracking-wider text-gray-500 font-medium"><%= label %></div>
+        <div class="text-[22px] font-semibold text-<%= color %> mt-1"><%= value %></div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @metricas[:total].zero? %>
+    <div class="tsuru-card p-12 text-center">
+      <div class="text-[13px] text-gray-700 font-medium">Nenhuma tarefa atribuída a você ainda</div>
+      <p class="text-[12px] text-gray-500 mt-2 max-w-md mx-auto">
+        Quando algum projeto atribuir uma tarefa para o seu usuário, ela aparece aqui agrupada por coluna do kanban e com o cronômetro pronto pra rodar.
+      </p>
+    </div>
+  <% else %>
+    <%# Lista agrupada por kanban_status %>
+    <div class="space-y-6">
+      <% @statuses.each do |status| %>
+        <% tasks_da_coluna = (@tasks_by_status[status] || []) %>
+        <% next if tasks_da_coluna.empty? %>
+        <% label = ProjectTask.new(kanban_status: status).kanban_status_label %>
+        <section>
+          <div class="flex items-center gap-2 mb-2 px-1">
+            <span class="text-[12px] uppercase tracking-wider text-gray-700 font-semibold"><%= label %></span>
+            <span class="bg-gray-100 text-gray-700 text-[11px] px-2 py-0.5 rounded-full border border-gray-200"><%= tasks_da_coluna.size %></span>
+          </div>
+          <div class="space-y-2">
+            <% tasks_da_coluna.each do |task| %>
+              <%# Reaproveita o card mas dentro de uma linha vertical %>
+              <div class="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm p-3 flex items-center gap-4">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1 text-[11px] text-gray-500">
+                    <%= link_to task.demand.codigo_display, demand_path(task.demand), class: "font-medium text-indigo-700 hover:underline" %>
+                    <span>·</span>
+                    <span class="truncate"><%= task.demand.title %></span>
+                  </div>
+                  <%= link_to edit_demand_task_path(task.demand, task), class: "block text-[13.5px] font-medium text-gray-900 leading-snug",
+                        data: { turbo_frame: "modal" } do %>
+                    <%= task.title %>
+                  <% end %>
+                  <% if t_resumo = task.tracking_resumo %>
+                    <div class="mt-1 text-[10.5px] text-gray-500" title="Tempo cronometrado x decorrido desde atribuição"><%= t_resumo %></div>
+                  <% end %>
+                </div>
+                <div class="flex items-center gap-3 shrink-0">
+                  <% if task.due_date.present? %>
+                    <% klass = task.atrasada? ? "bg-red-50 text-red-700" : "text-gray-500" %>
+                    <span class="text-[11px] px-2 py-0.5 rounded-full <%= klass %>"><%= "⚠ " if task.atrasada? %><%= task.due_date.strftime("%d/%m") %></span>
+                  <% end %>
+                  <% if running = task.running_entry_for(current_user) %>
+                    <%= button_to stop_timer_demand_task_path(task.demand, task), method: :post,
+                          class: "inline-flex items-center gap-1 text-[11.5px] px-2 py-1 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 font-medium",
+                          form: { class: "inline" } do %>
+                      ⏸ <span data-controller="ticker" data-ticker-start-value="<%= running.started_at.utc.iso8601 %>" class="tabular-nums">00:00:00</span>
+                    <% end %>
+                  <% else %>
+                    <%= button_to start_timer_demand_task_path(task.demand, task), method: :post,
+                          class: "inline-flex items-center gap-1 text-[11.5px] px-2 py-1 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium",
+                          form: { class: "inline" } do %>
+                      ▶ Iniciar
+                    <% end %>
+                  <% end %>
+                  <%= link_to kanban_demand_tasks_path(task.demand), class: "text-[11.5px] text-gray-500 hover:text-gray-900" do %>
+                    Ver kanban →
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<%= turbo_frame_tag "modal" %>

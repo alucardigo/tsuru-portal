@@ -95,24 +95,27 @@ module UiHelper
     case user.role
     when "colaborador"
       [
-        { key: "inicio",     label: "Início",            icon: :home,    path: dashboard_path },
-        { key: "demandas",   label: "Minhas demandas",   icon: :bulb,    path: demands_path },
-        { key: "nova",       label: "Nova demanda",      icon: :plus,    path: new_demand_path },
-        { key: "biblioteca", label: "Biblioteca PD&I",   icon: :book,    path: "#" }
+        { key: "inicio",      label: "Início",            icon: :home,    path: dashboard_path },
+        { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
+        { key: "demandas",    label: "Minhas demandas",   icon: :bulb,    path: demands_path },
+        { key: "nova",        label: "Nova demanda",      icon: :plus,    path: new_demand_path },
+        { key: "biblioteca",  label: "Biblioteca PD&I",   icon: :book,    path: "#" }
       ]
     when "gestor"
       [
-        { key: "aprovar",    label: "Para aprovar",      icon: :inbox,   path: gestor_demands_path, badge: gestor_pending_count },
-        { key: "minha-area", label: "Minha área",        icon: :folder,  path: demands_path },
-        { key: "historico",  label: "Histórico",         icon: :doc,     path: demands_path },
-        { key: "biblioteca", label: "Biblioteca PD&I",   icon: :book,    path: "#" }
+        { key: "aprovar",     label: "Para aprovar",      icon: :inbox,   path: gestor_demands_path, badge: gestor_pending_count },
+        { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
+        { key: "minha-area",  label: "Minha área",        icon: :folder,  path: demands_path },
+        { key: "historico",   label: "Histórico",         icon: :doc,     path: demands_path },
+        { key: "biblioteca",  label: "Biblioteca PD&I",   icon: :book,    path: "#" }
       ]
     when "analista_pdi"
       [
         { key: "esteira",      label: "Esteira do comitê", icon: :triage,  path: dashboard_path, badge: pending_count(user) },
+        { key: "minhas-tarefas", label: "Minhas tarefas",  icon: :flag,    path: me_tasks_path },
         { key: "pipeline",     label: "Pipeline Kanban",   icon: :chart,   path: pipeline_path },
         { key: "projetos",     label: "Projetos PD&I",     icon: :folder,  path: demands_path },
-        { key: "elegibilidade", label: "Elegibilidade",     icon: :shield,  path: demands_path },
+        { key: "elegibilidade", label: "Elegibilidade",    icon: :shield,  path: demands_path },
         { key: "defesa",       label: "Composição defesa", icon: :doc,     path: "#" },
         { key: "evidencias",   label: "Evidências",        icon: :file,    path: "#" },
         { key: "biblioteca",   label: "Biblioteca PD&I",   icon: :book,    path: "#" }
@@ -120,6 +123,7 @@ module UiHelper
     when "admin"
       [
         { key: "esteira",     label: "Esteira do comitê", icon: :triage,  path: admin_demands_path },
+        { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
         { key: "pipeline",    label: "Pipeline Kanban",   icon: :chart,   path: pipeline_path },
         { key: "metricas",    label: "Métricas",          icon: :chart,   path: admin_metrics_path },
         { key: "usuarios",    label: "Usuários",          icon: :user,    path: admin_users_path },
@@ -129,6 +133,7 @@ module UiHelper
     when "board"
       [
         { key: "resumo",     label: "Resumo executivo",  icon: :chart,   path: dashboard_path },
+        { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
         { key: "portfolio",  label: "Portfólio",         icon: :folder,  path: demands_path },
         { key: "decisoes",   label: "Decisões pendentes", icon: :flag,    path: board_demands_path, badge: board_pending_count },
         { key: "exportar",   label: "Exportar",          icon: :download, path: "#" }
@@ -136,6 +141,7 @@ module UiHelper
     when "fi"
       [
         { key: "fila-fi",    label: "Fila de avaliação", icon: :triage,  path: fi_demands_path, badge: fi_pending_count },
+        { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
         { key: "projetos",   label: "Projetos avaliados", icon: :folder, path: demands_path },
         { key: "biblioteca", label: "Biblioteca PD&I",   icon: :book,    path: "#" }
       ]
