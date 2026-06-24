@@ -1,4 +1,7 @@
-<aside class="w-[228px] shrink-0 border-r border-gray-200 bg-white flex flex-col">
+<aside data-sidebar-target="panel"
+       class="w-[228px] shrink-0 border-r border-gray-200 bg-white flex flex-col
+              fixed inset-y-0 left-0 z-40 -translate-x-full transition-transform duration-200
+              lg:static lg:translate-x-0 lg:transition-none">
   <%# Logo %>
   <div class="px-3.5 h-12 flex items-center border-b border-gray-100">
     <%= link_to root_path, class: "flex items-center gap-2 group" do %>

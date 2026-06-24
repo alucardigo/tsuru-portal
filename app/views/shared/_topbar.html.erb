@@ -1,13 +1,24 @@
 <header class="topbar">
-  <div class="min-w-0">
-    <% if crumb.present? %>
-      <div class="topbar-crumb"><%= crumb %></div>
-    <% end %>
-    <div class="flex items-baseline gap-2 min-w-0">
-      <div class="topbar-title"><%= title %></div>
-      <% if subtitle.present? %>
-        <div class="topbar-subtitle"><%= subtitle %></div>
+  <div class="flex items-center gap-2 min-w-0">
+    <button type="button" class="lg:hidden -ml-1 p-1.5 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+            data-action="click->sidebar#toggle"
+            aria-label="Abrir menu">
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <line x1="3" y1="6"  x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+    <div class="min-w-0">
+      <% if crumb.present? %>
+        <div class="topbar-crumb"><%= crumb %></div>
       <% end %>
+      <div class="flex items-baseline gap-2 min-w-0">
+        <div class="topbar-title"><%= title %></div>
+        <% if subtitle.present? %>
+          <div class="topbar-subtitle hidden sm:block"><%= subtitle %></div>
+        <% end %>
+      </div>
     </div>
   </div>
   <div class="flex items-center gap-1">
