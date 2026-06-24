@@ -45,15 +45,10 @@
     <% end %>
   </div>
 
-  <%# Mover via dropdown (fallback se drag-drop nao funcionar) %>
-  <div class="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-    <%= form_with url: move_demand_task_path(task.demand, task), method: :patch, local: true, class: "inline-flex items-center gap-1" do |f| %>
-      <%= f.select :kanban_status, ProjectTask::KANBAN_STATUSES.map { |s| [ProjectTask.new(kanban_status: s).kanban_status_label, s] }, { selected: task.kanban_status }, class: "text-[11px] border border-gray-200 rounded px-1 py-0.5", onchange: "this.form.requestSubmit()" %>
-      <%= f.hidden_field :position, value: 0 %>
-    <% end %>
-
+  <div class="flex items-center justify-end mt-2 pt-2 border-t border-gray-100">
     <%= button_to demand_task_path(task.demand, task), method: :delete,
           data: { turbo_confirm: "Excluir esta tarefa?" },
-          class: "text-[11px] text-gray-400 hover:text-red-600" do %>✕<% end %>
+          class: "text-[11px] text-gray-400 hover:text-red-600",
+          form: { class: "inline" } do %>✕<% end %>
   </div>
 </div>
