@@ -3,7 +3,7 @@
 # /me/timesheet — relatório semanal de tempo cronometrado x tempo decorrido.
 # Mostra o "gap" entre cycle time (atribuição → conclusão) e active time (cronômetro).
 module Me
-  class TimesheetController < ApplicationController
+  class TimesheetsController < ApplicationController
     before_action :authenticate_user!
 
     def show
@@ -13,7 +13,7 @@ module Me
 
       entries = ProjectTaskTimeEntry
                   .where(user_id: current_user.id)
-                  .where("started_at >= ? AND started_at < ?", @week_start, @week_end + 1)
+                  .where("project_task_time_entries.started_at >= ? AND project_task_time_entries.started_at < ?", @week_start, @week_end + 1)
                   .includes(project_task: :demand)
 
       @by_day = (0..6).map { |i| @week_start + i.days }.index_with { [] }

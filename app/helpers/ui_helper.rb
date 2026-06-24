@@ -132,8 +132,8 @@ module UiHelper
         { key: "usuarios",    label: "Usuários",          icon: :user,    path: admin_users_path },
         { key: "elegibilidade", label: "Elegibilidade",   icon: :shield,  path: admin_demands_path },
         { key: "exportar",    label: "Exportar",          icon: :download, path: admin_demands_path },
-        { key: "roadmap-gantt",       label: "Gantt (em breve)",       icon: :chart,  path: roadmap_gantt_path },
-        { key: "roadmap-sprints",     label: "Sprints (em breve)",     icon: :folder, path: roadmap_sprints_path },
+        { key: "gantt",       label: "Gantt portfolio",   icon: :chart,    path: gantt_path },
+        { key: "tags",        label: "Tags / labels",     icon: :flag,     path: admin_tags_path },
         { key: "roadmap-automations", label: "Automações (em breve)",  icon: :flag,   path: roadmap_automations_path }
       ]
     when "board"

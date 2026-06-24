@@ -46,6 +46,13 @@ Rails.application.routes.draw do
       end
       resources :dependencies, controller: "project_task_dependencies", only: %i[create destroy]
     end
+
+    resources :sprints do
+      member do
+        post :assign_task
+        post :unassign_task
+      end
+    end
     resources :documentos, only: %i[index create destroy], controller: "demand_documentos"
 
     resource :lei_do_bem_record, only: %i[show new create edit update], path: "lei-do-bem" do
@@ -60,9 +67,8 @@ Rails.application.routes.draw do
     resource  :timesheet, only: %i[show]
   end
 
+  get "gantt", to: "gantt#show", as: :gantt
   scope path: "roadmap", controller: "roadmap" do
-    get "gantt",       action: :gantt,       as: :roadmap_gantt
-    get "sprints",     action: :sprints,     as: :roadmap_sprints
     get "automations", action: :automations, as: :roadmap_automations
   end
 
@@ -116,6 +122,7 @@ Rails.application.routes.draw do
       end
     end
     get "metrics", to: "metrics#show", as: :metrics
+    resources :tags, only: %i[index create update destroy]
     get "auditoria", to: "audits#index", as: :auditoria
     get "organograma", to: "organograma#index", as: :organograma
   end

@@ -11,6 +11,7 @@ class ProjectTask < ApplicationRecord
   belongs_to :assignee, class_name: "User", optional: true
   belongs_to :creator,  class_name: "User"
   belongs_to :parent,   class_name: "ProjectTask", optional: true
+  belongs_to :sprint,   optional: true
   has_many   :subtasks, class_name: "ProjectTask", foreign_key: :parent_id, dependent: :destroy
   has_many   :time_entries,    class_name: "ProjectTaskTimeEntry",  dependent: :destroy
   has_many   :checklist_items, class_name: "ProjectTaskChecklistItem", dependent: :destroy
@@ -31,6 +32,8 @@ class ProjectTask < ApplicationRecord
 
   before_save :sync_timestamps_with_status
   before_save :touch_assigned_at, if: :assignee_id_changed?
+  after_update :fire_automations_on_status_change, if: :saved_change_to_kanban_status?
+  after_update :fire_automations_on_assignment,    if: :saved_change_to_assignee_id?
 
   scope :for_demand,    ->(d) { where(demand_id: d.id) }
   scope :open,          -> { where.not(kanban_status: "concluida") }
@@ -138,6 +141,14 @@ class ProjectTask < ApplicationRecord
 
   def touch_assigned_at
     self.assigned_at = Time.current if assignee_id.present?
+  end
+
+  def fire_automations_on_status_change
+    AutomationEngine.fire(:"task.completed", self) if kanban_status == "concluida"
+  end
+
+  def fire_automations_on_assignment
+    AutomationEngine.fire(:"task.assigned", self) if assignee_id.present?
   end
 
   def sync_timestamps_with_status

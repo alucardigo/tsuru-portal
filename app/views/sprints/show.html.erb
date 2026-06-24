@@ -1,0 +1,54 @@
+<% content_for :title, "Sprint #{@sprint.name}" %>
+<% content_for :crumb, "#{@demand.codigo_display} · Sprint" %>
+<% content_for :subtitle, "· #{@sprint.start_date} → #{@sprint.end_date}" %>
+<% content_for :actions do %>
+  <%= link_to demand_sprints_path(@demand), class: "tsuru-btn-ghost" do %>← Voltar<% end %>
+<% end %>
+
+<div class="px-7 py-6 max-w-[1600px] mx-auto">
+  <div class="mb-5 grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="tsuru-card p-4">
+      <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-medium">Tarefas</div>
+      <div class="text-[18px] font-semibold text-gray-900"><%= @sprint.project_tasks.size %></div>
+    </div>
+    <div class="tsuru-card p-4">
+      <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-medium">Total points</div>
+      <div class="text-[18px] font-semibold text-gray-900"><%= @sprint.total_points %></div>
+    </div>
+    <div class="tsuru-card p-4">
+      <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-medium">Velocity (concluídos)</div>
+      <div class="text-[18px] font-semibold text-emerald-700"><%= @sprint.velocity_points %></div>
+    </div>
+    <div class="tsuru-card p-4">
+      <div class="text-[10.5px] uppercase tracking-wider text-gray-500 font-medium">Meta</div>
+      <div class="text-[13px] text-gray-700 leading-tight"><%= @sprint.goal.presence || "—" %></div>
+    </div>
+  </div>
+
+  <%# Mini-kanban da sprint %>
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+    <% @statuses.each do |status| %>
+      <% tasks = (@tasks_by_status[status] || []) %>
+      <% label = ProjectTask.new(kanban_status: status).kanban_status_label %>
+      <div class="bg-gray-50 rounded-xl p-3 border border-gray-200">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] uppercase tracking-wider text-gray-600 font-semibold"><%= label %></span>
+          <span class="bg-white text-gray-700 text-[10.5px] px-2 py-0.5 rounded-full border border-gray-200"><%= tasks.size %></span>
+        </div>
+        <div class="space-y-2">
+          <% tasks.each do |t| %>
+            <div class="bg-white border border-gray-200 rounded p-2 text-[12px]">
+              <%= link_to t.title, edit_demand_task_path(@demand, t), class: "block font-medium text-gray-900 hover:underline mb-1", data: { turbo_frame: "modal" } %>
+              <div class="flex items-center gap-2 text-[10.5px] text-gray-500">
+                <% if t.story_points %><span class="font-medium text-gray-700">SP <%= t.story_points %></span><% end %>
+                <% if t.assignee %><span><%= t.assignee.name.to_s[0,2].upcase %></span><% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<%= turbo_frame_tag "modal" %>

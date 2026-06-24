@@ -1,0 +1,40 @@
+<% content_for :title, "Nova sprint" %>
+
+<div class="px-7 py-6 max-w-[640px] mx-auto">
+  <div class="tsuru-card p-6">
+    <h1 class="text-[18px] font-semibold text-gray-900 mb-4">Nova sprint em <%= @demand.codigo_display %></h1>
+    <%= form_with model: [@demand, @sprint], data: { turbo: false }, class: "space-y-4" do |f| %>
+      <% if @sprint.errors.any? %>
+        <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-[13px] text-red-700">
+          <% @sprint.errors.full_messages.each do |m| %><div>• <%= m %></div><% end %>
+        </div>
+      <% end %>
+      <div>
+        <%= f.label :name, "Nome", class: "tsuru-label" %>
+        <%= f.text_field :name, class: "tsuru-input mt-1", required: true, placeholder: "Ex: Sprint 01 — MVP" %>
+      </div>
+      <div>
+        <%= f.label :goal, "Meta da sprint", class: "tsuru-label" %>
+        <%= f.text_area :goal, rows: 3, class: "tsuru-input mt-1", placeholder: "Resultado esperado ao final da sprint…" %>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <%= f.label :start_date, "Início", class: "tsuru-label" %>
+          <%= f.date_field :start_date, class: "tsuru-input mt-1", required: true %>
+        </div>
+        <div>
+          <%= f.label :end_date, "Fim", class: "tsuru-label" %>
+          <%= f.date_field :end_date, class: "tsuru-input mt-1", required: true %>
+        </div>
+      </div>
+      <div>
+        <%= f.label :state, "Estado inicial", class: "tsuru-label" %>
+        <%= f.select :state, Sprint::STATES, {}, class: "tsuru-select mt-1" %>
+      </div>
+      <div class="flex justify-between pt-3 border-t border-gray-100">
+        <%= link_to "Cancelar", demand_sprints_path(@demand), class: "tsuru-btn-ghost" %>
+        <%= f.submit "Criar sprint", class: "tsuru-btn-primary" %>
+      </div>
+    <% end %>
+  </div>
+</div>

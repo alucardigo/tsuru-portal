@@ -1,0 +1,42 @@
+<% content_for :title, "Tags / Labels" %>
+<% content_for :crumb, "Administração" %>
+<% content_for :subtitle, "· catálogo de tags do portal" %>
+
+<div class="px-7 py-6 max-w-[860px] mx-auto">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <%# CRUD %>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <h2 class="text-[13px] font-semibold text-gray-900 mb-3">Tags cadastradas (<%= @tags.size %>)</h2>
+      <% if @tags.empty? %>
+        <div class="text-[12.5px] text-gray-500 italic">Nenhuma tag ainda.</div>
+      <% else %>
+        <div class="space-y-1.5">
+          <% @tags.each do |t| %>
+            <div class="flex items-center gap-2 text-[12.5px]">
+              <span class="text-[11px] px-2 py-0.5 rounded-full bg-<%= t.color %>-100 text-<%= t.color %>-700 font-medium"><%= t.name %></span>
+              <span class="ml-auto"></span>
+              <%= button_to "Remover", admin_tag_path(t), method: :delete,
+                    data: { turbo_confirm: "Remover tag #{t.name}?" },
+                    class: "tsuru-btn-ghost !h-7 !text-[11px] !px-2 !text-rose-600",
+                    form: { class: "inline" } %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <h2 class="text-[13px] font-semibold text-gray-900 mb-3">Criar nova tag</h2>
+      <%= form_with model: @tag, url: admin_tags_path, data: { turbo: false }, class: "space-y-3" do |f| %>
+        <div>
+          <%= f.label :name, "Nome", class: "tsuru-label" %>
+          <%= f.text_field :name, class: "tsuru-input mt-1", required: true, placeholder: "ex: bug, urgente, refactor…" %>
+        </div>
+        <div>
+          <%= f.label :color, "Cor", class: "tsuru-label" %>
+          <%= f.select :color, Tag::COLORS, {}, class: "tsuru-select mt-1" %>
+        </div>
+        <%= f.submit "Criar tag", class: "tsuru-btn-primary" %>
+      <% end %>
+    </div>
+  </div>
+</div>

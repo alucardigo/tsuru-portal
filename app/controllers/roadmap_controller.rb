@@ -5,8 +5,6 @@
 class RoadmapController < ApplicationController
   before_action :authenticate_user!
 
-  def gantt;       render_stub(:gantt);       end
-  def sprints;     render_stub(:sprints);     end
   def automations; render_stub(:automations); end
 
   private
