@@ -27,11 +27,15 @@ class Comment < ApplicationRecord
   end
 
   def notify_mentions
+    link = Rails.application.routes.url_helpers.demand_path(demand_id)
     mentioned_users.where.not(id: user_id).find_each do |u|
       Notification.create!(
-        user_id: u.id, kind: "mention",
-        message: "#{user.display_name} mencionou você em \"#{demand.title.to_s.truncate(40)}\"",
-        link_path: Rails.application.routes.url_helpers.demand_path(demand_id)
+        recipient_id: u.id,
+        demand_id:    demand_id,
+        kind:         "mention",
+        title:        "Você foi mencionado",
+        body:         "#{user.display_name} mencionou você em \"#{demand.title.to_s.truncate(40)}\"",
+        payload:      { link_path: link }
       )
     end
   rescue StandardError => e

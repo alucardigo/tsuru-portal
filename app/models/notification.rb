@@ -15,6 +15,8 @@ class Notification < ApplicationRecord
     demand_nao_elegivel
     demand_arquivada
     demand_comentada
+    automation
+    mention
   ].freeze
 
   validates :kind, inclusion: { in: KINDS }

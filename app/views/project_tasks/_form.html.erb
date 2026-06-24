@@ -47,14 +47,18 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div>
-            <%= f.label :estimated_hours, "Estimativa (horas)", class: "tsuru-label" %>
+            <%= f.label :estimated_hours, "Estimativa (h)", class: "tsuru-label" %>
             <%= f.number_field :estimated_hours, step: 0.5, min: 0, class: "tsuru-input mt-1", placeholder: "8.0" %>
           </div>
           <div>
-            <%= f.label :spent_hours, "Horas gastas", class: "tsuru-label" %>
+            <%= f.label :spent_hours, "Gastas (h)", class: "tsuru-label" %>
             <%= f.number_field :spent_hours, step: 0.5, min: 0, class: "tsuru-input mt-1", placeholder: "0.0" %>
+          </div>
+          <div>
+            <%= f.label :story_points, "Story points", class: "tsuru-label" %>
+            <%= f.number_field :story_points, step: 1, min: 0, class: "tsuru-input mt-1", placeholder: "5" %>
           </div>
           <div>
             <%= f.label :due_date, "Prazo", class: "tsuru-label" %>

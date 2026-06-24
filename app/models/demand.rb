@@ -7,6 +7,7 @@ class Demand < ApplicationRecord
   has_one  :lei_do_bem_record, dependent: :destroy
   has_many :board_decisions, dependent: :restrict_with_exception
   has_many :tasks, class_name: "ProjectTask", dependent: :destroy
+  has_many :sprints, dependent: :destroy
   has_many_attached :attachments
   has_many_attached :documentos
 

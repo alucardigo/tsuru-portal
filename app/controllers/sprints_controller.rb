@@ -4,6 +4,7 @@
 class SprintsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_demand
+  before_action :authorize_demand!
 
   def index
     @sprints = @demand.sprints.ordered
@@ -63,6 +64,12 @@ class SprintsController < ApplicationController
 
   def set_demand
     @demand = Demand.find(params[:demand_id])
+  end
+
+  def authorize_demand!
+    authorize(@demand, :show?) # reuso a DemandPolicy
+  rescue Pundit::NotAuthorizedError
+    redirect_to demand_path(@demand), alert: "Sem permissão para gerenciar sprints deste projeto." and return
   end
 
   def sprint_params

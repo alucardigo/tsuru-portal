@@ -3,6 +3,7 @@
 class ProjectTaskDependenciesController < ApplicationController
   before_action :authenticate_user!
   before_action :set_demand_and_task
+  before_action :authorize_task!
 
   def create
     predecessor = @demand.tasks.find_by(id: params[:predecessor_id])
@@ -28,5 +29,11 @@ class ProjectTaskDependenciesController < ApplicationController
   def set_demand_and_task
     @demand = Demand.find(params[:demand_id])
     @task = @demand.tasks.find(params[:task_id])
+  end
+
+  def authorize_task!
+    authorize(@task, :update?, policy_class: ProjectTaskPolicy)
+  rescue Pundit::NotAuthorizedError
+    redirect_to demand_path(@demand), alert: "Sem permissão para esta tarefa." and return
   end
 end

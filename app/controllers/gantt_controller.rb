@@ -8,10 +8,23 @@ class GanttController < ApplicationController
 
   def show
     @demand = Demand.find_by(id: params[:demand]) if params[:demand].present?
+    if @demand
+      begin
+        authorize(@demand, :show?)
+      rescue Pundit::NotAuthorizedError
+        redirect_to demands_path, alert: "Sem permissão para ver este projeto." and return
+      end
+    end
     base = if @demand
              @demand.tasks
            else
-             ProjectTask.joins(:demand).where.not(demands: { aasm_state: %w[arquivada cancelada] })
+             # Portfolio: admin/analista/board veem tudo; outros vêem só projetos próprios.
+             scope = ProjectTask.joins(:demand).where.not(demands: { aasm_state: %w[arquivada cancelada] })
+             if current_user.admin? || current_user.analista_pdi? || current_user.board?
+               scope
+             else
+               scope.where(demands: { user_id: current_user.id })
+             end
            end
 
     tasks = base.includes(:assignee, :demand).order(:position, :id).to_a

@@ -16,34 +16,41 @@ module AutomationEngine
   end
 
   def dispatch(automation, task)
+    link = Rails.application.routes.url_helpers.kanban_demand_tasks_path(task.demand_id)
     case automation.action_kind
     when "notify_assignees_of_dependents"
       task.successors.where.not(assignee_id: nil).find_each do |dep|
-        Notification.create!(
-          user_id: dep.assignee_id,
-          kind:    "automation",
-          message: "Predecessora \"#{task.title}\" foi concluída — você pode iniciar \"#{dep.title}\".",
-          link_path: Rails.application.routes.url_helpers.kanban_demand_tasks_path(task.demand_id)
-        )
+        notify(dep.assignee_id, task.demand_id,
+               "Predecessora concluída",
+               "Você pode iniciar \"#{dep.title}\" — predecessora \"#{task.title}\" foi concluída.",
+               link)
       end
     when "notify_assignee"
       return unless task.assignee_id
-      Notification.create!(
-        user_id: task.assignee_id,
-        kind: "automation",
-        message: "Automação \"#{automation.name}\" disparada em \"#{task.title}\"",
-        link_path: Rails.application.routes.url_helpers.kanban_demand_tasks_path(task.demand_id)
-      )
+      notify(task.assignee_id, task.demand_id,
+             "Automação: #{automation.name}",
+             "Disparada em \"#{task.title}\"",
+             link)
     when "notify_supervisors"
       area = task.demand.try(:area_impactada)
       return unless area
       User.where(role: :gestor, area: area).find_each do |sup|
-        Notification.create!(
-          user_id: sup.id, kind: "automation",
-          message: "Automação na área #{area}: \"#{task.title}\"",
-          link_path: Rails.application.routes.url_helpers.kanban_demand_tasks_path(task.demand_id)
-        )
+        notify(sup.id, task.demand_id,
+               "Automação na área #{area}",
+               "Tarefa: \"#{task.title}\"",
+               link)
       end
     end
+  end
+
+  def notify(recipient_id, demand_id, title, body, link_path)
+    Notification.create!(
+      recipient_id: recipient_id,
+      demand_id:    demand_id,
+      kind:         "automation",
+      title:        title,
+      body:         body,
+      payload:      { link_path: link_path }
+    )
   end
 end

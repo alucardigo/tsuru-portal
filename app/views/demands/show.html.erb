@@ -10,6 +10,12 @@
   <%= link_to kanban_demand_tasks_path(@demand), class: "tsuru-btn-ghost" do %>
     Tarefas
   <% end %>
+  <%= link_to gantt_path(demand: @demand.id), class: "tsuru-btn-ghost" do %>
+    Gantt
+  <% end %>
+  <%= link_to demand_sprints_path(@demand), class: "tsuru-btn-ghost" do %>
+    Sprints
+  <% end %>
   <%= link_to demand_documentos_path(@demand), class: "tsuru-btn-ghost" do %>
     Documentos
   <% end %>
