@@ -43,6 +43,6 @@ class ProjectTaskTimersController < ApplicationController
   end
 
   def set_task
-    @task = @demand.tasks.find(params[:task_id])
+    @task = @demand.tasks.find(params[:id])
   end
 end
