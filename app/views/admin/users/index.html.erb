@@ -133,7 +133,7 @@
                 </td>
                 <td class="px-3 py-2.5">
                   <%= form_with url: admin_user_path(user), method: :patch, local: true, class: "inline-flex items-center gap-1.5" do |f| %>
-                    <%= f.select :role,
+                    <%= f.select "user[role]",
                           User.roles.keys.map { |r| [ role_label(r), r ] },
                           { selected: user.role },
                           class: "tsuru-select !h-8 !text-[12px] !py-0 !px-2 min-w-[140px]" %>
