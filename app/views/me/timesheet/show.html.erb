@@ -1,0 +1,124 @@
+<% content_for :title, "Meu timesheet" %>
+<% content_for :crumb, "Tempo cronometrado x decorrido" %>
+<% content_for :subtitle, "· semana de #{@week_start.strftime('%d/%m')} a #{@week_end.strftime('%d/%m')}" %>
+
+<div class="px-7 py-6 max-w-[1400px] mx-auto">
+  <%# Navegação semana anterior / próxima %>
+  <div class="flex items-center justify-between mb-5">
+    <div class="flex gap-2">
+      <%= link_to me_timesheet_path(date: (@week_start - 7).iso8601), class: "tsuru-btn-ghost" do %>← Semana anterior<% end %>
+      <%= link_to me_timesheet_path, class: "tsuru-btn-ghost" do %>Atual<% end %>
+      <%= link_to me_timesheet_path(date: (@week_start + 7).iso8601), class: "tsuru-btn-ghost" do %>Próxima semana →<% end %>
+    </div>
+    <div class="text-[12px] text-gray-500">Semana ISO de seg a dom</div>
+  </div>
+
+  <%# Métricas do período %>
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+    <% [
+      ["Tempo cronometrado", ProjectTask.format_short(@total_secs), "emerald-700"],
+      ["Sessões em aberto",  @entries_open,                        "amber-700"],
+      ["Tarefas distintas",  @tasks_distinct,                      "indigo-600"],
+      ["Projetos distintos", @projects_distinct,                   "gray-900"],
+      ["Pico nas discrepâncias", (@discrepancia.first&.[](:gap_pct) || 0).to_s + "%", "red-600"]
+    ].each do |label, value, color| %>
+      <div class="tsuru-card p-4">
+        <div class="text-[11px] uppercase tracking-wider text-gray-500 font-medium"><%= label %></div>
+        <div class="text-[20px] font-semibold text-<%= color %> mt-1 tabular-nums"><%= value %></div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Tabela semanal: dia a dia x sessões %>
+  <section class="mb-8">
+    <h2 class="text-[14px] font-semibold text-gray-900 mb-2">Sessões da semana</h2>
+    <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <table class="w-full text-[12.5px]">
+        <thead class="bg-gray-50 text-[10.5px] uppercase tracking-wider text-gray-500">
+          <tr>
+            <th class="px-3 py-2 text-left">Dia</th>
+            <th class="px-3 py-2 text-right">Sessões</th>
+            <th class="px-3 py-2 text-right">Total cronometrado</th>
+            <th class="px-3 py-2 text-left">Detalhes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @by_day.each do |day, entries| %>
+            <% total = entries.sum { |e| e.current_duration_seconds } %>
+            <tr class="border-t border-gray-100">
+              <td class="px-3 py-2 align-top">
+                <div class="text-[12.5px] font-medium text-gray-900"><%= day.strftime("%a · %d/%m") %></div>
+              </td>
+              <td class="px-3 py-2 text-right align-top text-gray-700 tabular-nums"><%= entries.size %></td>
+              <td class="px-3 py-2 text-right align-top text-gray-900 font-medium tabular-nums"><%= ProjectTask.format_short(total) %></td>
+              <td class="px-3 py-2">
+                <% if entries.empty? %>
+                  <span class="text-gray-400 italic">—</span>
+                <% else %>
+                  <div class="space-y-0.5">
+                    <% entries.each do |e| %>
+                      <div class="text-[11.5px] text-gray-700">
+                        <span class="tabular-nums text-gray-500"><%= e.started_at.strftime("%H:%M") %></span>
+                        →
+                        <% if e.ended_at %>
+                          <span class="tabular-nums text-gray-500"><%= e.ended_at.strftime("%H:%M") %></span>
+                        <% else %>
+                          <span class="text-emerald-700 font-medium">em aberto</span>
+                        <% end %>
+                        ·
+                        <%= link_to "#{e.project_task.demand.codigo_display}", demand_path(e.project_task.demand), class: "text-indigo-700 hover:underline" %>
+                        ·
+                        <span class="text-gray-700"><%= e.project_task.title.to_s.truncate(50) %></span>
+                        <span class="text-gray-500 tabular-nums">(<%= ProjectTask.format_short(e.current_duration_seconds) %>)</span>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <%# Cruzamento cycle vs active %>
+  <section>
+    <h2 class="text-[14px] font-semibold text-gray-900 mb-1">Discrepância cycle time × active time</h2>
+    <p class="text-[12px] text-gray-500 mb-3 max-w-3xl">
+      Tarefas atribuídas a você ordenadas pela maior diferença entre o tempo decorrido desde a atribuição (cycle) e o tempo efetivamente cronometrado (active). Gap alto = tarefa parada esperando ação.
+    </p>
+    <% if @discrepancia.empty? %>
+      <div class="tsuru-card p-8 text-center text-[12.5px] text-gray-500">
+        Nenhuma tarefa com tempo de atribuição registrado ainda.
+      </div>
+    <% else %>
+      <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <table class="w-full text-[12.5px]">
+          <thead class="bg-gray-50 text-[10.5px] uppercase tracking-wider text-gray-500">
+            <tr>
+              <th class="px-3 py-2 text-left">Tarefa</th>
+              <th class="px-3 py-2 text-right">Cycle (desde atribuição)</th>
+              <th class="px-3 py-2 text-right">Active (cronômetro)</th>
+              <th class="px-3 py-2 text-right">Gap</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @discrepancia.each do |row| %>
+              <% gap_class = row[:gap_pct] >= 80 ? "text-red-700 font-semibold" : row[:gap_pct] >= 50 ? "text-amber-700 font-medium" : "text-gray-700" %>
+              <tr class="border-t border-gray-100">
+                <td class="px-3 py-2">
+                  <%= link_to row[:task].demand.codigo_display, demand_path(row[:task].demand), class: "text-[11.5px] text-indigo-700 hover:underline font-medium" %>
+                  · <span class="text-gray-700"><%= row[:task].title.to_s.truncate(60) %></span>
+                </td>
+                <td class="px-3 py-2 text-right tabular-nums text-gray-700"><%= ProjectTask.format_short(row[:lead]) %></td>
+                <td class="px-3 py-2 text-right tabular-nums text-gray-700"><%= ProjectTask.format_short(row[:active]) %></td>
+                <td class="px-3 py-2 text-right tabular-nums <%= gap_class %>"><%= row[:gap_pct] %>%</td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </section>
+</div>

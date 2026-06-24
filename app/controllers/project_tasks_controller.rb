@@ -94,7 +94,7 @@ class ProjectTasksController < ApplicationController
 
   def task_params
     params.require(:project_task).permit(:title, :description, :kanban_status, :priority,
-                                         :estimated_hours, :spent_hours, :due_date, :assignee_id)
+                                         :estimated_hours, :spent_hours, :due_date, :assignee_id, :parent_id)
   end
 
   def next_position_for(status)

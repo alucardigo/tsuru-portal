@@ -97,6 +97,7 @@ module UiHelper
       [
         { key: "inicio",      label: "Início",            icon: :home,    path: dashboard_path },
         { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
+        { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "demandas",    label: "Minhas demandas",   icon: :bulb,    path: demands_path },
         { key: "nova",        label: "Nova demanda",      icon: :plus,    path: new_demand_path },
         { key: "biblioteca",  label: "Biblioteca PD&I",   icon: :book,    path: "#" }
@@ -105,6 +106,7 @@ module UiHelper
       [
         { key: "aprovar",     label: "Para aprovar",      icon: :inbox,   path: gestor_demands_path, badge: gestor_pending_count },
         { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
+        { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "minha-area",  label: "Minha área",        icon: :folder,  path: demands_path },
         { key: "historico",   label: "Histórico",         icon: :doc,     path: demands_path },
         { key: "biblioteca",  label: "Biblioteca PD&I",   icon: :book,    path: "#" }
@@ -124,16 +126,21 @@ module UiHelper
       [
         { key: "esteira",     label: "Esteira do comitê", icon: :triage,  path: admin_demands_path },
         { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
+        { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "pipeline",    label: "Pipeline Kanban",   icon: :chart,   path: pipeline_path },
         { key: "metricas",    label: "Métricas",          icon: :chart,   path: admin_metrics_path },
         { key: "usuarios",    label: "Usuários",          icon: :user,    path: admin_users_path },
         { key: "elegibilidade", label: "Elegibilidade",   icon: :shield,  path: admin_demands_path },
-        { key: "exportar",    label: "Exportar",          icon: :download, path: admin_demands_path }
+        { key: "exportar",    label: "Exportar",          icon: :download, path: admin_demands_path },
+        { key: "roadmap-gantt",       label: "Gantt (em breve)",       icon: :chart,  path: roadmap_gantt_path },
+        { key: "roadmap-sprints",     label: "Sprints (em breve)",     icon: :folder, path: roadmap_sprints_path },
+        { key: "roadmap-automations", label: "Automações (em breve)",  icon: :flag,   path: roadmap_automations_path }
       ]
     when "board"
       [
         { key: "resumo",     label: "Resumo executivo",  icon: :chart,   path: dashboard_path },
         { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
+        { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "portfolio",  label: "Portfólio",         icon: :folder,  path: demands_path },
         { key: "decisoes",   label: "Decisões pendentes", icon: :flag,    path: board_demands_path, badge: board_pending_count },
         { key: "exportar",   label: "Exportar",          icon: :download, path: "#" }
@@ -142,6 +149,7 @@ module UiHelper
       [
         { key: "fila-fi",    label: "Fila de avaliação", icon: :triage,  path: fi_demands_path, badge: fi_pending_count },
         { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
+        { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "projetos",   label: "Projetos avaliados", icon: :folder, path: demands_path },
         { key: "biblioteca", label: "Biblioteca PD&I",   icon: :book,    path: "#" }
       ]

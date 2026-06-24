@@ -1,0 +1,41 @@
+<% content_for :title, @stub[:title] %>
+<% content_for :crumb, "Roadmap" %>
+<% content_for :subtitle, "· em construção" %>
+
+<div class="px-7 py-6 max-w-[860px] mx-auto">
+  <div class="tsuru-card p-6 border-l-4 border-amber-400">
+    <div class="text-[11px] uppercase tracking-wider text-amber-700 font-semibold mb-1">Em construção</div>
+    <h1 class="text-[20px] font-semibold text-gray-900"><%= @stub[:title] %></h1>
+    <div class="text-[13px] text-gray-500 mt-1"><%= @stub[:subtitle] %></div>
+
+    <div class="mt-5 space-y-4">
+      <div>
+        <div class="text-[11px] uppercase tracking-wider text-gray-400 font-medium mb-1">O que vai ser</div>
+        <p class="text-[13px] text-gray-700 leading-relaxed"><%= @stub[:what_it_is] %></p>
+      </div>
+
+      <div>
+        <div class="text-[11px] uppercase tracking-wider text-gray-400 font-medium mb-1">Inspiração</div>
+        <p class="text-[13px] text-gray-700"><%= @stub[:inspiration] %></p>
+      </div>
+
+      <div>
+        <div class="text-[11px] uppercase tracking-wider text-gray-400 font-medium mb-1">Depende de</div>
+        <ul class="text-[13px] text-gray-700 list-disc list-inside space-y-0.5">
+          <% @stub[:depends_on].each do |item| %>
+            <li><%= item %></li>
+          <% end %>
+        </ul>
+      </div>
+
+      <div>
+        <div class="text-[11px] uppercase tracking-wider text-gray-400 font-medium mb-1">Próximo passo</div>
+        <p class="text-[13px] text-gray-700"><%= @stub[:next_step] %></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 text-[12px] text-gray-500">
+    Esta tela é um placeholder. A feature será entregue em uma sprint dedicada — peça quando quiser priorizar.
+  </div>
+</div>

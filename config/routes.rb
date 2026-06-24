@@ -41,6 +41,10 @@ Rails.application.routes.draw do
         post "timer/stop",  to: "project_task_timers#stop",  as: :stop_timer
       end
       collection { get :kanban }
+      resources :checklist_items, controller: "project_task_checklist_items", only: %i[create destroy] do
+        member { patch :toggle }
+      end
+      resources :dependencies, controller: "project_task_dependencies", only: %i[create destroy]
     end
     resources :documentos, only: %i[index create destroy], controller: "demand_documentos"
 
@@ -53,6 +57,13 @@ Rails.application.routes.draw do
 
   namespace :me do
     resources :tasks, only: %i[index]
+    resource  :timesheet, only: %i[show]
+  end
+
+  scope path: "roadmap", controller: "roadmap" do
+    get "gantt",       action: :gantt,       as: :roadmap_gantt
+    get "sprints",     action: :sprints,     as: :roadmap_sprints
+    get "automations", action: :automations, as: :roadmap_automations
   end
 
   namespace :board do

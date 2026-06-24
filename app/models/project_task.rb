@@ -10,7 +10,16 @@ class ProjectTask < ApplicationRecord
   belongs_to :demand
   belongs_to :assignee, class_name: "User", optional: true
   belongs_to :creator,  class_name: "User"
-  has_many   :time_entries, class_name: "ProjectTaskTimeEntry", dependent: :destroy
+  belongs_to :parent,   class_name: "ProjectTask", optional: true
+  has_many   :subtasks, class_name: "ProjectTask", foreign_key: :parent_id, dependent: :destroy
+  has_many   :time_entries,    class_name: "ProjectTaskTimeEntry",  dependent: :destroy
+  has_many   :checklist_items, class_name: "ProjectTaskChecklistItem", dependent: :destroy
+  has_many   :dependencies_as_successor,   class_name: "ProjectTaskDependency", foreign_key: :successor_id,   dependent: :destroy
+  has_many   :dependencies_as_predecessor, class_name: "ProjectTaskDependency", foreign_key: :predecessor_id, dependent: :destroy
+  has_many   :predecessors, through: :dependencies_as_successor,   source: :predecessor
+  has_many   :successors,   through: :dependencies_as_predecessor, source: :successor
+  has_many   :project_task_tags, dependent: :destroy
+  has_many   :tags, through: :project_task_tags
 
   has_paper_trail
 
@@ -92,6 +101,26 @@ class ProjectTask < ApplicationRecord
       parts << "#{self.class.format_short(lt)} desde atribuição"
     end
     parts.join(" · ").presence
+  end
+
+  # ---- Sprint 18 — bloqueios + progresso ---------------------------------
+
+  # True se existe predecessor ainda nao concluido (bloqueia inicio).
+  def blocked?
+    return false if dependencies_as_successor.empty?
+    predecessors.where.not(kanban_status: "concluida").exists?
+  end
+
+  def blocked_by
+    predecessors.where.not(kanban_status: "concluida").to_a
+  end
+
+  # Progresso do checklist em %
+  def checklist_progress
+    total = checklist_items.size
+    return nil if total.zero?
+    done = checklist_items.count { |i| i.done }
+    ((done.to_f / total) * 100).round
   end
 
   def self.format_short(secs)
