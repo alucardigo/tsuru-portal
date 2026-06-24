@@ -37,6 +37,10 @@ Rails.application.routes.draw do
     resources :tasks, controller: "project_tasks", except: [:show] do
       member { patch :move }
       collection { get :kanban }
+      scope module: nil, controller: "project_task_timers" do
+        post "timer/start", action: :start, as: :start_timer
+        post "timer/stop",  action: :stop,  as: :stop_timer
+      end
     end
     resources :documentos, only: %i[index create destroy], controller: "demand_documentos"
 

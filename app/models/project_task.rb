@@ -10,6 +10,7 @@ class ProjectTask < ApplicationRecord
   belongs_to :demand
   belongs_to :assignee, class_name: "User", optional: true
   belongs_to :creator,  class_name: "User"
+  has_many   :time_entries, class_name: "ProjectTaskTimeEntry", dependent: :destroy
 
   has_paper_trail
 
@@ -20,6 +21,7 @@ class ProjectTask < ApplicationRecord
   validates :spent_hours,     numericality: { greater_than_or_equal_to: 0 }
 
   before_save :sync_timestamps_with_status
+  before_save :touch_assigned_at, if: :assignee_id_changed?
 
   scope :for_demand,    ->(d) { where(demand_id: d.id) }
   scope :open,          -> { where.not(kanban_status: "concluida") }
@@ -54,7 +56,60 @@ class ProjectTask < ApplicationRecord
     [est, spent].compact.join(" · ")
   end
 
+  # ---- Sprint 17 — time tracking helpers ---------------------------------
+
+  # Sessão aberta deste usuário para esta task (se houver)
+  def running_entry_for(user)
+    time_entries.running.find_by(user_id: user.id)
+  end
+
+  def timer_running_for?(user)
+    return false unless user
+    time_entries.running.where(user_id: user.id).exists?
+  end
+
+  # Active time = soma de todas sessões cronometradas (incluindo as abertas em tempo real)
+  def active_seconds
+    finished = time_entries.finished.sum(:duration_seconds).to_i
+    open_now = time_entries.running.sum { |e| e.current_duration_seconds }
+    finished + open_now
+  end
+
+  # Lead time = decorrido desde a atribuição até concluída (ou agora se em aberto)
+  def lead_time_seconds
+    return nil unless assigned_at
+    finish = kanban_status == "concluida" ? (completed_at || Time.current) : Time.current
+    [ (finish - assigned_at).to_i, 0 ].max
+  end
+
+  # Texto compacto pra exibir no card: "1h12 trab · 3d desde atribuição"
+  def tracking_resumo
+    parts = []
+    if active_seconds > 0
+      parts << "#{self.class.format_short(active_seconds)} trab"
+    end
+    if lt = lead_time_seconds
+      parts << "#{self.class.format_short(lt)} desde atribuição"
+    end
+    parts.join(" · ").presence
+  end
+
+  def self.format_short(secs)
+    return "0s" if secs.to_i <= 0
+    s = secs.to_i
+    d = s / 86_400; s %= 86_400
+    h = s / 3_600;  s %= 3_600
+    m = s / 60
+    return "#{d}d#{h > 0 ? h.to_s + 'h' : ''}" if d > 0
+    return "#{h}h#{m > 0 ? m.to_s.rjust(2, '0') : ''}" if h > 0
+    "#{m}min"
+  end
+
   private
+
+  def touch_assigned_at
+    self.assigned_at = Time.current if assignee_id.present?
+  end
 
   def sync_timestamps_with_status
     if kanban_status_changed?

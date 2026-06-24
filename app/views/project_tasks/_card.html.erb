@@ -4,6 +4,8 @@
   "alta"    => "bg-orange-100 text-orange-700",
   "urgente" => "bg-red-100 text-red-700"
 }[task.priority] %>
+<% running = task.running_entry_for(current_user) %>
+<% tracking = task.tracking_resumo %>
 
 <div class="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm p-3 cursor-grab transition"
      data-task-id="<%= task.id %>"
@@ -45,7 +47,26 @@
     <% end %>
   </div>
 
-  <div class="flex items-center justify-end mt-2 pt-2 border-t border-gray-100">
+  <% if tracking %>
+    <div class="mt-1.5 text-[10.5px] text-gray-500 truncate" title="Tempo cronometrado x decorrido desde atribuição">
+      <%= tracking %>
+    </div>
+  <% end %>
+
+  <div class="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+    <% if running %>
+      <%= button_to stop_timer_demand_task_path(task.demand, task), method: :post,
+            class: "inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 font-medium",
+            form: { class: "inline" } do %>
+        ⏸ <span data-controller="ticker" data-ticker-start-value="<%= running.started_at.utc.iso8601 %>" class="tabular-nums">00:00:00</span>
+      <% end %>
+    <% else %>
+      <%= button_to start_timer_demand_task_path(task.demand, task), method: :post,
+            class: "inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium",
+            form: { class: "inline" } do %>
+        ▶ Iniciar
+      <% end %>
+    <% end %>
     <%= button_to demand_task_path(task.demand, task), method: :delete,
           data: { turbo_confirm: "Excluir esta tarefa?" },
           class: "text-[11px] text-gray-400 hover:text-red-600",
