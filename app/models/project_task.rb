@@ -22,6 +22,8 @@ class ProjectTask < ApplicationRecord
   has_many   :project_task_tags, dependent: :destroy
   has_many   :tags, through: :project_task_tags
   has_many   :comments, class_name: "ProjectTaskComment", dependent: :destroy
+  has_many   :task_watchers, class_name: "ProjectTaskWatcher", dependent: :destroy
+  has_many   :watchers, through: :task_watchers, source: :user
   has_many_attached :attachments
 
   has_paper_trail
@@ -36,6 +38,8 @@ class ProjectTask < ApplicationRecord
   before_save :touch_assigned_at, if: :assignee_id_changed?
   after_update :fire_automations_on_status_change, if: :saved_change_to_kanban_status?
   after_update :fire_automations_on_assignment,    if: :saved_change_to_assignee_id?
+  after_update :notify_watchers_on_change
+  after_update :ensure_assignee_is_watcher, if: :saved_change_to_assignee_id?
 
   scope :for_demand,    ->(d) { where(demand_id: d.id) }
   scope :open,          -> { where.not(kanban_status: "concluida") }
@@ -151,6 +155,43 @@ class ProjectTask < ApplicationRecord
 
   def fire_automations_on_assignment
     AutomationEngine.fire(:"task.assigned", self) if assignee_id.present?
+  end
+
+  def notify_watchers_on_change
+    relevant = saved_changes.slice("kanban_status", "assignee_id", "title", "due_date", "priority")
+    return if relevant.empty?
+    link = Rails.application.routes.url_helpers.edit_demand_task_path(demand_id, id)
+    summary = relevant.keys.map do |k|
+      case k
+      when "kanban_status"
+        "status: #{relevant[k][0]} → #{relevant[k][1]}"
+      when "assignee_id"
+        old_n = User.find_by(id: relevant[k][0])&.display_name || "—"
+        new_n = User.find_by(id: relevant[k][1])&.display_name || "—"
+        "responsável: #{old_n} → #{new_n}"
+      when "title"      then "título"
+      when "due_date"   then "prazo: #{relevant[k][1] || 'sem prazo'}"
+      when "priority"   then "prioridade: #{relevant[k][1]}"
+      end
+    end.compact.join(" · ")
+    actor = PaperTrail.request.whodunnit
+    watchers.where.not(id: actor.to_i).find_each do |w|
+      Notification.create!(
+        recipient_id: w.id, demand_id: demand_id, kind: "task_activity",
+        title: "Tarefa que você segue mudou",
+        body: "\"#{title.to_s.truncate(50)}\" — #{summary}",
+        payload: { link_path: link }
+      )
+    end
+  rescue StandardError => e
+    Rails.logger.warn("[ProjectTask#notify_watchers_on_change] #{e.class}: #{e.message}")
+  end
+
+  def ensure_assignee_is_watcher
+    return unless assignee_id.present?
+    task_watchers.find_or_create_by(user_id: assignee_id)
+  rescue StandardError
+    nil
   end
 
   def sync_timestamps_with_status

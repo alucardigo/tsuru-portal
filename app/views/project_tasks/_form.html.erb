@@ -11,6 +11,49 @@
         <%= link_to kanban_demand_tasks_path(@demand), class: "text-gray-400 hover:text-gray-700 text-2xl leading-none" do %>×<% end %>
       </div>
 
+      <% unless task.new_record? %>
+        <%# Sprint 24 — barra de colaboração: Watch + Transferir %>
+        <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100 text-[12px]">
+          <% is_watching = task.watchers.exists?(id: current_user.id) %>
+          <% if is_watching %>
+            <%= button_to demand_task_watcher_path(@demand, task), method: :delete,
+                  class: "inline-flex items-center gap-1 px-2 py-1 rounded bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium",
+                  form: { class: "inline" } do %>👁 Seguindo<% end %>
+          <% else %>
+            <%= button_to demand_task_watcher_path(@demand, task), method: :post,
+                  class: "inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-50 text-gray-700 hover:bg-gray-100 font-medium",
+                  form: { class: "inline" } do %>👁 Seguir<% end %>
+          <% end %>
+          <span class="text-gray-500"><%= task.watchers.count %> seguindo</span>
+          <% if task.watchers.any? %>
+            <span class="flex -space-x-1 ml-1">
+              <% task.watchers.limit(5).each do |w| %>
+                <span title="<%= w.display_name %>" class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[9px] font-semibold flex items-center justify-center border border-white"><%= w.name.to_s[0,2].upcase %></span>
+              <% end %>
+            </span>
+          <% end %>
+
+          <details class="ml-auto relative">
+            <summary class="inline-flex items-center gap-1 px-2 py-1 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 font-medium cursor-pointer list-none">🔁 Transferir</summary>
+            <div class="absolute right-0 mt-1 w-72 bg-white rounded-lg shadow-xl border border-gray-200 p-3 z-50">
+              <%= form_with url: reassign_demand_task_path(@demand, task), method: :post, data: { turbo: false }, class: "space-y-2" do %>
+                <div>
+                  <label class="tsuru-label">Novo responsável</label>
+                  <%= select_tag :assignee_id,
+                        options_from_collection_for_select(User.ativos.order(:name), :id, :display_name),
+                        include_blank: "— selecione —", class: "tsuru-select !text-[12px] w-full mt-1" %>
+                </div>
+                <div>
+                  <label class="tsuru-label">Handoff note (opcional)</label>
+                  <%= text_area_tag :handoff_note, "", rows: 2, class: "tsuru-input !text-[12px] w-full mt-1", placeholder: "Contexto rápido pro próximo dono…" %>
+                </div>
+                <button class="tsuru-btn-primary w-full !text-[12px]">Transferir</button>
+              <% end %>
+            </div>
+          </details>
+        </div>
+      <% end %>
+
       <%= form_with model: [@demand, task], url: task.new_record? ? demand_tasks_path(@demand) : demand_task_path(@demand, task),
               data: { turbo: false }, html: { multipart: true }, class: "space-y-4" do |f| %>
 
@@ -203,8 +246,9 @@
             <span class="text-[11px] text-gray-500 font-normal">· <%= comments.size %></span>
           </h3>
           <% if comments.any? %>
-            <div class="space-y-2 mb-3">
+            <div class="space-y-3 mb-3">
               <% comments.each do |c| %>
+                <% grouped = c.reactions_grouped %>
                 <div class="flex items-start gap-2 text-[12.5px]">
                   <div class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-semibold flex items-center justify-center shrink-0"><%= c.user.name.to_s[0,2].upcase %></div>
                   <div class="flex-1 min-w-0">
@@ -219,6 +263,29 @@
                       <% end %>
                     </div>
                     <div class="text-[12.5px] text-gray-700 whitespace-pre-wrap"><%= c.body %></div>
+                    <%# Reactions: bar com emojis disponíveis + counts %>
+                    <div class="flex items-center flex-wrap gap-1 mt-1.5">
+                      <% grouped.each do |emoji, users| %>
+                        <% mine = users.any? { |u| u.id == current_user.id } %>
+                        <%= button_to toggle_reaction_demand_task_comment_path(@demand, task, c, emoji: emoji), method: :post,
+                              class: "inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded #{mine ? 'bg-indigo-50 ring-1 ring-indigo-300 text-indigo-700' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}",
+                              form: { class: "inline" },
+                              title: users.map(&:display_name).join(", ") do %>
+                          <span><%= emoji %></span>
+                          <span class="tabular-nums"><%= users.size %></span>
+                        <% end %>
+                      <% end %>
+                      <details class="relative">
+                        <summary class="inline-flex items-center text-[11px] px-1.5 py-0.5 rounded text-gray-400 hover:bg-gray-100 cursor-pointer list-none">+ 😀</summary>
+                        <div class="absolute left-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 p-1.5 z-40 flex gap-0.5">
+                          <% ProjectTaskCommentReaction::EMOJIS.each do |e| %>
+                            <%= button_to toggle_reaction_demand_task_comment_path(@demand, task, c, emoji: e), method: :post,
+                                  class: "text-[14px] px-1.5 py-0.5 rounded hover:bg-gray-100",
+                                  form: { class: "inline" } do %><%= e %><% end %>
+                          <% end %>
+                        </div>
+                      </details>
+                    </div>
                   </div>
                 </div>
               <% end %>
@@ -232,29 +299,68 @@
           <% end %>
         </section>
 
-        <%# Histórico — PaperTrail versions %>
+        <%# Activity feed — PaperTrail decifrado em português %>
         <section class="mt-5 pt-5 border-t border-gray-100">
-          <% versions = task.versions.includes(:item).reorder(created_at: :desc).limit(15) %>
+          <% versions = task.versions.includes(:item).reorder(created_at: :desc).limit(20) %>
           <h3 class="text-[13px] font-semibold text-gray-900 mb-2">
-            Histórico
-            <span class="text-[11px] text-gray-500 font-normal">· últimas <%= versions.size %> alterações</span>
+            Atividade
+            <span class="text-[11px] text-gray-500 font-normal">· últimas <%= versions.size %></span>
           </h3>
           <% if versions.any? %>
-            <div class="space-y-1">
+            <ol class="relative border-l border-gray-200 ml-1.5 space-y-2">
               <% versions.each do |v| %>
-                <% who = User.find_by(id: v.whodunnit)&.display_name || "—" %>
-                <div class="flex items-start gap-2 text-[11.5px] py-0.5">
-                  <span class="text-[10.5px] uppercase tracking-wider <%= { 'create' => 'text-emerald-700', 'update' => 'text-blue-700', 'destroy' => 'text-rose-700' }[v.event] || 'text-gray-500' %> font-semibold w-14"><%= v.event %></span>
-                  <span class="text-gray-700 truncate flex-1">
-                    <%= who %>
-                    <% if v.object_changes.is_a?(Hash) && v.object_changes.any? %>
-                      · <span class="text-gray-500">alterou: <%= v.object_changes.keys.reject { |k| %w[updated_at].include?(k) }.first(4).join(", ") %></span>
+                <% who = User.find_by(id: v.whodunnit)&.display_name || "Sistema" %>
+                <% changes = v.object_changes.is_a?(Hash) ? v.object_changes.reject { |k, _| %w[updated_at created_at lock_version assigned_at].include?(k) } : {} %>
+                <%
+                  label_for = ->(field) {
+                    {
+                      "kanban_status" => "status",
+                      "priority"      => "prioridade",
+                      "assignee_id"   => "responsável",
+                      "title"         => "título",
+                      "description"   => "descrição",
+                      "due_date"      => "prazo",
+                      "estimated_hours" => "estimativa (h)",
+                      "spent_hours"   => "gastas (h)",
+                      "story_points"  => "story points",
+                      "parent_id"     => "tarefa pai",
+                      "sprint_id"     => "sprint"
+                    }[field] || field
+                  }
+                  pretty_val = ->(field, val) {
+                    case field
+                    when "assignee_id" then val.present? ? (User.find_by(id: val)&.display_name || "—") : "ninguém"
+                    when "kanban_status" then ProjectTask.new(kanban_status: val).kanban_status_label rescue val
+                    when "priority"      then ProjectTask.new(priority: val).priority_label rescue val
+                    else val.is_a?(String) && val.length > 40 ? val.truncate(40) : val.inspect
+                    end
+                  }
+                %>
+                <li class="ml-3">
+                  <span class="absolute -left-1.5 w-3 h-3 rounded-full <%= { 'create' => 'bg-emerald-500', 'update' => 'bg-blue-500', 'destroy' => 'bg-rose-500' }[v.event] || 'bg-gray-400' %>"></span>
+                  <div class="text-[11.5px] text-gray-800">
+                    <% if v.event == "create" %>
+                      <strong><%= who %></strong> criou a tarefa
+                    <% elsif v.event == "destroy" %>
+                      <strong><%= who %></strong> excluiu a tarefa
+                    <% elsif changes.any? %>
+                      <strong><%= who %></strong>
+                      <% if changes.size == 1 %>
+                        alterou <%= label_for.call(changes.keys.first) %> de
+                        <code class="text-[11px] bg-gray-100 px-1 rounded"><%= pretty_val.call(changes.keys.first, changes.values.first[0]) %></code>
+                        para
+                        <code class="text-[11px] bg-emerald-50 text-emerald-800 px-1 rounded"><%= pretty_val.call(changes.keys.first, changes.values.first[1]) %></code>
+                      <% else %>
+                        alterou <%= changes.keys.map { |f| label_for.call(f) }.first(4).join(", ") %>
+                      <% end %>
+                    <% else %>
+                      <strong><%= who %></strong> tocou a tarefa
                     <% end %>
-                  </span>
-                  <span class="text-[10.5px] text-gray-400 tabular-nums"><%= v.created_at.strftime("%d/%m %H:%M") %></span>
-                </div>
+                  </div>
+                  <div class="text-[10.5px] text-gray-400 tabular-nums"><%= v.created_at.strftime("%d/%m %H:%M") %></div>
+                </li>
               <% end %>
-            </div>
+            </ol>
           <% else %>
             <div class="text-[12px] text-gray-400 italic">Sem alterações registradas ainda.</div>
           <% end %>

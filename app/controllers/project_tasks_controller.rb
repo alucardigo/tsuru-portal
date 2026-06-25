@@ -3,7 +3,7 @@
 class ProjectTasksController < ApplicationController
   before_action :authenticate_user!
   before_action :set_demand
-  before_action :set_task, only: %i[edit update destroy move]
+  before_action :set_task, only: %i[edit update destroy move reassign]
   before_action :authorize_task!, except: %i[index kanban new create]
   before_action :authorize_collection!, only: %i[index kanban new create]
 
@@ -47,6 +47,40 @@ class ProjectTasksController < ApplicationController
   def destroy
     @task.destroy!
     redirect_to kanban_demand_tasks_path(@demand), notice: "Tarefa removida."
+  end
+
+  # Sprint 24 — Transferir tarefa com handoff note (estilo Wrike).
+  # Mudar assignee + adicionar comentário automático + notif para novo responsável.
+  def reassign
+    new_assignee_id = params[:assignee_id].presence
+    note = params[:handoff_note].to_s.strip
+    old_user = @task.assignee
+    new_user = User.find_by(id: new_assignee_id)
+
+    if new_assignee_id.blank? || new_user.nil?
+      redirect_back fallback_location: edit_demand_task_path(@demand, @task), alert: "Selecione um responsável válido." and return
+    end
+    if new_user.id == old_user&.id
+      redirect_back fallback_location: edit_demand_task_path(@demand, @task), alert: "Mesmo responsável." and return
+    end
+
+    @task.update!(assignee: new_user)
+
+    handoff_body = if old_user
+      "🔁 Transferido por #{current_user.display_name}: #{old_user.display_name} → #{new_user.display_name}#{note.present? ? "\n\n#{note}" : ''}"
+    else
+      "🔁 Atribuído a #{new_user.display_name} por #{current_user.display_name}#{note.present? ? "\n\n#{note}" : ''}"
+    end
+    @task.comments.create!(user: current_user, body: handoff_body)
+
+    Notification.create!(
+      recipient_id: new_user.id, demand_id: @demand.id, kind: "task_handoff",
+      title: "Você recebeu uma tarefa",
+      body: "#{current_user.display_name} atribuiu \"#{@task.title.to_s.truncate(50)}\" a você",
+      payload: { link_path: edit_demand_task_path(@demand, @task) }
+    )
+
+    redirect_back fallback_location: edit_demand_task_path(@demand, @task), notice: "Tarefa transferida para #{new_user.display_name}."
   end
 
   # Drag-and-drop: muda status (coluna) e/ou posição da task no kanban

@@ -7,6 +7,7 @@ class ApplicationController < ActionController::Base
 
   before_action :authenticate_user!
   before_action :set_current_user
+  before_action :set_paper_trail_whodunnit_from_user
 
   rescue_from Pundit::NotAuthorizedError, with: :pundit_not_authorized
 
@@ -14,6 +15,10 @@ class ApplicationController < ActionController::Base
 
   def set_current_user
     Current.user = current_user
+  end
+
+  def set_paper_trail_whodunnit_from_user
+    PaperTrail.request.whodunnit = current_user&.id&.to_s
   end
 
   def pundit_not_authorized

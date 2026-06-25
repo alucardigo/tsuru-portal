@@ -17,6 +17,8 @@ class Notification < ApplicationRecord
     demand_comentada
     automation
     mention
+    task_activity
+    task_handoff
   ].freeze
 
   validates :kind, inclusion: { in: KINDS }

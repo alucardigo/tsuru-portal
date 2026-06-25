@@ -37,6 +37,7 @@ Rails.application.routes.draw do
     resources :tasks, controller: "project_tasks", except: [:show] do
       member do
         patch :move
+        post  :reassign
         post "timer/start", to: "project_task_timers#start", as: :start_timer
         post "timer/stop",  to: "project_task_timers#stop",  as: :stop_timer
       end
@@ -45,8 +46,11 @@ Rails.application.routes.draw do
         member { patch :toggle }
       end
       resources :dependencies, controller: "project_task_dependencies", only: %i[create destroy]
-      resources :comments, controller: "project_task_comments", only: %i[create destroy]
+      resources :comments, controller: "project_task_comments", only: %i[create destroy] do
+        post "reactions/toggle", to: "project_task_reactions#toggle", as: :toggle_reaction, on: :member
+      end
       resources :attachments, controller: "project_task_attachments", only: %i[destroy]
+      resource  :watcher,  controller: "project_task_watchers", only: %i[create destroy]
     end
 
     resources :sprints do
