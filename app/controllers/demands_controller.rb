@@ -31,7 +31,8 @@ class DemandsController < ApplicationController
     authorize @demand
 
     if @demand.save
-      redirect_to @demand, notice: t("demands.created")
+      auto_submit_if_rascunho!(@demand)
+      redirect_to @demand, notice: @demand.submetida? ? t("demands.submitted") : t("demands.created")
     else
       render :new, status: :unprocessable_content
     end
@@ -45,7 +46,8 @@ class DemandsController < ApplicationController
     authorize @demand
 
     if @demand.update(demand_params)
-      redirect_to @demand, notice: t("demands.updated")
+      auto_submit_if_rascunho!(@demand)
+      redirect_to @demand, notice: @demand.submetida? ? t("demands.submitted") : t("demands.updated")
     else
       render :edit, status: :unprocessable_content
     end
@@ -195,6 +197,15 @@ class DemandsController < ApplicationController
 
   def set_demand
     @demand = Demand.find(params[:id])
+  end
+
+  # Submete automaticamente quando a demanda foi salva em rascunho —
+  # remove o passo manual de "Submeter para triagem" depois do save.
+  def auto_submit_if_rascunho!(demand)
+    return unless demand.rascunho?
+    if demand.submeter
+      DemandMailer.submetida(demand).deliver_later rescue nil
+    end
   end
 
   def demand_params
