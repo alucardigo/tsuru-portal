@@ -21,6 +21,8 @@ class ProjectTask < ApplicationRecord
   has_many   :successors,   through: :dependencies_as_predecessor, source: :successor
   has_many   :project_task_tags, dependent: :destroy
   has_many   :tags, through: :project_task_tags
+  has_many   :comments, class_name: "ProjectTaskComment", dependent: :destroy
+  has_many_attached :attachments
 
   has_paper_trail
 

@@ -45,6 +45,8 @@ Rails.application.routes.draw do
         member { patch :toggle }
       end
       resources :dependencies, controller: "project_task_dependencies", only: %i[create destroy]
+      resources :comments, controller: "project_task_comments", only: %i[create destroy]
+      resources :attachments, controller: "project_task_attachments", only: %i[destroy]
     end
 
     resources :sprints do
