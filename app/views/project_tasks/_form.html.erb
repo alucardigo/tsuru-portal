@@ -125,6 +125,39 @@
           </div>
         <% end %>
 
+        <%# Custom fields (Sprint 25 — definidos por demand) %>
+        <% defs = @demand.task_field_definitions || [] %>
+        <% if defs.any? %>
+          <div class="pt-3 border-t border-gray-100">
+            <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium mb-2">Campos personalizados</div>
+            <div class="space-y-2">
+              <% defs.each do |d| %>
+                <% key = d["key"]; label = d["label"]; kind = d["kind"]; val = (task.custom_fields || {})[key] %>
+                <div>
+                  <label class="tsuru-label" for="cf_<%= key %>"><%= label %></label>
+                  <% case kind %>
+                  <% when "text" %>
+                    <input type="text" name="project_task[custom_fields][<%= key %>]" value="<%= val %>" id="cf_<%= key %>" class="tsuru-input mt-1"/>
+                  <% when "url" %>
+                    <input type="url" name="project_task[custom_fields][<%= key %>]" value="<%= val %>" id="cf_<%= key %>" placeholder="https://…" class="tsuru-input mt-1"/>
+                  <% when "number" %>
+                    <input type="number" step="any" name="project_task[custom_fields][<%= key %>]" value="<%= val %>" id="cf_<%= key %>" class="tsuru-input mt-1"/>
+                  <% when "date" %>
+                    <input type="date" name="project_task[custom_fields][<%= key %>]" value="<%= val %>" id="cf_<%= key %>" class="tsuru-input mt-1"/>
+                  <% when "select" %>
+                    <select name="project_task[custom_fields][<%= key %>]" id="cf_<%= key %>" class="tsuru-select mt-1">
+                      <option value="">—</option>
+                      <% (d["options"] || []).each do |opt| %>
+                        <option value="<%= opt %>" <%= "selected" if val == opt %>><%= opt %></option>
+                      <% end %>
+                    </select>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
         <%# Upload de anexos (precisa estar dentro do form principal — multipart) %>
         <div>
           <%= f.label :attachments, "Adicionar arquivos (anexar ao salvar)", class: "tsuru-label" %>

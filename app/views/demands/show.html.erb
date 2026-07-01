@@ -13,8 +13,20 @@
   <%= link_to gantt_path(demand: @demand.id), class: "tsuru-btn-ghost" do %>
     Gantt
   <% end %>
+  <%= link_to calendar_demand_tasks_path(@demand), class: "tsuru-btn-ghost" do %>
+    Calendário
+  <% end %>
   <%= link_to demand_sprints_path(@demand), class: "tsuru-btn-ghost" do %>
     Sprints
+  <% end %>
+  <%= link_to demand_task_field_definitions_path(@demand), class: "tsuru-btn-ghost" do %>
+    Campos
+  <% end %>
+  <%= link_to demand_task_templates_path(@demand), class: "tsuru-btn-ghost" do %>
+    Templates
+  <% end %>
+  <%= link_to demand_task_workflow_path(@demand), class: "tsuru-btn-ghost" do %>
+    Workflow
   <% end %>
   <%= link_to demand_documentos_path(@demand), class: "tsuru-btn-ghost" do %>
     Documentos

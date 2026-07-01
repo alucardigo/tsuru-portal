@@ -43,7 +43,11 @@ Rails.application.routes.draw do
         post "timer/start", to: "project_task_timers#start", as: :start_timer
         post "timer/stop",  to: "project_task_timers#stop",  as: :stop_timer
       end
-      collection { get :kanban }
+      collection do
+        get :kanban
+        get :calendar, to: "project_task_calendars#show"
+        post :bulk, to: "project_task_bulks#create"
+      end
       resources :checklist_items, controller: "project_task_checklist_items", only: %i[create destroy] do
         member { patch :toggle }
       end
@@ -61,6 +65,12 @@ Rails.application.routes.draw do
         post :unassign_task
       end
     end
+
+    resources :task_field_definitions, controller: "demand_task_field_definitions", only: %i[index create destroy]
+    resources :task_templates, controller: "project_task_templates", only: %i[index create destroy] do
+      member { post :apply }
+    end
+    resource :task_workflow, controller: "demand_task_workflows", only: %i[show update destroy]
     resources :documentos, only: %i[index create destroy], controller: "demand_documentos"
 
     resource :lei_do_bem_record, only: %i[show new create edit update], path: "lei-do-bem" do
@@ -76,6 +86,7 @@ Rails.application.routes.draw do
   end
 
   get "gantt", to: "gantt#show", as: :gantt
+  get "search/quick", to: "search#quick", as: :quick_search
   scope path: "roadmap", controller: "roadmap" do
     get "automations", action: :automations, as: :roadmap_automations
   end

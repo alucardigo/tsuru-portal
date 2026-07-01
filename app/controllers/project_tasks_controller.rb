@@ -13,7 +13,9 @@ class ProjectTasksController < ApplicationController
 
   def kanban
     @tasks_by_status = @demand.tasks.includes(:assignee).by_kanban.group_by(&:kanban_status)
-    @statuses        = ProjectTask::KANBAN_STATUSES
+    custom = @demand.task_workflow_states
+    @statuses        = custom.present? ? custom.map { |s| s["key"] } : ProjectTask::KANBAN_STATUSES
+    @status_labels   = custom.present? ? custom.each_with_object({}) { |s, h| h[s["key"]] = s["label"] } : {}
     @metricas        = build_metricas
   end
 
@@ -127,10 +129,17 @@ class ProjectTasksController < ApplicationController
   end
 
   def task_params
-    params.require(:project_task).permit(:title, :description, :kanban_status, :priority,
+    permitted = params.require(:project_task).permit(:title, :description, :kanban_status, :priority,
                                          :estimated_hours, :spent_hours, :due_date, :assignee_id, :parent_id,
                                          :sprint_id, :story_points,
-                                         attachments: [])
+                                         attachments: [], custom_fields: {})
+    # Sanitize custom_fields keys against the demand's field definitions
+    defs = @demand&.task_field_definitions || []
+    allowed_keys = defs.map { |d| d["key"] }
+    if permitted[:custom_fields].present?
+      permitted[:custom_fields] = permitted[:custom_fields].to_h.slice(*allowed_keys)
+    end
+    permitted
   end
 
   def next_position_for(status)

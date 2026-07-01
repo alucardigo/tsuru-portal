@@ -24,6 +24,14 @@ class ProjectTask < ApplicationRecord
   has_many   :comments, class_name: "ProjectTaskComment", dependent: :destroy
   has_many   :task_watchers, class_name: "ProjectTaskWatcher", dependent: :destroy
   has_many   :watchers, through: :task_watchers, source: :user
+  has_many   :task_assignees, class_name: "ProjectTaskAssignee", dependent: :destroy
+  has_many   :additional_assignees, through: :task_assignees, source: :user
+
+  # Todos os responsáveis: primary + adicionais (unique).
+  def all_assignees
+    ids = [ assignee_id, *task_assignees.pluck(:user_id) ].compact.uniq
+    User.where(id: ids)
+  end
   has_many_attached :attachments
 
   has_paper_trail

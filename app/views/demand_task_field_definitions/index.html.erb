@@ -1,0 +1,59 @@
+<% content_for :title, "Campos personalizados" %>
+<% content_for :crumb, "Projeto #{@demand.codigo_display}" %>
+<% content_for :subtitle, "· campos que aparecem em cada tarefa" %>
+
+<div class="px-7 py-6 max-w-[900px] mx-auto">
+  <div class="mb-4 flex items-center gap-2">
+    <%= link_to demand_path(@demand), class: "tsuru-btn-ghost" do %>← Projeto<% end %>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <h2 class="text-[13px] font-semibold text-gray-900 mb-3">Campos cadastrados (<%= @fields.size %>)</h2>
+      <% if @fields.empty? %>
+        <div class="text-[12.5px] text-gray-500 italic">Nenhum campo customizado ainda.</div>
+      <% else %>
+        <div class="space-y-1.5">
+          <% @fields.each do |f| %>
+            <div class="flex items-center gap-2 text-[12.5px] py-1">
+              <span class="text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold w-14"><%= f["kind"] %></span>
+              <span class="flex-1 font-medium text-gray-900"><%= f["label"] %></span>
+              <% if f["kind"] == "select" && f["options"].present? %>
+                <span class="text-[10.5px] text-gray-500"><%= f["options"].join(", ").truncate(40) %></span>
+              <% end %>
+              <%= button_to demand_task_field_definition_path(@demand, f["key"]), method: :delete,
+                    class: "text-[11px] text-gray-400 hover:text-rose-600",
+                    data: { turbo_confirm: "Remover #{f["label"]}?" },
+                    form: { class: "inline" } do %>×<% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <h2 class="text-[13px] font-semibold text-gray-900 mb-3">Novo campo</h2>
+      <%= form_with url: demand_task_field_definitions_path(@demand), method: :post, data: { turbo: false }, class: "space-y-3" do %>
+        <div>
+          <label class="tsuru-label">Nome</label>
+          <input name="label" required placeholder="ex: URL do PR, Custo estimado…" class="tsuru-input mt-1"/>
+        </div>
+        <div>
+          <label class="tsuru-label">Tipo</label>
+          <select name="kind" class="tsuru-select mt-1">
+            <option value="text">Texto</option>
+            <option value="url">URL</option>
+            <option value="number">Número</option>
+            <option value="select">Seleção (dropdown)</option>
+            <option value="date">Data</option>
+          </select>
+        </div>
+        <div>
+          <label class="tsuru-label">Opções (apenas para Seleção, separadas por vírgula)</label>
+          <input name="options" placeholder="Baixo, Médio, Alto" class="tsuru-input mt-1"/>
+        </div>
+        <button class="tsuru-btn-primary">Criar campo</button>
+      <% end %>
+    </div>
+  </div>
+</div>

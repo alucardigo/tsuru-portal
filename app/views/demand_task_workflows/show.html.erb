@@ -1,0 +1,44 @@
+<% content_for :title, "Workflow do projeto" %>
+<% content_for :crumb, "Projeto #{@demand.codigo_display}" %>
+<% content_for :subtitle, "· estados do kanban" %>
+
+<div class="px-7 py-6 max-w-[800px] mx-auto">
+  <div class="mb-4"><%= link_to "← Projeto", demand_path(@demand), class: "tsuru-btn-ghost" %></div>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-4">
+    <h2 class="text-[13px] font-semibold text-gray-900 mb-1">Estados atuais <% if @default %><span class="text-[10.5px] text-gray-500 font-normal">(padrão do sistema)</span><% end %></h2>
+    <p class="text-[11.5px] text-gray-500 mb-3 max-w-lg">O workflow define as colunas do kanban interno deste projeto. Se você não personalizou, o padrão do sistema é aplicado.</p>
+    <div class="flex flex-wrap gap-2 mb-4">
+      <% @states.each do |s| %>
+        <span class="inline-flex items-center gap-2 text-[12px] px-2.5 py-1 rounded bg-gray-100 text-gray-800">
+          <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+          <span class="font-medium"><%= s["label"] %></span>
+          <span class="text-[10.5px] text-gray-500 font-mono"><%= s["key"] %></span>
+        </span>
+      <% end %>
+    </div>
+
+    <%= form_with url: demand_task_workflow_path(@demand), method: :patch, data: { turbo: false }, class: "space-y-3" do %>
+      <div>
+        <label class="tsuru-label">Definir estados customizados</label>
+        <p class="text-[10.5px] text-gray-500 mt-0.5">Formato: <code>chave:Rótulo, chave:Rótulo</code>. Ex: <code>ideias:Ideias, dev:Em dev, teste:Teste, live:Live</code></p>
+        <input type="text" name="states"
+               value="<%= @states.map { |s| "#{s["key"]}:#{s["label"]}" }.join(", ") %>"
+               class="tsuru-input mt-1 font-mono"/>
+      </div>
+      <div class="flex gap-2">
+        <button class="tsuru-btn-primary">Salvar workflow</button>
+        <% unless @default %>
+          <%= button_to demand_task_workflow_path(@demand), method: :delete,
+                data: { turbo_confirm: "Voltar ao workflow padrão? Tarefas em estados custom podem ficar órfãs visualmente." },
+                class: "tsuru-btn-ghost !text-rose-600",
+                form: { class: "inline" } do %>Resetar para padrão<% end %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="mt-4 text-[11.5px] text-gray-500 bg-amber-50 border border-amber-200 rounded p-3">
+    <strong>Nota:</strong> mudar workflow não migra tarefas existentes. Tarefas com <code>kanban_status</code> antigo continuam aparecendo mas fora das colunas do novo workflow. Use com cuidado em projetos ativos.
+  </div>
+</div>

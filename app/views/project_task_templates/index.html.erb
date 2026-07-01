@@ -1,0 +1,74 @@
+<% content_for :title, "Templates de tarefa" %>
+<% content_for :crumb, "Projeto #{@demand.codigo_display}" %>
+
+<div class="px-7 py-6 max-w-[900px] mx-auto">
+  <div class="mb-4"><%= link_to "← Projeto", demand_path(@demand), class: "tsuru-btn-ghost" %></div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <h2 class="text-[13px] font-semibold text-gray-900 mb-3">Templates (<%= @templates.size %>)</h2>
+      <% if @templates.empty? %>
+        <div class="text-[12.5px] text-gray-500 italic">Nenhum template ainda.</div>
+      <% else %>
+        <div class="space-y-2">
+          <% @templates.each do |t| %>
+            <div class="flex items-start gap-2 text-[12.5px] p-2 rounded bg-gray-50">
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-gray-900"><%= t.name %></div>
+                <div class="text-[11px] text-gray-500 truncate"><%= t.payload["title"] || "—" %></div>
+                <% if (t.payload["checklist"] || []).any? %>
+                  <div class="text-[10.5px] text-gray-500 mt-0.5">✓ <%= t.payload["checklist"].size %> itens de checklist</div>
+                <% end %>
+              </div>
+              <%= button_to apply_demand_task_template_path(@demand, t), method: :post,
+                    class: "tsuru-btn-secondary !h-7 !text-[11px] !px-2",
+                    form: { class: "inline" } do %>Criar tarefa<% end %>
+              <%= button_to demand_task_template_path(@demand, t), method: :delete,
+                    class: "text-[11px] text-gray-400 hover:text-rose-600",
+                    data: { turbo_confirm: "Remover template?" },
+                    form: { class: "inline" } do %>×<% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <h2 class="text-[13px] font-semibold text-gray-900 mb-3">Novo template</h2>
+      <%= form_with url: demand_task_templates_path(@demand), method: :post, data: { turbo: false }, class: "space-y-3" do %>
+        <div>
+          <label class="tsuru-label">Nome do template</label>
+          <input name="name" required placeholder="ex: Ticket de bug, Onboarding..." class="tsuru-input mt-1"/>
+        </div>
+        <div>
+          <label class="tsuru-label">Título default da tarefa</label>
+          <input name="title" placeholder="[BUG] " class="tsuru-input mt-1"/>
+        </div>
+        <div>
+          <label class="tsuru-label">Descrição</label>
+          <textarea name="description" rows="3" class="tsuru-input mt-1"></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="tsuru-label">Prioridade</label>
+            <select name="priority" class="tsuru-select mt-1">
+              <option value="baixa">Baixa</option>
+              <option value="media" selected>Média</option>
+              <option value="alta">Alta</option>
+              <option value="urgente">Urgente</option>
+            </select>
+          </div>
+          <div>
+            <label class="tsuru-label">Estimativa (h)</label>
+            <input type="number" step="0.5" name="estimated_hours" class="tsuru-input mt-1"/>
+          </div>
+        </div>
+        <div>
+          <label class="tsuru-label">Checklist (um item por linha)</label>
+          <textarea name="checklist" rows="4" class="tsuru-input mt-1" placeholder="Reproduzir o bug&#10;Escrever teste&#10;Corrigir&#10;Deploy"></textarea>
+        </div>
+        <button class="tsuru-btn-primary">Criar template</button>
+      <% end %>
+    </div>
+  </div>
+</div>

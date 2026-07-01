@@ -1,0 +1,20 @@
+<%# Sprint 29 — Command palette Cmd+K %>
+<div data-controller="command-palette">
+  <div data-command-palette-target="overlay"
+       data-action="click->command-palette#backdrop"
+       class="hidden fixed inset-0 z-50 bg-black/40 flex items-start justify-center pt-24">
+    <div class="w-full max-w-xl bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200">
+      <div class="p-3 border-b border-gray-100">
+        <input data-command-palette-target="input"
+               data-action="input->command-palette#search"
+               type="text"
+               placeholder="Buscar projeto, tarefa ou pessoa…  (Cmd+K)"
+               class="w-full text-[14px] outline-none placeholder-gray-400"/>
+      </div>
+      <div data-command-palette-target="results" class="max-h-[440px] overflow-y-auto"></div>
+      <div class="text-[10.5px] text-gray-400 px-3 py-1.5 bg-gray-50 border-t border-gray-100">
+        Cmd+K abre · ESC fecha
+      </div>
+    </div>
+  </div>
+</div>

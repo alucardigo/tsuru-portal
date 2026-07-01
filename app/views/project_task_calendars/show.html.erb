@@ -1,0 +1,37 @@
+<% content_for :title, "Calendário" %>
+<% content_for :crumb, "Tarefas · #{@demand.codigo_display}" %>
+<% content_for :subtitle, "· #{I18n.l(@month_start, format: '%B %Y')}" %>
+<% content_for :actions do %>
+  <%= link_to kanban_demand_tasks_path(@demand), class: "tsuru-btn-ghost" do %>Kanban<% end %>
+  <%= link_to calendar_demand_tasks_path(@demand, date: (@month_start - 1).iso8601), class: "tsuru-btn-ghost" do %>← Mês anterior<% end %>
+  <%= link_to calendar_demand_tasks_path(@demand), class: "tsuru-btn-ghost" do %>Atual<% end %>
+  <%= link_to calendar_demand_tasks_path(@demand, date: (@month_end + 1).iso8601), class: "tsuru-btn-ghost" do %>Próximo mês →<% end %>
+<% end %>
+
+<div class="px-7 py-6 max-w-[1400px] mx-auto">
+  <div class="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden border border-gray-200">
+    <% %w[Dom Seg Ter Qua Qui Sex Sáb].each do |wd| %>
+      <div class="bg-gray-50 text-[10.5px] uppercase tracking-wider text-gray-500 font-semibold py-2 text-center"><%= wd %></div>
+    <% end %>
+    <% today = Date.current %>
+    <% @grid_days.each do |day| %>
+      <% in_month = day >= @month_start && day <= @month_end %>
+      <div class="bg-white min-h-[110px] p-1.5 <%= 'opacity-40' unless in_month %>">
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-[11.5px] font-medium <%= day == today ? 'text-white bg-rose-500 w-5 h-5 rounded-full inline-flex items-center justify-center' : 'text-gray-700' %>"><%= day.day %></span>
+        </div>
+        <% (@tasks_by_day[day] || []).first(4).each do |t| %>
+          <% color = { "backlog" => "bg-gray-100 text-gray-700", "a_fazer" => "bg-cyan-50 text-cyan-800", "em_andamento" => "bg-indigo-50 text-indigo-800", "em_revisao" => "bg-violet-50 text-violet-800", "concluida" => "bg-emerald-50 text-emerald-800" }[t.kanban_status] || "bg-gray-50 text-gray-700" %>
+          <%= link_to edit_demand_task_path(@demand, t), class: "block truncate text-[10.5px] px-1 py-0.5 rounded #{color} mb-0.5 hover:brightness-95", data: { turbo_frame: "modal" }, title: t.title do %>
+            <%= t.title.truncate(24) %>
+          <% end %>
+        <% end %>
+        <% if (@tasks_by_day[day] || []).size > 4 %>
+          <div class="text-[10px] text-gray-500 px-1">+<%= @tasks_by_day[day].size - 4 %> mais</div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<%= turbo_frame_tag "modal" %>
