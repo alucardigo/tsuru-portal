@@ -132,6 +132,7 @@
                   <th class="px-3 py-2 font-medium text-right">TRL</th>
                   <th class="px-3 py-2 font-medium">ODS</th>
                   <th class="px-3 py-2 font-medium">Criada</th>
+                  <th class="px-3 py-2 font-medium text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -170,6 +171,20 @@
                     </td>
                     <td class="px-3 py-2 text-gray-500 whitespace-nowrap">
                       <%= l demand.created_at, format: :short %>
+                    </td>
+                    <td class="px-3 py-2 text-right whitespace-nowrap">
+                      <% unless demand.arquivada? %>
+                        <%= button_to arquivar_demand_path(demand), method: :patch,
+                              form: { class: "inline", data: { turbo_confirm: "Arquivar #{demand.codigo_display}?" } },
+                              class: "tsuru-btn-ghost !h-7 !text-[11px] !px-2 !text-amber-700" do %>
+                          Arquivar
+                        <% end %>
+                      <% end %>
+                      <%= button_to hard_destroy_demand_path(demand), method: :delete,
+                            form: { class: "inline", data: { turbo_confirm: "Excluir #{demand.codigo_display} PERMANENTEMENTE? Esta ação não pode ser desfeita." } },
+                            class: "tsuru-btn-ghost !h-7 !text-[11px] !px-2 !text-rose-600" do %>
+                        Excluir
+                      <% end %>
                     </td>
                   </tr>
                 <% end %>

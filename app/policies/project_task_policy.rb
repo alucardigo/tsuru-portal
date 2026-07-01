@@ -10,6 +10,7 @@ class ProjectTaskPolicy < ApplicationPolicy
   def update?     = manage_demand?
   def destroy?    = manage_demand?
   def move?       = manage_demand? || gestor_da_area?
+  def reassign?   = manage_demand? || gestor_da_area?
   def kanban?     = view_demand?
 
   private

@@ -27,6 +27,8 @@ Rails.application.routes.draw do
       patch :n2, action: :update_n2
       patch :decidir_elegibilidade
       patch :tornar_projeto
+      patch  :arquivar
+      delete :hard_destroy
       get   :versions
     end
 

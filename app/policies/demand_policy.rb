@@ -83,6 +83,9 @@ class DemandPolicy < ApplicationPolicy
     (record.rascunho? && owner?) || user.admin?
   end
 
+  def arquivar?      = user.admin? || owner?
+  def hard_destroy?  = user.admin?
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       if user.colaborador?

@@ -1,5 +1,5 @@
 class DemandsController < ApplicationController
-  before_action :set_demand, only: %i[show edit update destroy submeter retomar iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade tornar_projeto versions]
+  before_action :set_demand, only: %i[show edit update destroy submeter retomar iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade tornar_projeto versions arquivar hard_destroy]
 
   def index
     scope = policy_scope(Demand)
@@ -170,6 +170,33 @@ class DemandsController < ApplicationController
 
     @demand.cancelar
     redirect_to demands_path, notice: t("demands.cancelled")
+  end
+
+  # Arquivar — soft. Aceita estados ampliados via evento :arquivar.
+  # Se não conseguir arquivar diretamente, tenta cancelar primeiro (para estados intermediários).
+  def arquivar
+    authorize @demand, :destroy?
+    if @demand.arquivar
+      redirect_back fallback_location: admin_demands_path, notice: "Demanda arquivada."
+    elsif @demand.cancelar
+      redirect_back fallback_location: admin_demands_path, notice: "Demanda cancelada (etapa intermediária)."
+    else
+      redirect_back fallback_location: admin_demands_path, alert: "Não foi possível arquivar (estado #{@demand.aasm_state})."
+    end
+  end
+
+  # Excluir permanentemente (admin-only). Remove do banco com cascade das FKs.
+  def hard_destroy
+    authorize @demand, :hard_destroy?
+    codigo = @demand.codigo_display
+    Demand.transaction do
+      Notification.where(demand_id: @demand.id).delete_all
+      DemandTransition.where(demand_id: @demand.id).delete_all
+      @demand.destroy!
+    end
+    redirect_to admin_demands_path, notice: "Demanda #{codigo} excluída permanentemente."
+  rescue StandardError => e
+    redirect_to admin_demands_path, alert: "Falha ao excluir: #{e.message.truncate(120)}"
   end
 
   private

@@ -22,7 +22,7 @@ class ProjectTaskReactionsController < ApplicationController
   def set_demand_task_comment
     @demand = Demand.find(params[:demand_id])
     @task = @demand.tasks.find(params[:task_id])
-    @comment = @task.comments.find(params[:comment_id])
+    @comment = @task.comments.find(params[:comment_id] || params[:id])
   end
 
   def authorize_task!

@@ -139,7 +139,7 @@ class Demand < ApplicationRecord
     end
 
     event :arquivar do
-      transition %i[concluida nao_elegivel] => :arquivada
+      transition %i[concluida nao_elegivel elegivel projeto in_execution n1_reprovada cancelada] => :arquivada
     end
 
     event :cancelar do
