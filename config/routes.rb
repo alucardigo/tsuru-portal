@@ -125,6 +125,26 @@ Rails.application.routes.draw do
       resources :tasks, only: %i[create] do
         post "comments", to: "tasks#create_comment", on: :member
       end
+
+      # API administrativa completa — pensada para agentes de codigo (MCP) gerenciarem
+      # o Tsuru remotamente com privilegios de admin. Ver Api::V1::Admin::BaseController.
+      namespace :admin do
+        resources :users, only: %i[index show create update destroy]
+
+        resources :demands, only: %i[index show create update] do
+          post "transition", on: :member
+          post "comments",   to: "demands#create_comment", on: :member
+        end
+
+        resources :project_tasks, only: %i[index show create update]
+
+        resources :areas, only: %i[index create update destroy]
+
+        get "organograma", to: "organograma#index"
+
+        post "reports/demand/:demand_id", to: "reports#create_for_demand", as: :report_for_demand
+        post "reports/portfolio",         to: "reports#create_portfolio"
+      end
     end
   end
 

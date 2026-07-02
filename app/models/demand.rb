@@ -183,6 +183,15 @@ class Demand < ApplicationRecord
     end
   end
 
+  # Nomes de todos os eventos da state machine acima — usado pela API admin (Bloco MCP)
+  # pra validar o param :event antes de disparar um transition!() arbitrario via public_send.
+  AASM_EVENTS = %w[
+    submeter aprovar_supervisor iniciar_triagem aprovar_n1 reprovar_n1 iniciar_n2 concluir_n2
+    solicitar_revisao retomar enviar_para_board aprovar_diretoria fi_aprovar fi_reprovar
+    marcar_elegivel marcar_nao_elegivel tornar_projeto iniciar_execucao concluir_execucao
+    converter_em_tarefa arquivar cancelar
+  ].freeze
+
   N1_FLAGS = %w[
     rotina_operacional
     adequacao_normativa
