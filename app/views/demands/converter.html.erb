@@ -1,0 +1,56 @@
+<% content_for :title, "Converter em tarefa" %>
+<% content_for :nav_active, "demandas" %>
+<% content_for :crumb, "#{@demand.codigo_display} · #{@demand.title.truncate(60)}" %>
+<% content_for :subtitle, "· converter em tarefa de projeto existente" %>
+
+<div class="max-w-[820px] mx-auto px-8 py-8">
+  <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4 text-[12.5px] text-gray-600 leading-relaxed">
+    Use isto quando a sugestão de <strong><%= @demand.user.display_name %></strong> não precisa virar um projeto
+    novo — uma melhoria pontual em um projeto já existente resolve. A sugestão será marcada como
+    <strong>"Convertida em tarefa"</strong> e o autor será notificado com o link da tarefa criada.
+  </div>
+
+  <%= form_with url: converter_demand_path(@demand), method: :post, local: true, class: "space-y-3" do %>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <label class="tsuru-label">Projeto de destino</label>
+      <select name="target_demand_id" required class="tsuru-select mt-1">
+        <option value="">— selecione o projeto —</option>
+        <% @demandas_alvo.each do |d| %>
+          <option value="<%= d.id %>" <%= "selected" if @alvo_id == d.id.to_s %>>
+            <%= d.codigo_display %> — <%= d.title.truncate(70) %> (<%= UiHelper::STATUS_LABELS[d.aasm_state] %>)
+          </option>
+        <% end %>
+      </select>
+      <p class="text-[11px] text-gray-400 mt-1">Só projetos ainda ativos (não arquivados/cancelados) aparecem aqui.</p>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <label class="tsuru-label">Título da tarefa</label>
+      <input type="text" name="task_title" value="<%= @demand.title %>" required class="tsuru-input mt-1">
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <label class="tsuru-label">Descrição da tarefa</label>
+      <textarea name="task_description" rows="4" class="tsuru-textarea mt-1"><%= @demand.description %></textarea>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <label class="tsuru-label">Prioridade</label>
+      <select name="task_priority" class="tsuru-select mt-1">
+        <% ProjectTask::PRIORITIES.each do |p| %>
+          <option value="<%= p %>" <%= "selected" if p == "media" %>><%= p.humanize %></option>
+        <% end %>
+      </select>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <label class="tsuru-label">Nota da conversão (opcional — visível no histórico)</label>
+      <textarea name="conversion_note" rows="2" class="tsuru-textarea mt-1" placeholder="Ex: já existe funcionalidade equivalente em X, só precisa de ajuste Y"></textarea>
+    </div>
+
+    <div class="flex items-center justify-between pt-1">
+      <%= link_to "Cancelar", demand_path(@demand), class: "text-[12.5px] text-gray-600 hover:text-gray-900" %>
+      <button class="tsuru-btn-primary" data-turbo-confirm="Converter esta sugestão em tarefa? A sugestão sairá do funil de elegibilidade.">Converter em tarefa</button>
+    </div>
+  <% end %>
+</div>

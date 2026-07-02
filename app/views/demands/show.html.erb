@@ -36,6 +36,11 @@
       Histórico
     <% end %>
   <% end %>
+  <% if policy(@demand).converter? %>
+    <%= link_to converter_demand_path(@demand), class: "tsuru-btn-secondary" do %>
+      Converter em tarefa
+    <% end %>
+  <% end %>
 <% end %>
 
 <div class="flex-1 flex min-h-0">
@@ -70,6 +75,20 @@
           <%= pill("Nível 3 · pendente", color: "gray") %>
         <% end %>
       </div>
+
+      <% if @demand.convertida? && @demand.converted_task %>
+        <div class="mt-4 bg-indigo-50 border border-indigo-200 rounded-lg p-3.5 text-[12.5px] text-indigo-900 flex items-start gap-2">
+          <span class="text-[16px] leading-none">↩️</span>
+          <div>
+            Esta sugestão foi convertida na tarefa
+            <%= link_to "\"#{@demand.converted_task.title}\"", kanban_demand_tasks_path(@demand.converted_task.demand), class: "font-medium underline" %>
+            do projeto <%= link_to @demand.converted_task.demand.codigo_display, demand_path(@demand.converted_task.demand), class: "font-medium underline" %>.
+            <% if @demand.conversion_note.present? %>
+              <div class="mt-1 text-indigo-700">Nota: <%= @demand.conversion_note %></div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
 
       <%# Título %>
       <div class="mt-4 flex items-start gap-3">
@@ -156,6 +175,33 @@
             </div>
             <div class="prop-value"><%= l @demand.created_at.to_date, format: :long %></div>
           </div>
+
+          <% if policy(@demand).vincular_sankhya? %>
+            <div class="prop-row">
+              <div class="prop-label">
+                <%= icon(:link, size: 14) %>
+                <span>Projeto Sankhya</span>
+              </div>
+              <div class="prop-value">
+                <%= form_with url: vincular_sankhya_demand_path(@demand), method: :patch, local: true, class: "flex items-center gap-1.5" do %>
+                  <select name="sankhya_record_id" class="tsuru-select !h-7 !text-[11.5px]" onchange="this.form.requestSubmit()">
+                    <option value="">— sem vínculo —</option>
+                    <% SankhyaRecord.of_kind("projeto").order(:nome).each do |r| %>
+                      <option value="<%= r.id %>" <%= "selected" if @demand.sankhya_record_id == r.id %>><%= r.nome || r.codigo %></option>
+                    <% end %>
+                  </select>
+                <% end %>
+              </div>
+            </div>
+          <% elsif @demand.sankhya_record %>
+            <div class="prop-row">
+              <div class="prop-label">
+                <%= icon(:link, size: 14) %>
+                <span>Projeto Sankhya</span>
+              </div>
+              <div class="prop-value"><%= @demand.sankhya_record.nome %></div>
+            </div>
+          <% end %>
 
           <div class="prop-row">
             <div class="prop-label">
@@ -580,5 +626,25 @@
         Ver comentários · <%= @demand.comments.count %>
       <% end %>
     </div>
+
+    <% if current_user&.gestor_or_above? %>
+      <div id="ia" class="pt-4 mt-4 border-t border-gray-200">
+        <div class="flex items-center justify-between mb-2">
+          <div class="subhead">🤖 Resumo IA</div>
+          <%= button_to ai_report_for_demand_path(@demand), method: :post,
+                class: "tsuru-btn-ghost !h-6 !text-[10.5px] !px-1.5",
+                form: { data: { turbo_confirm: "Gerar novo resumo com IA? Pode levar até 30s." } } do %>Gerar<% end %>
+        </div>
+        <% last_report = @demand.ai_reports.where(kind: "project_summary").order(created_at: :desc).first %>
+        <% if last_report&.ok? %>
+          <div class="text-[11.5px] text-gray-700 whitespace-pre-line leading-relaxed bg-gray-50 rounded-md p-2.5"><%= last_report.content %></div>
+          <div class="text-[10px] text-gray-400 mt-1"><%= time_ago_in_words(last_report.created_at) %> atrás</div>
+        <% elsif last_report&.status == "failed" %>
+          <div class="text-[11.5px] text-rose-600"><%= last_report.error %></div>
+        <% else %>
+          <div class="text-[11.5px] text-gray-400">Nenhum resumo gerado ainda.</div>
+        <% end %>
+      </div>
+    <% end %>
   </aside>
 </div>

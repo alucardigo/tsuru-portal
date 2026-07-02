@@ -21,7 +21,7 @@
 <% end %>
 
 <%
-  estados_list = %w[rascunho submetida em_triagem n1_aprovada n1_reprovada n2_em_andamento n2_completa elegivel nao_elegivel cancelada]
+  estados_list = %w[rascunho submetida em_triagem n1_aprovada n1_reprovada n2_em_andamento n2_completa elegivel nao_elegivel convertida cancelada]
   estados_counts = Demand.group(:aasm_state).count rescue {}
   base_params = params.permit(:q, :trl, :data_ini, :data_fim, :estado).to_h
 %>

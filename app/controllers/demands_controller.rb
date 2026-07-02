@@ -1,5 +1,5 @@
 class DemandsController < ApplicationController
-  before_action :set_demand, only: %i[show edit update destroy submeter retomar iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade tornar_projeto versions arquivar hard_destroy]
+  before_action :set_demand, only: %i[show edit update destroy submeter retomar iniciar_triagem triagem update_triagem iniciar_n2 n2 update_n2 decidir_elegibilidade tornar_projeto versions arquivar hard_destroy converter realizar_conversao vincular_sankhya]
 
   def index
     scope = policy_scope(Demand)
@@ -162,7 +162,64 @@ class DemandsController < ApplicationController
 
   def versions
     authorize @demand, :versions?
-    @versions = @demand.versions.order(created_at: :desc).includes(:item)
+    @events = Demands::TimelineBuilder.call(@demand)
+  end
+
+  # Bloco I — vincula esta demanda a um "projeto" Sankhya (usado no rateio de horas do timesheet)
+  def vincular_sankhya
+    authorize @demand, :vincular_sankhya?
+    @demand.update(sankhya_record_id: params[:sankhya_record_id].presence)
+    redirect_to demand_path(@demand), notice: "Vínculo Sankhya atualizado."
+  end
+
+  # Bloco K — formulário para escolher o projeto/tarefa que resolve esta sugestão
+  def converter
+    authorize @demand, :converter?
+    @alvo_id = params[:target_demand_id].presence
+    @demandas_alvo = Demand.where.not(id: @demand.id)
+                            .where.not(aasm_state: %w[rascunho cancelada arquivada convertida])
+                            .order(Arel.sql("codigo IS NULL, codigo DESC"))
+  end
+
+  def realizar_conversao
+    authorize @demand, :realizar_conversao?
+    target = Demand.find_by(id: params[:target_demand_id])
+    if target.nil?
+      redirect_to converter_demand_path(@demand), alert: "Selecione o projeto de destino." and return
+    end
+
+    task = target.tasks.build(
+      title: params[:task_title].presence || @demand.title,
+      description: params[:task_description].presence || @demand.description,
+      priority: params[:task_priority].presence_in(ProjectTask::PRIORITIES) || "media",
+      kanban_status: "backlog",
+      creator: current_user
+    )
+
+    converted = Demand.transaction do
+      unless task.save
+        raise ActiveRecord::Rollback
+      end
+      @demand.converted_task = task
+      @demand.conversion_note = params[:conversion_note]
+      unless @demand.converter_em_tarefa && @demand.save
+        raise ActiveRecord::Rollback
+      end
+      true
+    end
+
+    unless converted
+      redirect_to converter_demand_path(@demand), alert: "Não foi possível converter (verifique o estado atual da sugestão)." and return
+    end
+
+    Notification.create!(
+      recipient_id: @demand.user_id, demand_id: target.id, kind: "task_activity",
+      title: "Sua sugestão virou tarefa",
+      body: "\"#{@demand.title.to_s.truncate(60)}\" foi convertida na tarefa \"#{task.title.to_s.truncate(60)}\" do projeto #{target.codigo_display}",
+      payload: { link_path: Rails.application.routes.url_helpers.kanban_demand_tasks_path(target) }
+    )
+
+    redirect_to demand_path(@demand), notice: "Convertida na tarefa \"#{task.title}\" de #{target.codigo_display}."
   end
 
   def destroy

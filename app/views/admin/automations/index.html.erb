@@ -51,9 +51,16 @@
         <div>
           <label class="tsuru-label">Quando (gatilho)</label>
           <select name="trigger_event" class="tsuru-select mt-1">
-            <% TaskAutomation::TRIGGERS.each do |t| %>
-              <option value="<%= t %>"><%= TaskAutomation::TRIGGER_LABELS[t] || t %></option>
-            <% end %>
+            <optgroup label="Tarefa">
+              <% TaskAutomation::TASK_TRIGGERS.each do |t| %>
+                <option value="<%= t %>"><%= TaskAutomation::TRIGGER_LABELS[t] || t %></option>
+              <% end %>
+            </optgroup>
+            <optgroup label="Projeto (Power Automate)">
+              <% TaskAutomation::DEMAND_TRIGGERS.each do |t| %>
+                <option value="<%= t %>"><%= TaskAutomation::TRIGGER_LABELS[t] || t %></option>
+              <% end %>
+            </optgroup>
           </select>
         </div>
         <div>
@@ -72,6 +79,11 @@
               <option value="<%= d.id %>"><%= d.codigo_display %> — <%= d.title.truncate(40) %></option>
             <% end %>
           </select>
+        </div>
+        <div>
+          <label class="tsuru-label">URL do webhook (Power Automate — só p/ ação "Enviar para Power Automate")</label>
+          <input name="webhook_url" type="url" placeholder="https://prod-00.brazilsouth.logic.azure.com/workflows/…" class="tsuru-input mt-1">
+          <p class="text-[10.5px] text-gray-400 mt-1">URL do trigger "When an HTTP request is received" do seu Flow.</p>
         </div>
         <button class="tsuru-btn-primary w-full">Criar automação</button>
       <% end %>

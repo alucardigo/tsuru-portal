@@ -30,6 +30,9 @@ Rails.application.routes.draw do
       patch  :arquivar
       delete :hard_destroy
       get   :versions
+      get   :converter
+      post  :converter, action: :realizar_conversao
+      patch :vincular_sankhya
     end
 
     resources :comments, only: %i[create]
@@ -66,6 +69,10 @@ Rails.application.routes.draw do
       end
     end
 
+    resources :defense_dossiers, controller: "demand_defense_dossiers" do
+      member { get :pdf }
+      resources :defense_evidences, controller: "demand_defense_evidences", only: %i[create destroy]
+    end
     resources :task_field_definitions, controller: "demand_task_field_definitions", only: %i[index create destroy]
     resources :task_templates, controller: "project_task_templates", only: %i[index create destroy] do
       member { post :apply }
@@ -89,6 +96,36 @@ Rails.application.routes.draw do
   get "search/quick", to: "search#quick", as: :quick_search
   scope path: "roadmap", controller: "roadmap" do
     get "automations", action: :automations, as: :roadmap_automations
+  end
+
+  # Bloco D — Portfólio Lei do Bem (N1/N2/N3)
+  get "elegibilidade", to: "pdi/eligibility#index", as: :pdi_elegibilidade
+  get "defesa",        to: "pdi/defenses#index",    as: :pdi_defesa
+  get "evidencias",    to: "pdi/evidences#index",   as: :pdi_evidencias
+
+  # Bloco F — Biblioteca PD&I
+  get  "biblioteca",     to: "knowledge_articles#index", as: :biblioteca
+  get  "biblioteca/:id", to: "knowledge_articles#show",  as: :biblioteca_article
+
+  # Bloco E — Central de exportação (acessível além de admin)
+  get "exportar",             to: "exports#index",     as: :exports
+  get "exportar/demandas",    to: "exports#demandas",  as: :exports_demandas
+  get "exportar/tarefas",     to: "exports#tarefas",   as: :exports_tarefas
+  get "exportar/timesheet",   to: "exports#timesheet", as: :exports_timesheet
+
+  # Bloco G — Relatórios de IA sob demanda
+  post "demands/:demand_id/ai_report", to: "ai_reports#create_for_demand", as: :ai_report_for_demand
+  post "dashboard/ai_report",          to: "ai_reports#create_portfolio",  as: :ai_report_portfolio
+
+  # Bloco H — token de API pessoal (Power Automate / integrações)
+  post "api_token/regenerate", to: "api_tokens#regenerate", as: :regenerate_api_token
+
+  namespace :api do
+    namespace :v1 do
+      resources :tasks, only: %i[create] do
+        post "comments", to: "tasks#create_comment", on: :member
+      end
+    end
   end
 
   namespace :board do
@@ -131,6 +168,8 @@ Rails.application.routes.draw do
       member do
         patch :toggle_active
         patch :vincular_superior
+        get   :excluir
+        post  :excluir, action: :realizar_exclusao
       end
     end
     resources :demands, only: %i[index] do
@@ -152,6 +191,10 @@ Rails.application.routes.draw do
       member { post :test }
     end
     resources :automations, only: %i[index create update destroy]
+    resources :knowledge_articles, only: %i[index create update destroy]
+    resources :sankhya_mappings, only: %i[index create update destroy] do
+      member { post :sync }
+    end
     get "auditoria", to: "audits#index", as: :auditoria
     get "organograma", to: "organograma#index", as: :organograma
   end

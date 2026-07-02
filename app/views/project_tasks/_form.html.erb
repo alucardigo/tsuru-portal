@@ -11,6 +11,12 @@
         <%= link_to kanban_demand_tasks_path(@demand), class: "text-gray-400 hover:text-gray-700 text-2xl leading-none" do %>×<% end %>
       </div>
 
+      <% if !task.new_record? && task.origin_demand.present? %>
+        <div class="mb-4 -mt-2 text-[11.5px] text-indigo-700 bg-indigo-50 border border-indigo-100 rounded-md px-2.5 py-1.5">
+          ↩️ Originada da sugestão <%= link_to task.origin_demand.codigo_display, demand_path(task.origin_demand), class: "underline font-medium" %>
+        </div>
+      <% end %>
+
       <% unless task.new_record? %>
         <%# Sprint 24 — barra de colaboração: Watch + Transferir %>
         <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gray-100 text-[12px]">

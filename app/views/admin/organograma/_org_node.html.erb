@@ -1,0 +1,18 @@
+<div class="<%= 'mt-2' if level > 0 %>" style="margin-left: <%= level * 22 %>px">
+  <div class="flex items-center gap-2 py-1.5 <%= level > 0 ? 'border-l-2 border-gray-200 pl-3' : '' %>">
+    <%= avatar(user, size: 26) %>
+    <div class="min-w-0">
+      <div class="text-[12.5px] font-medium text-gray-900 truncate"><%= user.display_name %></div>
+      <div class="text-[10.5px] text-gray-500 truncate">
+        <%= role_label(user.role) %><%= " · #{user.area}" if user.area.present? %>
+      </div>
+    </div>
+    <% filhos = filhos_por_supervisor[user.id] || [] %>
+    <% if filhos.any? %>
+      <span class="text-[10px] text-gray-400 ml-1">(<%= filhos.size %>)</span>
+    <% end %>
+  </div>
+  <% filhos.each do |filho| %>
+    <%= render "org_node", user: filho, filhos_por_supervisor: filhos_por_supervisor, level: level + 1 %>
+  <% end %>
+</div>

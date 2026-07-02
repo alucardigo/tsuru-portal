@@ -1,10 +1,11 @@
 module Admin
   class UsersController < BaseController
-    before_action :set_user, only: %i[update toggle_active vincular_superior]
+    before_action :set_user, only: %i[update toggle_active vincular_superior excluir realizar_exclusao]
 
     def index
       scope = User.all
       scope = scope.where(role: params[:role]) if params[:role].present?
+      scope = scope.where(area: params[:area]) if params[:area].present?
       if params[:status] == "ativos"
         scope = scope.ativos
       elsif params[:status] == "inativos"
@@ -14,7 +15,7 @@ module Admin
         like = "%#{User.sanitize_sql_like(params[:q])}%"
         scope = scope.where("name ILIKE :q OR email ILIKE :q", q: like)
       end
-      @users = scope.order(:name, :email)
+      @pagy, @users = pagy(scope.order(:name, :email), limit: 30)
       @supervisores = supervisores_disponiveis
     end
 
@@ -58,6 +59,31 @@ module Admin
                   notice: sup_id ? "Superior vinculado a #{@user.display_name}." : "Vínculo de superior removido."
     end
 
+    # Bloco M — tela de confirmação: mostra o que o usuário possui antes de excluir/transferir
+    def excluir
+      if @user == current_user
+        redirect_to admin_users_path, alert: "Você não pode excluir a própria conta." and return
+      end
+      @preview = Users::TransferAndDelete.preview(@user)
+      @destinos = User.where.not(id: @user.id).ativos.order(:name)
+    end
+
+    def realizar_exclusao
+      if @user == current_user
+        redirect_to admin_users_path, alert: "Você não pode excluir a própria conta." and return
+      end
+      target = User.find_by(id: params[:target_user_id])
+      if target.nil?
+        redirect_to excluir_admin_user_path(@user), alert: "Selecione um usuário de destino." and return
+      end
+
+      nome = @user.display_name
+      Users::TransferAndDelete.call(source: @user, target: target)
+      redirect_to admin_users_path, notice: "#{nome} excluído(a) — tudo que era dele(a) foi transferido para #{target.display_name}."
+    rescue StandardError => e
+      redirect_to excluir_admin_user_path(@user), alert: "Não foi possível excluir: #{e.message.truncate(150)}"
+    end
+
     private
 
     def set_user
@@ -70,12 +96,12 @@ module Admin
 
     def create_params
       # brakeman:ignore:MassAssignment - admin-only endpoint
-      params.require(:user).permit(:name, :email, :role, :area, :supervisor_id)
+      params.require(:user).permit(:name, :email, :role, :area, :supervisor_id, :sankhya_record_id)
     end
 
     def user_params
       # brakeman:ignore:MassAssignment - admin-only endpoint, role change is intentional
-      params.require(:user).permit(:role, :area, :supervisor_id, :active, :name)
+      params.require(:user).permit(:role, :area, :supervisor_id, :active, :name, :sankhya_record_id)
     end
   end
 end

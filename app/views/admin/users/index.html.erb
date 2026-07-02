@@ -36,10 +36,48 @@
     <div class="hidden md:flex items-center gap-2">
       <div class="text-right">
         <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium">Total</div>
-        <div class="text-[20px] font-semibold tracking-tight text-gray-900 tabular-nums"><%= @users.size %></div>
+        <div class="text-[20px] font-semibold tracking-tight text-gray-900 tabular-nums"><%= @pagy.count %></div>
       </div>
     </div>
   </div>
+
+  <%# === Busca e filtros (Bloco L) === %>
+  <%= form_with url: admin_users_path, method: :get, local: true, class: "flex flex-wrap items-end gap-2 mb-4" do %>
+    <div class="flex-1 min-w-[200px]">
+      <label class="tsuru-label">Buscar</label>
+      <input type="text" name="q" value="<%= params[:q] %>" placeholder="nome ou e-mail…" class="tsuru-input mt-1 !h-8 !text-[12.5px]">
+    </div>
+    <div>
+      <label class="tsuru-label">Papel</label>
+      <select name="role" class="tsuru-select mt-1 !h-8 !text-[12.5px]">
+        <option value="">Todos</option>
+        <% User.roles.keys.each do |r| %>
+          <option value="<%= r %>" <%= "selected" if params[:role] == r %>><%= role_label(r) %></option>
+        <% end %>
+      </select>
+    </div>
+    <div>
+      <label class="tsuru-label">Área</label>
+      <select name="area" class="tsuru-select mt-1 !h-8 !text-[12.5px]">
+        <option value="">Todas</option>
+        <% Area.names.each do |a| %>
+          <option value="<%= a %>" <%= "selected" if params[:area] == a %>><%= a %></option>
+        <% end %>
+      </select>
+    </div>
+    <div>
+      <label class="tsuru-label">Status</label>
+      <select name="status" class="tsuru-select mt-1 !h-8 !text-[12.5px]">
+        <option value="">Todos</option>
+        <option value="ativos" <%= "selected" if params[:status] == "ativos" %>>Ativos</option>
+        <option value="inativos" <%= "selected" if params[:status] == "inativos" %>>Inativos</option>
+      </select>
+    </div>
+    <button class="tsuru-btn-primary !h-8 !text-[12.5px]">Filtrar</button>
+    <% if params[:q].present? || params[:role].present? || params[:area].present? || params[:status].present? %>
+      <%= link_to "Limpar", admin_users_path, class: "text-[12px] text-gray-500 hover:text-gray-900 !h-8 inline-flex items-center px-2" %>
+    <% end %>
+  <% end %>
 
   <%# === Resumo por papel === %>
   <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-5">
@@ -139,10 +177,11 @@
                 <td class="px-3 py-2.5 text-right whitespace-nowrap">
                   <% unless user == current_user %>
                     <%= button_to toggle_active_admin_user_path(user), method: :patch,
-                          form: { data: { turbo_confirm: user.active ? "Inativar #{user.display_name}?" : "Reativar #{user.display_name}?" } },
+                          form: { data: { turbo_confirm: user.active ? "Inativar #{user.display_name}?" : "Reativar #{user.display_name}?" }, class: "inline" },
                           class: "tsuru-btn-ghost !h-8 !text-[11.5px] !px-2.5 #{user.active ? '!text-rose-600' : '!text-emerald-600'}" do %>
                       <%= user.active ? "Inativar" : "Reativar" %>
                     <% end %>
+                    <%= link_to "Excluir", excluir_admin_user_path(user), class: "tsuru-btn-ghost !h-8 !text-[11.5px] !px-2.5 !text-rose-600" %>
                   <% end %>
                 </td>
               </tr>
@@ -154,13 +193,13 @@
       <%# Footer informativo %>
       <div class="px-4 py-2.5 border-t border-gray-100 bg-gray-50/40 flex items-center justify-between text-[11.5px] text-gray-600">
         <div>
-          <%= @users.size %> usuário(s) listado(s) ·
+          Mostrando <%= @users.size %> de <%= @pagy.count %> ·
+          página <%= @pagy.page %> de <%= @pagy.last %> ·
           <span class="text-gray-500"><%= total_confirmed %> confirmados</span>
         </div>
-        <div class="flex items-center gap-1.5 text-[11px] text-gray-500">
-          <%= icon(:shield, size: 11) %>
-          Mudanças de papel ficam auditadas (PaperTrail)
-        </div>
+        <nav aria-label="paginação" class="flex items-center gap-1 text-[11.5px]">
+          <%== @pagy.series_nav %>
+        </nav>
       </div>
     <% end %>
   </div>

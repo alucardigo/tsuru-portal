@@ -1,0 +1,58 @@
+<%= form_with model: [ @demand, @dossier ], local: true, class: "space-y-3" do |f| %>
+  <div class="bg-white rounded-lg border border-gray-200 p-4">
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="tsuru-label">Ano-base</label>
+        <%= f.number_field :ano_base, class: "tsuru-input mt-1" %>
+      </div>
+      <div>
+        <label class="tsuru-label">Status</label>
+        <%= f.select :status, [ [ "Rascunho", "rascunho" ], [ "Final", "final" ] ], {}, class: "tsuru-select mt-1" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-4">
+    <div class="subhead mb-2">Bloco 1 — Critérios de sucesso (até 6 linhas; deixe em branco as que não usar)</div>
+    <% existing = Array(@dossier.success_criteria) %>
+    <% 6.times do |i| %>
+      <% c = existing[i] || {} %>
+      <div class="grid grid-cols-4 gap-2 mb-2">
+        <input type="text" name="defense_dossier[success_criteria][][criterio]" value="<%= c['criterio'] %>" placeholder="Critério" class="tsuru-input !text-[12px]">
+        <input type="text" name="defense_dossier[success_criteria][][meta]" value="<%= c['meta'] %>" placeholder="Meta / threshold" class="tsuru-input !text-[12px]">
+        <input type="text" name="defense_dossier[success_criteria][][resultado]" value="<%= c['resultado'] %>" placeholder="Resultado obtido" class="tsuru-input !text-[12px]">
+        <select name="defense_dossier[success_criteria][][status]" class="tsuru-select !text-[12px]">
+          <option value="">Status</option>
+          <option value="atingido" <%= "selected" if c["status"] == "atingido" %>>Atingido</option>
+          <option value="parcial" <%= "selected" if c["status"] == "parcial" %>>Parcial</option>
+          <option value="nao_atingido" <%= "selected" if c["status"] == "nao_atingido" %>>Não atingido</option>
+        </select>
+      </div>
+    <% end %>
+  </div>
+
+  <% [
+       [ :ganhos_operacionais, "Bloco 2 — Benefícios operacionais/econômicos", 3 ],
+       [ :barreiras_base, "Bloco 3.1.1 — Barreiras de baseline (já mapeadas em N2)", 3 ],
+       [ :barreiras_emergentes, "Bloco 3.1.2 — Barreiras emergentes no ano-base", 3 ],
+       [ :barreiras_resolvidas, "Bloco 3.2.2 — Barreiras resolvidas", 3 ],
+       [ :barreiras_nao_resolvidas, "Bloco 3.2.2 — Barreiras não resolvidas / abandonadas", 3 ],
+       [ :contexto_plurianual, "Bloco 4 — Contexto plurianual (contraste com ano anterior)", 4 ]
+     ].each do |key, label, rows| %>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <label class="tsuru-label"><%= label %></label>
+      <%= f.text_area key, rows: rows, class: "tsuru-textarea mt-1" %>
+    </div>
+  <% end %>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-4">
+    <div class="subhead mb-2">Bloco 8 — Recomendação consultiva final</div>
+    <%= f.select :recomendacao_final, DefenseDossier::RECOMENDACOES.map { |r| [ DefenseDossier::RECOMENDACAO_LABELS[r], r ] }, { include_blank: "— selecione —" }, class: "tsuru-select mt-1" %>
+    <%= f.text_area :recomendacao_notas, rows: 2, class: "tsuru-textarea mt-2", placeholder: "Notas / pontos de risco…" %>
+  </div>
+
+  <div class="flex items-center justify-between pt-1">
+    <%= link_to "Cancelar", pdi_defesa_path, class: "text-[12.5px] text-gray-600 hover:text-gray-900" %>
+    <%= f.submit "Salvar dossiê", class: "tsuru-btn-primary" %>
+  </div>
+<% end %>

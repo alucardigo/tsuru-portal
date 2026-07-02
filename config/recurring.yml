@@ -16,3 +16,6 @@ production:
   project_task_recurrence:
     class: ProjectTaskRecurrenceJob
     schedule: every day at 6am
+  weekly_portfolio_insight:
+    class: WeeklyPortfolioInsightJob
+    schedule: every monday at 7am

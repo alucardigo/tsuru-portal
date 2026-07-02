@@ -1,15 +1,9 @@
-<% content_for :title, "Histórico de versões" %>
+<% content_for :title, "Histórico completo" %>
 <% content_for :nav_active, "demandas" %>
 <% content_for :crumb, "#{@demand.codigo_display} · #{@demand.title.truncate(60)}" %>
-<% content_for :subtitle, "· Histórico de alterações" %>
+<% content_for :subtitle, "· histórico completo" %>
 
 <%
-  event_meta = {
-    "create"   => { label: "criou",         color: "bg-emerald-500", ring: "ring-emerald-100", pill: "emerald" },
-    "update"   => { label: "atualizou",     color: "bg-blue-500",    ring: "ring-blue-100",    pill: "blue" },
-    "destroy"  => { label: "removeu",       color: "bg-rose-500",    ring: "ring-rose-100",    pill: "rose" }
-  }
-
   human_field = lambda do |raw|
     label = {
       "aasm_state"        => "estado",
@@ -20,8 +14,9 @@
       "n1_flags"          => "flags N1",
       "n2_assessment"     => "avaliação N2",
       "ods_goals"         => "ODS",
-      "updated_at"        => "atualizado em",
-      "created_at"        => "criado em"
+      "converted_task_id" => "tarefa de conversão",
+      "conversion_note"   => "nota de conversão",
+      "sankhya_record_id" => "vínculo Sankhya"
     }[raw.to_s]
     label || raw.to_s.humanize
   end
@@ -35,20 +30,21 @@
       val.to_s.truncate(80)
     end
   end
+
+  actor_name = ->(actor) { actor&.display_name || "Sistema" }
 %>
 
 <div class="max-w-[820px] mx-auto px-12 py-8">
-  <!-- Header card -->
   <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6">
     <div class="flex items-start gap-3">
       <div class="w-9 h-9 rounded-md bg-gray-900 text-white flex items-center justify-center">
         <%= icon(:doc, size: 20) %>
       </div>
       <div class="flex-1">
-        <div class="text-[13.5px] font-semibold text-gray-900">Histórico de alterações</div>
+        <div class="text-[13.5px] font-semibold text-gray-900">Histórico completo</div>
         <div class="text-[12px] text-gray-600 leading-relaxed mt-0.5">
-          Registro auditável de todas as mudanças realizadas nesta demanda — autor, momento e diff dos campos.
-          Preserva a rastreabilidade exigida para defesa Lei do Bem.
+          Transições de estado, comentários, documentos anexados e alterações de campo, tudo numa
+          única linha do tempo — rastreabilidade completa para defesa Lei do Bem.
         </div>
       </div>
       <div class="shrink-0">
@@ -60,67 +56,93 @@
     </div>
   </div>
 
-  <% if @versions.empty? %>
+  <% if @events.empty? %>
     <div class="bg-white rounded-lg border border-gray-200 p-8 text-center">
-      <div class="text-[13px] text-gray-500">Nenhuma alteração registrada até o momento.</div>
+      <div class="text-[13px] text-gray-500">Nenhum evento registrado até o momento.</div>
     </div>
   <% else %>
-    <div class="subhead mb-3"><%= @versions.size %> entrada<%= "s" if @versions.size != 1 %></div>
+    <div class="subhead mb-3"><%= @events.size %> evento<%= "s" if @events.size != 1 %></div>
 
-    <!-- Timeline -->
     <ol class="relative border-l-2 border-gray-100 ml-3 space-y-0">
-      <% @versions.each do |version|
-           meta = event_meta[version.event.to_s] || { label: version.event.to_s, color: "bg-gray-400", ring: "ring-gray-100", pill: "gray" }
-           author = version.whodunnit.present? ? User.find_by(id: version.whodunnit) : nil
-           author_name = author&.display_name || "Sistema"
-           changes = version.changeset.is_a?(Hash) ? version.changeset.except("updated_at", "created_at") : {} %>
+      <% @events.each do |ev| %>
         <li class="relative pl-6 pb-6 last:pb-0">
-          <!-- Bolinha do evento -->
-          <span class="absolute -left-[7px] top-1 w-3 h-3 rounded-full <%= meta[:color] %> ring-4 <%= meta[:ring] %>" aria-hidden="true"></span>
+          <% case ev.type
+             when :transition
+               dot = "bg-indigo-500"; ring = "ring-indigo-100"
+             when :comment
+               dot = "bg-teal-500"; ring = "ring-teal-100"
+             when :document
+               dot = "bg-amber-500"; ring = "ring-amber-100"
+             else
+               dot = ev.payload[:event] == "create" ? "bg-emerald-500" : "bg-blue-500"
+               ring = ev.payload[:event] == "create" ? "ring-emerald-100" : "ring-blue-100"
+             end %>
+          <span class="absolute -left-[7px] top-1 w-3 h-3 rounded-full <%= dot %> ring-4 <%= ring %>" aria-hidden="true"></span>
 
-          <!-- Card do evento -->
           <div class="bg-white rounded-lg border border-gray-200 p-3.5 hover:border-gray-300 transition-colors">
             <div class="flex items-start justify-between gap-3">
               <div class="flex items-center gap-2 min-w-0">
-                <% if author %>
-                  <%= avatar(author, size: 22) %>
+                <% if ev.actor %>
+                  <%= avatar(ev.actor, size: 22) %>
                 <% else %>
                   <span class="inline-flex items-center justify-center w-[22px] h-[22px] rounded-full bg-gray-100 text-gray-500 text-[10px] font-semibold">SY</span>
                 <% end %>
                 <div class="text-[12.5px] text-gray-900 min-w-0">
-                  <span class="font-medium"><%= author_name %></span>
-                  <span class="text-gray-500"><%= meta[:label] %> a demanda</span>
+                  <span class="font-medium"><%= actor_name.call(ev.actor) %></span>
+                  <% case ev.type %>
+                  <% when :transition %>
+                    <span class="text-gray-500">mudou o estado</span>
+                    <%= pill("#{UiHelper::STATUS_LABELS[ev.payload[:from_state]] || ev.payload[:from_state] || 'início'} → #{UiHelper::STATUS_LABELS[ev.payload[:to_state]] || ev.payload[:to_state]}", color: "indigo") %>
+                  <% when :comment %>
+                    <span class="text-gray-500">comentou</span>
+                  <% when :document %>
+                    <span class="text-gray-500">anexou um documento</span>
+                  <% else %>
+                    <span class="text-gray-500"><%= { "create" => "criou", "update" => "atualizou", "destroy" => "removeu" }[ev.payload[:event]] || ev.payload[:event] %> a demanda</span>
+                  <% end %>
                 </div>
-                <%= pill(version.event.to_s, color: meta[:pill]) %>
               </div>
               <div class="shrink-0 text-[11px] text-gray-400 font-mono"
-                   title="<%= l(version.created_at, format: :long) rescue version.created_at.strftime("%d/%m/%Y %H:%M:%S") %>">
-                <%= l(version.created_at, format: :short) %>
+                   title="<%= l(ev.created_at, format: :long) rescue ev.created_at.strftime("%d/%m/%Y %H:%M:%S") %>">
+                <%= l(ev.created_at, format: :short) %>
               </div>
             </div>
 
-            <% if changes.any? %>
-              <div class="mt-3 pt-3 border-t border-gray-100 space-y-1.5">
-                <% changes.each do |field, change_pair|
-                     before, after = Array(change_pair) %>
-                  <div class="grid grid-cols-[120px_1fr] gap-3 text-[12px] items-baseline">
-                    <div class="text-gray-500 truncate" title="<%= field %>"><%= human_field.call(field) %></div>
-                    <div class="min-w-0">
-                      <% if version.event.to_s == "create" %>
-                        <span class="text-emerald-700 break-words"><%= format_change.call(after) %></span>
-                      <% else %>
-                        <span class="inline-flex items-baseline gap-1.5 flex-wrap">
-                          <span class="text-rose-600 line-through break-words"><%= format_change.call(before) %></span>
-                          <span class="text-gray-400" aria-hidden="true">→</span>
-                          <span class="text-emerald-700 break-words"><%= format_change.call(after) %></span>
-                        </span>
-                      <% end %>
-                    </div>
-                  </div>
-                <% end %>
+            <% case ev.type %>
+            <% when :transition %>
+              <% if ev.payload[:justification].present? %>
+                <div class="mt-2.5 pt-2.5 border-t border-gray-100 text-[12px] text-gray-700 whitespace-pre-line"><%= ev.payload[:justification] %></div>
+              <% end %>
+            <% when :comment %>
+              <div class="mt-2.5 pt-2.5 border-t border-gray-100 text-[12.5px] text-gray-700 whitespace-pre-line"><%= ev.payload[:body] %></div>
+            <% when :document %>
+              <div class="mt-2.5 pt-2.5 border-t border-gray-100 text-[12px] text-gray-700 flex items-center gap-1.5">
+                <%= icon(:file, size: 12, class_name: "text-gray-400") %>
+                <%= link_to ev.payload[:filename], rails_blob_path(ev.payload[:blob], disposition: "attachment"), class: "hover:underline" %>
+                <span class="text-gray-400">· <%= number_to_human_size(ev.payload[:byte_size]) %></span>
               </div>
             <% else %>
-              <div class="mt-2 text-[11.5px] text-gray-400 italic">Sem alterações de campo registradas neste evento.</div>
+              <% if ev.payload[:changes].present? %>
+                <div class="mt-3 pt-3 border-t border-gray-100 space-y-1.5">
+                  <% ev.payload[:changes].each do |field, change_pair|
+                       before, after = Array(change_pair) %>
+                    <div class="grid grid-cols-[120px_1fr] gap-3 text-[12px] items-baseline">
+                      <div class="text-gray-500 truncate" title="<%= field %>"><%= human_field.call(field) %></div>
+                      <div class="min-w-0">
+                        <% if ev.payload[:event] == "create" %>
+                          <span class="text-emerald-700 break-words"><%= format_change.call(after) %></span>
+                        <% else %>
+                          <span class="inline-flex items-baseline gap-1.5 flex-wrap">
+                            <span class="text-rose-600 line-through break-words"><%= format_change.call(before) %></span>
+                            <span class="text-gray-400" aria-hidden="true">→</span>
+                            <span class="text-emerald-700 break-words"><%= format_change.call(after) %></span>
+                          </span>
+                        <% end %>
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
             <% end %>
           </div>
         </li>

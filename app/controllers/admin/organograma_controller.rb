@@ -1,34 +1,28 @@
 module Admin
-  # Organograma: árvore da empresa por área — gestores no topo de cada área,
-  # equipe direta (supervisor_id) aninhada, demais membros da área agrupados.
+  # Organograma: árvore genealógica real por supervisor_id.
+  # Diretoria (role=board) no topo; qualquer gestor/admin sem supervisor_id definido
+  # reporta diretamente à Diretoria; a partir daí a árvore segue supervisor_id recursivamente.
   class OrganogramaController < BaseController
+    LEADERSHIP_ROLES = %w[gestor admin].freeze
+
     def index
       ativos = User.ativos
-      @areas = Area.order(:name)
-
-      @por_area = @areas.map do |area|
-        membros = ativos.where(area: area.name).order(:name).to_a
-        sups    = membros.select { |u| u.gestor? || u.admin? }
-        sub_ids = sups.map(&:id)
-        equipe_por_sup = sub_ids.any? ? ativos.where(supervisor_id: sub_ids).order(:name).group_by(&:supervisor_id) : {}
-        alocados = sups + equipe_por_sup.values.flatten
-        outros   = (membros - alocados)
-        {
-          area: area,
-          supervisores: sups,
-          equipe_por_sup: equipe_por_sup,
-          outros: outros,
-          total: (membros | equipe_por_sup.values.flatten).size,
-          demandas: Demand.where(area_impactada: area.name).count
-        }
-      end
 
       @diretoria = ativos.where(role: :board).order(:name)
-      @analistas = ativos.where(role: :analista_pdi).order(:name)
       @fi        = ativos.where(role: :fi).order(:name)
-      @sem_area  = ativos.where(area: [ nil, "" ])
-                         .where(role: %i[colaborador gestor admin])
-                         .order(:name)
+      @analistas = ativos.where(role: :analista_pdi).order(:name)
+
+      # Topo da hierarquia (abaixo da diretoria): lideranças sem supervisor_id definido
+      @nivel1 = ativos.where(role: LEADERSHIP_ROLES, supervisor_id: nil).order(:name)
+
+      # Mapa supervisor_id -> filhos diretos, pra renderizar a árvore recursivamente
+      @filhos_por_supervisor = ativos.where.not(supervisor_id: nil).order(:name).group_by(&:supervisor_id)
+
+      # Colaboradores sem superior definido — não aparecem na árvore, ficam num bloco à parte
+      ids_na_arvore = ([ @nivel1 ] + @filhos_por_supervisor.values).flatten.map(&:id).to_set
+      @sem_hierarquia = ativos.where(role: %i[colaborador gestor admin])
+                              .where.not(id: ids_na_arvore.to_a)
+                              .order(:area, :name)
     end
   end
 end

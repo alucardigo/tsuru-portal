@@ -1,0 +1,69 @@
+<% content_for :title, "Elegibilidade" %>
+<% content_for :nav_active, "elegibilidade" %>
+<% content_for :crumb, "Portfólio PD&I" %>
+<% content_for :subtitle, "· veredito N1 de todos os projetos" %>
+
+<div class="max-w-[1100px] mx-auto px-7 py-6">
+  <div class="grid grid-cols-3 gap-3 mb-5">
+    <%= link_to pdi_elegibilidade_path(verdict: "verde"), class: "bg-white rounded-lg border #{@filtro == 'verde' ? 'border-emerald-400 ring-1 ring-emerald-200' : 'border-gray-200'} p-4 hover:border-emerald-300" do %>
+      <div class="text-[11px] uppercase tracking-wider text-gray-500 font-medium">Potencialmente elegíveis</div>
+      <div class="text-[26px] font-semibold text-emerald-700 tabular-nums mt-1"><%= @counts[:verde] %></div>
+    <% end %>
+    <%= link_to pdi_elegibilidade_path(verdict: "vermelho"), class: "bg-white rounded-lg border #{@filtro == 'vermelho' ? 'border-rose-400 ring-1 ring-rose-200' : 'border-gray-200'} p-4 hover:border-rose-300" do %>
+      <div class="text-[11px] uppercase tracking-wider text-gray-500 font-medium">Não elegíveis</div>
+      <div class="text-[26px] font-semibold text-rose-700 tabular-nums mt-1"><%= @counts[:vermelho] %></div>
+    <% end %>
+    <%= link_to pdi_elegibilidade_path(verdict: "incompleto"), class: "bg-white rounded-lg border #{@filtro == 'incompleto' ? 'border-gray-400 ring-1 ring-gray-200' : 'border-gray-200'} p-4 hover:border-gray-300" do %>
+      <div class="text-[11px] uppercase tracking-wider text-gray-500 font-medium">Triagem incompleta</div>
+      <div class="text-[26px] font-semibold text-gray-500 tabular-nums mt-1"><%= @counts[:incompleto] %></div>
+    <% end %>
+  </div>
+
+  <% if @filtro %>
+    <div class="mb-3">
+      <%= link_to "× limpar filtro", pdi_elegibilidade_path, class: "text-[11.5px] text-gray-500 hover:text-gray-900" %>
+    </div>
+  <% end %>
+
+  <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <% if @demands.empty? %>
+      <div class="p-10 text-center text-[13px] text-gray-500">Nenhum projeto nesta categoria.</div>
+    <% else %>
+      <table class="w-full text-[12.5px]">
+        <thead>
+          <tr class="bg-gray-50/60 text-[10.5px] uppercase tracking-wider text-gray-500 text-left">
+            <th class="px-3 py-2 font-medium">Código</th>
+            <th class="px-3 py-2 font-medium">Título</th>
+            <th class="px-3 py-2 font-medium">Área</th>
+            <th class="px-3 py-2 font-medium">Estado</th>
+            <th class="px-3 py-2 font-medium">Veredito N1</th>
+            <th class="px-3 py-2 font-medium text-right">Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @demands.each do |d| %>
+            <% v = n1_verdict(d) %>
+            <tr class="border-t border-gray-100 hover:bg-gray-50/60">
+              <td class="px-3 py-2 font-mono text-[11px] text-gray-700 whitespace-nowrap"><%= d.codigo_display %></td>
+              <td class="px-3 py-2 text-gray-900"><%= link_to d.title.truncate(60), demand_path(d), class: "hover:underline font-medium" %></td>
+              <td class="px-3 py-2 text-gray-600"><%= d.area_impactada || "—" %></td>
+              <td class="px-3 py-2"><%= status_pill(d.aasm_state) %></td>
+              <td class="px-3 py-2">
+                <% if v == "verde" %>
+                  <%= pill("Potencialmente elegível", color: "emerald") %>
+                <% elsif v == "vermelho" %>
+                  <%= pill("Não elegível", color: "rose") %>
+                <% else %>
+                  <%= pill("Incompleta", color: "gray") %>
+                <% end %>
+              </td>
+              <td class="px-3 py-2 text-right">
+                <%= link_to "Ver triagem", triagem_demand_path(d), class: "tsuru-btn-ghost !h-7 !text-[11px] !px-2" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+</div>

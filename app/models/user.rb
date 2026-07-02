@@ -7,6 +7,7 @@ class User < ApplicationRecord
   # Vínculo hierárquico: colaborador -> supervisor (gestor)
   belongs_to :supervisor, class_name: "User", optional: true
   has_many :subordinados, class_name: "User", foreign_key: :supervisor_id, dependent: :nullify
+  belongs_to :sankhya_record, optional: true
 
   devise :database_authenticatable, :registerable, :recoverable,
          :rememberable, :validatable, :confirmable,
@@ -47,5 +48,16 @@ class User < ApplicationRecord
     else
       email[0].upcase
     end
+  end
+
+  # Bloco H — token para autenticar chamadas de entrada (Power Automate / integrações externas).
+  def ensure_api_token!
+    update!(api_token: SecureRandom.hex(24)) if api_token.blank?
+    api_token
+  end
+
+  def regenerate_api_token!
+    update!(api_token: SecureRandom.hex(24))
+    api_token
   end
 end

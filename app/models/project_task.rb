@@ -12,6 +12,7 @@ class ProjectTask < ApplicationRecord
   belongs_to :creator,  class_name: "User"
   belongs_to :parent,   class_name: "ProjectTask", optional: true
   belongs_to :sprint,   optional: true
+  has_one    :origin_demand, class_name: "Demand", foreign_key: :converted_task_id, inverse_of: :converted_task
   has_many   :subtasks, class_name: "ProjectTask", foreign_key: :parent_id, dependent: :destroy
   has_many   :time_entries,    class_name: "ProjectTaskTimeEntry",  dependent: :destroy
   has_many   :checklist_items, class_name: "ProjectTaskChecklistItem", dependent: :destroy

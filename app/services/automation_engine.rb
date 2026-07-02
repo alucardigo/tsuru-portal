@@ -15,6 +15,33 @@ module AutomationEngine
     Rails.logger.warn("[AutomationEngine] fired=#{event_key} task=#{task&.id} error=#{e.class}: #{e.message}")
   end
 
+  # Dispara automações de nível de projeto (ex: "demand.elegivel") — hoje só
+  # ações "webhook" e "notify_supervisors" fazem sentido nesse escopo.
+  def fire_demand(event_key, demand)
+    return unless demand
+    automations = TaskAutomation.enabled
+                                .where(trigger_event: "demand.#{event_key}")
+                                .for_demand(demand)
+    automations.each { |a| dispatch_demand(a, demand) }
+  rescue StandardError => e
+    Rails.logger.warn("[AutomationEngine] fired=demand.#{event_key} demand=#{demand&.id} error=#{e.class}: #{e.message}")
+  end
+
+  def dispatch_demand(automation, demand)
+    case automation.action_kind
+    when "webhook"
+      send_webhook(automation, subject_type: "demand", payload: demand_webhook_payload(demand))
+    when "notify_supervisors"
+      area = demand.area_impactada
+      return unless area
+      User.where(role: :gestor, area: area).find_each do |sup|
+        notify(sup.id, demand.id, "Automação: #{automation.name}",
+               "Projeto \"#{demand.title}\" — #{TaskAutomation::TRIGGER_LABELS[automation.trigger_event]}",
+               Rails.application.routes.url_helpers.demand_path(demand))
+      end
+    end
+  end
+
   def dispatch(automation, task)
     link = Rails.application.routes.url_helpers.kanban_demand_tasks_path(task.demand_id)
     case automation.action_kind
@@ -42,7 +69,58 @@ module AutomationEngine
       end
     when "llm_comment"
       llm_comment(automation, task)
+    when "webhook"
+      send_webhook(automation, subject_type: "task", payload: task_webhook_payload(task))
     end
+  end
+
+  # Envia o payload para a URL configurada (ex: Power Automate "When an HTTP request is received").
+  # Fire-and-forget em thread — falha de rede externa não deve travar o request do usuário.
+  def send_webhook(automation, subject_type:, payload:)
+    url = automation.webhook_url
+    return if url.blank?
+
+    body = {
+      event: automation.trigger_event,
+      automation: automation.name,
+      subject_type: subject_type,
+      fired_at: Time.current.iso8601
+    }.merge(payload).to_json
+
+    Thread.new do
+      Rails.application.executor.wrap do
+        uri = URI.parse(url)
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = uri.scheme == "https"
+        http.open_timeout = 8
+        http.read_timeout = 15
+        req = Net::HTTP::Post.new(uri.request_uri, "Content-Type" => "application/json")
+        req.body = body
+        http.request(req)
+      end
+    rescue StandardError => e
+      Rails.logger.warn("[AutomationEngine.send_webhook] automation=#{automation.id} #{e.class}: #{e.message}")
+    end
+  end
+
+  def task_webhook_payload(task)
+    {
+      task_id: task.id, task_title: task.title, status: task.kanban_status, priority: task.priority,
+      assignee: task.assignee&.display_name, demand_id: task.demand_id, demand_codigo: task.demand&.codigo_display,
+      link: Rails.application.routes.url_helpers.kanban_demand_tasks_url(task.demand_id, host: default_host)
+    }
+  end
+
+  def demand_webhook_payload(demand)
+    {
+      demand_id: demand.id, codigo: demand.codigo_display, title: demand.title, state: demand.aasm_state,
+      area: demand.area_impactada, trl: demand.trl,
+      link: Rails.application.routes.url_helpers.demand_url(demand, host: default_host)
+    }
+  end
+
+  def default_host
+    Rails.application.config.action_mailer.default_url_options&.dig(:host) || "localhost"
   end
 
   # IA comenta a tarefa via provedor LLM habilitado. Fire-and-forget em thread

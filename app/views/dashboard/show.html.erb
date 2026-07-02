@@ -239,6 +239,26 @@
           <% end %>
         </div>
       </div>
+
+      <% if current_user&.gestor_or_above? %>
+        <div id="ia" class="bg-white rounded-lg border border-gray-200 p-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="subhead">🤖 Insight de portfólio</div>
+            <%= button_to ai_report_portfolio_path, method: :post,
+                  class: "tsuru-btn-ghost !h-6 !text-[10.5px] !px-1.5",
+                  form: { data: { turbo_confirm: "Gerar novo insight de portfólio com IA? Pode levar até 30s." } } do %>Gerar<% end %>
+          </div>
+          <% last_report = AiReport.where(demand_id: nil, kind: "portfolio_insight").order(created_at: :desc).first %>
+          <% if last_report&.ok? %>
+            <div class="text-[11.5px] text-gray-700 whitespace-pre-line leading-relaxed bg-gray-50 rounded-md p-2.5"><%= last_report.content %></div>
+            <div class="text-[10px] text-gray-400 mt-1"><%= time_ago_in_words(last_report.created_at) %> atrás</div>
+          <% elsif last_report&.status == "failed" %>
+            <div class="text-[11.5px] text-rose-600"><%= last_report.error %></div>
+          <% else %>
+            <div class="text-[11.5px] text-gray-400">Nenhum insight gerado ainda.</div>
+          <% end %>
+        </div>
+      <% end %>
     </aside>
   </div>
 </div>

@@ -17,7 +17,8 @@ module UiHelper
     "in_execution"       => "PD&I em execução",
     "concluida"          => "Concluída",
     "arquivada"          => "Arquivada",
-    "cancelada"          => "Cancelada"
+    "cancelada"          => "Cancelada",
+    "convertida"         => "Convertida em tarefa"
   }.freeze
 
   # FlowTrack: 6 macro-etapas do fluxo INOVA BEL (maps aasm_state -> 0..5)
@@ -100,7 +101,7 @@ module UiHelper
         { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "demandas",    label: "Minhas demandas",   icon: :bulb,    path: demands_path },
         { key: "nova",        label: "Nova demanda",      icon: :plus,    path: new_demand_path },
-        { key: "biblioteca",  label: "Biblioteca PD&I",   icon: :book,    path: "#" }
+        { key: "biblioteca",  label: "Biblioteca PD&I",   icon: :book,    path: biblioteca_path }
       ]
     when "gestor"
       [
@@ -109,7 +110,8 @@ module UiHelper
         { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "minha-area",  label: "Minha área",        icon: :folder,  path: demands_path },
         { key: "historico",   label: "Histórico",         icon: :doc,     path: demands_path },
-        { key: "biblioteca",  label: "Biblioteca PD&I",   icon: :book,    path: "#" }
+        { key: "exportar",    label: "Exportar",          icon: :download, path: exports_path },
+        { key: "biblioteca",  label: "Biblioteca PD&I",   icon: :book,    path: biblioteca_path }
       ]
     when "analista_pdi"
       [
@@ -117,10 +119,11 @@ module UiHelper
         { key: "minhas-tarefas", label: "Minhas tarefas",  icon: :flag,    path: me_tasks_path },
         { key: "pipeline",     label: "Pipeline Kanban",   icon: :chart,   path: pipeline_path },
         { key: "projetos",     label: "Projetos PD&I",     icon: :folder,  path: demands_path },
-        { key: "elegibilidade", label: "Elegibilidade",    icon: :shield,  path: demands_path },
-        { key: "defesa",       label: "Composição defesa", icon: :doc,     path: "#" },
-        { key: "evidencias",   label: "Evidências",        icon: :file,    path: "#" },
-        { key: "biblioteca",   label: "Biblioteca PD&I",   icon: :book,    path: "#" }
+        { key: "elegibilidade", label: "Elegibilidade",    icon: :shield,  path: pdi_elegibilidade_path },
+        { key: "defesa",       label: "Composição defesa", icon: :doc,     path: pdi_defesa_path },
+        { key: "evidencias",   label: "Evidências",        icon: :file,    path: pdi_evidencias_path },
+        { key: "exportar",     label: "Exportar",          icon: :download, path: exports_path },
+        { key: "biblioteca",   label: "Biblioteca PD&I",   icon: :book,    path: biblioteca_path }
       ]
     when "admin"
       [
@@ -130,13 +133,17 @@ module UiHelper
         { key: "pipeline",    label: "Pipeline Kanban",   icon: :chart,   path: pipeline_path },
         { key: "metricas",    label: "Métricas",          icon: :chart,   path: admin_metrics_path },
         { key: "usuarios",    label: "Usuários",          icon: :user,    path: admin_users_path },
-        { key: "elegibilidade", label: "Elegibilidade",   icon: :shield,  path: admin_demands_path },
-        { key: "exportar",    label: "Exportar",          icon: :download, path: admin_demands_path },
+        { key: "elegibilidade", label: "Elegibilidade",   icon: :shield,  path: pdi_elegibilidade_path },
+        { key: "defesa",       label: "Composição defesa", icon: :doc,     path: pdi_defesa_path },
+        { key: "evidencias",   label: "Evidências",        icon: :file,    path: pdi_evidencias_path },
+        { key: "exportar",    label: "Exportar",          icon: :download, path: exports_path },
         { key: "gantt",       label: "Gantt portfolio",   icon: :chart,    path: gantt_path },
         { key: "areas",       label: "Áreas",             icon: :folder,   path: admin_areas_path },
         { key: "tags",        label: "Tags / labels",     icon: :flag,     path: admin_tags_path },
         { key: "automations", label: "Automações & IA",   icon: :flag,     path: admin_automations_path },
-        { key: "llm",         label: "IA · Provedores",   icon: :cog,      path: admin_llm_providers_path }
+        { key: "llm",         label: "IA · Provedores",   icon: :cog,      path: admin_llm_providers_path },
+        { key: "biblioteca",  label: "Biblioteca PD&I",   icon: :book,     path: admin_knowledge_articles_path },
+        { key: "sankhya",     label: "Integração Sankhya", icon: :link,    path: admin_sankhya_mappings_path }
       ]
     when "board"
       [
@@ -145,7 +152,8 @@ module UiHelper
         { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "portfolio",  label: "Portfólio",         icon: :folder,  path: demands_path },
         { key: "decisoes",   label: "Decisões pendentes", icon: :flag,    path: board_demands_path, badge: board_pending_count },
-        { key: "exportar",   label: "Exportar",          icon: :download, path: "#" }
+        { key: "defesa",     label: "Composição defesa", icon: :doc,     path: pdi_defesa_path },
+        { key: "exportar",   label: "Exportar",          icon: :download, path: exports_path }
       ]
     when "fi"
       [
@@ -153,7 +161,7 @@ module UiHelper
         { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
         { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "projetos",   label: "Projetos avaliados", icon: :folder, path: demands_path },
-        { key: "biblioteca", label: "Biblioteca PD&I",   icon: :book,    path: "#" }
+        { key: "biblioteca", label: "Biblioteca PD&I",   icon: :book,    path: biblioteca_path }
       ]
     else
       []

@@ -1,0 +1,99 @@
+<% content_for :title, "Dossiê N3 · #{@demand.codigo_display}" %>
+<% content_for :nav_active, "defesa" %>
+<% content_for :crumb, "Composição de defesa · #{@demand.codigo_display}" %>
+<% content_for :subtitle, "· ano-base #{@dossier.ano_base}" %>
+<% content_for :actions do %>
+  <%= link_to edit_demand_defense_dossier_path(@demand, @dossier), class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>Editar<% end %>
+  <%= link_to pdf_demand_defense_dossier_path(@demand, @dossier), class: "tsuru-btn-secondary !h-7 !text-[11.5px] !px-2" do %>
+    <%= icon(:pdf, size: 12) %> Exportar PDF
+  <% end %>
+<% end %>
+
+<div class="max-w-[1000px] mx-auto px-7 py-6 space-y-3">
+  <div class="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
+    <div class="text-[13.5px] font-medium text-gray-900"><%= @demand.title %></div>
+    <%= pill(@dossier.final? ? "Final" : "Rascunho", color: @dossier.final? ? "emerald" : "amber") %>
+  </div>
+
+  <% if Array(@dossier.success_criteria).any? %>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="subhead mb-2">Bloco 1 — Critérios de sucesso</div>
+      <table class="w-full text-[12px]">
+        <thead><tr class="text-left text-gray-500"><th class="py-1">Critério</th><th class="py-1">Meta</th><th class="py-1">Resultado</th><th class="py-1">Status</th></tr></thead>
+        <tbody>
+          <% @dossier.success_criteria.each do |c| %>
+            <tr class="border-t border-gray-100">
+              <td class="py-1.5 pr-2"><%= c["criterio"] %></td>
+              <td class="py-1.5 pr-2 text-gray-600"><%= c["meta"] %></td>
+              <td class="py-1.5 pr-2 text-gray-600"><%= c["resultado"] %></td>
+              <td class="py-1.5"><%= pill(c["status"].to_s.humanize.presence || "—", color: c["status"] == "atingido" ? "emerald" : c["status"] == "parcial" ? "amber" : "gray") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+
+  <% [
+       [ "Bloco 2 — Benefícios operacionais/econômicos", @dossier.ganhos_operacionais ],
+       [ "Bloco 3.1.1 — Barreiras de baseline", @dossier.barreiras_base ],
+       [ "Bloco 3.1.2 — Barreiras emergentes", @dossier.barreiras_emergentes ],
+       [ "Bloco 3.2.2 — Barreiras resolvidas", @dossier.barreiras_resolvidas ],
+       [ "Bloco 3.2.2 — Barreiras não resolvidas", @dossier.barreiras_nao_resolvidas ],
+       [ "Bloco 4 — Contexto plurianual", @dossier.contexto_plurianual ]
+     ].each do |label, value| %>
+    <% next if value.blank? %>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="subhead mb-1.5"><%= label %></div>
+      <div class="text-[12.5px] text-gray-700 whitespace-pre-line leading-relaxed"><%= value %></div>
+    </div>
+  <% end %>
+
+  <% if @dossier.recomendacao_final.present? %>
+    <div class="bg-white rounded-lg border border-gray-200 p-4">
+      <div class="subhead mb-1.5">Bloco 8 — Recomendação consultiva final</div>
+      <div class="text-[13px] font-medium text-gray-900"><%= DefenseDossier::RECOMENDACAO_LABELS[@dossier.recomendacao_final] %></div>
+      <% if @dossier.recomendacao_notas.present? %>
+        <div class="text-[12.5px] text-gray-600 mt-1"><%= @dossier.recomendacao_notas %></div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-4">
+    <div class="subhead mb-2">Bloco 7 — Evidências anexadas (<%= @dossier.evidences.size %>)</div>
+    <% if @dossier.evidences.any? %>
+      <ul class="space-y-1.5 mb-3">
+        <% @dossier.evidences.each do |ev| %>
+          <li class="flex items-center justify-between gap-2 text-[12.5px]">
+            <div class="flex items-center gap-2 min-w-0">
+              <%= pill(DefenseEvidence::TIPO_LABELS[ev.tipo] || ev.tipo, color: "blue") %>
+              <span class="truncate text-gray-700"><%= ev.descricao %></span>
+              <% if ev.arquivo.attached? %>
+                <%= link_to ev.arquivo.filename.to_s, rails_blob_path(ev.arquivo, disposition: "attachment"), class: "text-blue-600 hover:underline truncate" %>
+              <% end %>
+            </div>
+            <%= button_to demand_defense_dossier_defense_evidence_path(@demand, @dossier, ev), method: :delete,
+                  form: { class: "inline", data: { turbo_confirm: "Remover evidência?" } },
+                  class: "tsuru-btn-ghost !h-6 !text-[10.5px] !px-1.5 !text-rose-600 shrink-0" do %>×<% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% end %>
+
+    <%= form_with model: [ @demand, @dossier, @evidence ], local: true, class: "flex items-end gap-2" do |f| %>
+      <div class="flex-1">
+        <label class="tsuru-label">Tipo</label>
+        <%= f.select :tipo, DefenseEvidence::TIPOS.map { |t| [ DefenseEvidence::TIPO_LABELS[t], t ] }, {}, class: "tsuru-select mt-1 !h-8 !text-[12px]" %>
+      </div>
+      <div class="flex-1">
+        <label class="tsuru-label">Descrição</label>
+        <%= f.text_field :descricao, class: "tsuru-input mt-1 !h-8 !text-[12px]", placeholder: "ex: logs de PoC H1-H3" %>
+      </div>
+      <div>
+        <label class="tsuru-label">Arquivo (opcional)</label>
+        <%= f.file_field :arquivo, class: "text-[11.5px] mt-1" %>
+      </div>
+      <%= f.submit "Adicionar", class: "tsuru-btn-secondary !h-8 !text-[12px] shrink-0" %>
+    <% end %>
+  </div>
+</div>

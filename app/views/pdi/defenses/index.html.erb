@@ -1,0 +1,45 @@
+<% content_for :title, "Composição de defesa" %>
+<% content_for :nav_active, "defesa" %>
+<% content_for :crumb, "Portfólio PD&I" %>
+<% content_for :subtitle, "· dossiês N3 dos projetos elegíveis" %>
+
+<div class="max-w-[1100px] mx-auto px-7 py-6">
+  <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4 text-[12.5px] text-gray-600 leading-relaxed">
+    Projetos que já atingiram elegibilidade Lei do Bem (estado <strong>Elegível</strong> ou posterior) entram
+    aqui para composição do <strong>Dossiê N3</strong> — critérios de sucesso, barreiras técnicas consolidadas
+    e recomendação final para eventual defesa/contestação junto ao CAT.
+  </div>
+
+  <% if @demands.empty? %>
+    <div class="bg-white rounded-lg border border-gray-200 p-10 text-center text-[13px] text-gray-500">
+      Nenhum projeto elegível ainda. Dossiês aparecem aqui quando um projeto atinge o estado "Elegível".
+    </div>
+  <% else %>
+    <div class="space-y-2">
+      <% @demands.each do |d| %>
+        <% dossiers = d.defense_dossiers.sort_by(&:ano_base).reverse %>
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <div class="text-[11px] font-mono text-gray-500"><%= d.codigo_display %></div>
+              <%= link_to d.title.truncate(70), demand_path(d), class: "text-[13.5px] font-medium text-gray-900 hover:underline" %>
+              <div class="mt-1 flex items-center gap-2 flex-wrap">
+                <%= status_pill(d.aasm_state) %>
+                <% if dossiers.any? %>
+                  <% dossiers.each do |dd| %>
+                    <%= link_to demand_defense_dossier_path(d, dd), class: "inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ring-1 #{dd.final? ? 'bg-emerald-50 text-emerald-700 ring-emerald-100' : 'bg-amber-50 text-amber-700 ring-amber-100'}" do %>
+                      <%= dd.final? ? "✓" : "✎" %> Dossiê <%= dd.ano_base %>
+                    <% end %>
+                  <% end %>
+                <% else %>
+                  <span class="text-[11.5px] text-gray-400">Nenhum dossiê ainda</span>
+                <% end %>
+              </div>
+            </div>
+            <%= link_to new_demand_defense_dossier_path(d), class: "tsuru-btn-primary !h-7 !text-[11.5px] !px-3 shrink-0" do %>+ Novo dossiê<% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

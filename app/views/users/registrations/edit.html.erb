@@ -35,6 +35,18 @@
   </div>
 <% end %>
 
+<h3>Integrações — Power Automate / API</h3>
+<div style="max-width:480px">
+  <p>Token de API para automações externas (Power Automate, Zapier, n8n) chamarem o Tsuru via HTTP.</p>
+  <% if current_user.api_token.present? %>
+    <p><code><%= current_user.api_token %></code></p>
+  <% else %>
+    <p><em>Nenhum token gerado ainda.</em></p>
+  <% end %>
+  <%= button_to "Gerar novo token", regenerate_api_token_path, method: :post,
+        data: { turbo_confirm: current_user.api_token.present? ? "Isso invalida o token atual. Continuar?" : nil } %>
+</div>
+
 <h3>Cancel my account</h3>
 
 <div>Unhappy? <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?", turbo_confirm: "Are you sure?" }, method: :delete %></div>

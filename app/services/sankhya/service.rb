@@ -25,6 +25,28 @@ module Sankhya
       JSON.parse(response.body)
     end
 
+    # Bloco I — consulta genérica a qualquer entidade Sankhya (CRUDServiceProvider.loadRecords).
+    # Usado pelo SankhyaMapping configurável para sincronizar colaboradores/PJ/projetos/notas
+    # sem precisar de um método dedicado por entidade.
+    def consultar(entidade:, campos:, criterio: nil)
+      payload = {
+        serviceName: "CRUDServiceProvider.loadRecords",
+        requestBody: {
+          dataSet: {
+            rootEntity: entidade,
+            includePresentationFields: "S",
+            offsetPage: "0",
+            entity: { fieldset: { list: Array(campos).join(",") } }
+          }
+        }
+      }
+      payload[:requestBody][:dataSet][:criteria] = { expression: { "$": criterio } } if criterio.present?
+
+      response = gateway_post(payload, operation: "consultar_#{entidade}")
+      rows = JSON.parse(response.body).dig("responseBody", "entities", "entity") || []
+      rows.is_a?(Array) ? rows : [ rows ]
+    end
+
     private
 
     def gateway_post(payload, operation:)

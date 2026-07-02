@@ -1,0 +1,61 @@
+<% content_for :title, "Evidências" %>
+<% content_for :nav_active, "evidencias" %>
+<% content_for :crumb, "Portfólio PD&I" %>
+<% content_for :subtitle, "· documentos e evidências por projeto" %>
+
+<div class="max-w-[1100px] mx-auto px-7 py-6">
+  <% if @demands.empty? %>
+    <div class="bg-white rounded-lg border border-gray-200 p-10 text-center text-[13px] text-gray-500">
+      Nenhuma evidência anexada ainda. Faça upload em cada projeto (aba Documentos) ou num dossiê de defesa.
+    </div>
+  <% else %>
+    <div class="space-y-2">
+      <% @demands.each do |d| %>
+        <% docs = d.documentos.attached? ? d.documentos : [] %>
+        <% dossier_evidences = d.defense_dossiers.flat_map(&:evidences) %>
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+          <div class="flex items-center justify-between gap-3 mb-2">
+            <div class="min-w-0">
+              <div class="text-[11px] font-mono text-gray-500"><%= d.codigo_display %></div>
+              <%= link_to d.title.truncate(70), demand_path(d), class: "text-[13.5px] font-medium text-gray-900 hover:underline" %>
+            </div>
+            <%= link_to "Ver projeto", demand_path(d), class: "tsuru-btn-ghost !h-7 !text-[11px] !px-2 shrink-0" %>
+          </div>
+          <div class="grid grid-cols-2 gap-3 text-[12px]">
+            <div>
+              <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium mb-1">Documentos do projeto (<%= docs.size %>)</div>
+              <% if docs.any? %>
+                <ul class="space-y-1">
+                  <% docs.first(5).each do |doc| %>
+                    <li class="flex items-center gap-1.5 text-gray-700 truncate">
+                      <%= icon(:file, size: 12, class_name: "text-gray-400 shrink-0") %>
+                      <%= link_to doc.filename.to_s, rails_blob_path(doc, disposition: "attachment"), class: "hover:underline truncate" %>
+                    </li>
+                  <% end %>
+                  <% if docs.size > 5 %><li class="text-gray-400 text-[11px]">+<%= docs.size - 5 %> mais</li><% end %>
+                </ul>
+              <% else %>
+                <div class="text-gray-400 text-[11.5px]">—</div>
+              <% end %>
+            </div>
+            <div>
+              <div class="text-[10.5px] uppercase tracking-wider text-gray-400 font-medium mb-1">Evidências de dossiê (<%= dossier_evidences.size %>)</div>
+              <% if dossier_evidences.any? %>
+                <ul class="space-y-1">
+                  <% dossier_evidences.first(5).each do |ev| %>
+                    <li class="flex items-center gap-1.5 text-gray-700 truncate">
+                      <%= pill(DefenseEvidence::TIPO_LABELS[ev.tipo] || ev.tipo, color: "blue") %>
+                      <span class="truncate"><%= ev.descricao %></span>
+                    </li>
+                  <% end %>
+                </ul>
+              <% else %>
+                <div class="text-gray-400 text-[11.5px]">—</div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -1,0 +1,37 @@
+<% content_for :title, "Exportar" %>
+<% content_for :nav_active, "exportar" %>
+<% content_for :crumb, "Central de exportação" %>
+
+<div class="max-w-[900px] mx-auto px-7 py-6 space-y-3">
+  <div class="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
+    <div>
+      <div class="text-[13.5px] font-semibold text-gray-900">Demandas / Projetos</div>
+      <div class="text-[12px] text-gray-500"><%= @demands_count %> registros — inclui estado, TRL, ODS e parecer técnico</div>
+    </div>
+    <div class="flex gap-2">
+      <%= link_to exports_demandas_path(format: :csv), class: "tsuru-btn-secondary !h-8 !text-[12px]" do %><%= icon(:download, size: 12) %> CSV<% end %>
+      <%= link_to exports_demandas_path(format: :xlsx), class: "tsuru-btn-secondary !h-8 !text-[12px]" do %><%= icon(:xls, size: 12) %> XLSX<% end %>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
+    <div>
+      <div class="text-[13.5px] font-semibold text-gray-900">Tarefas</div>
+      <div class="text-[12px] text-gray-500"><%= @tasks_count %> tarefas — todos os projetos, com estimativa e horas gastas</div>
+    </div>
+    <%= link_to exports_tarefas_path(format: :csv), class: "tsuru-btn-secondary !h-8 !text-[12px]" do %><%= icon(:download, size: 12) %> CSV<% end %>
+  </div>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
+    <div>
+      <div class="text-[13.5px] font-semibold text-gray-900">Timesheet / Rateio Sankhya</div>
+      <div class="text-[12px] text-gray-500"><%= @time_entries_count %> apontamentos finalizados — inclui código do colaborador e do projeto no Sankhya, quando vinculados</div>
+    </div>
+    <%= link_to exports_timesheet_path(format: :csv), class: "tsuru-btn-secondary !h-8 !text-[12px]" do %><%= icon(:download, size: 12) %> CSV<% end %>
+  </div>
+
+  <div class="bg-white rounded-lg border border-gray-200 p-4">
+    <div class="text-[13.5px] font-semibold text-gray-900 mb-1">Dossiês de defesa (PDF)</div>
+    <div class="text-[12px] text-gray-500">Gerados individualmente em cada projeto — veja <%= link_to "Composição de defesa", pdi_defesa_path, class: "text-blue-600 hover:underline" %>.</div>
+  </div>
+</div>

@@ -92,6 +92,16 @@
                 class: "tsuru-select mt-1" %>
         </div>
 
+        <%# Bloco I — vínculo Sankhya (colaborador/PJ) %>
+        <div>
+          <%= f.label :sankhya_record_id, "Colaborador/PJ no Sankhya", class: "tsuru-label" %>
+          <%= f.collection_select :sankhya_record_id,
+                SankhyaRecord.of_kind(%w[colaborador parceiro_pj]).order(:nome), :id, :nome,
+                { include_blank: "— sem vínculo —" },
+                class: "tsuru-select mt-1" %>
+          <p class="tsuru-hint">Sincronize em <%= link_to "Integração Sankhya", admin_sankhya_mappings_path, class: "underline" %> antes de vincular.</p>
+        </div>
+
         <%# Senha inicial %>
         <div>
           <%= f.label :password, "Senha inicial", class: "tsuru-label" %>

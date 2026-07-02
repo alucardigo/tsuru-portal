@@ -86,6 +86,13 @@ class DemandPolicy < ApplicationPolicy
   def arquivar?      = user.admin? || owner?
   def hard_destroy?  = user.admin?
 
+  # Bloco K — só analista T&I ou admin decide converter uma sugestão em tarefa de projeto
+  def converter?           = (user.analista_pdi? || user.admin?) && record.convertivel?
+  def realizar_conversao?  = converter?
+
+  # Bloco I — vínculo Sankhya é decisão de gestão, não do autor da sugestão
+  def vincular_sankhya?    = gestor_or_above?
+
   class Scope < ApplicationPolicy::Scope
     def resolve
       if user.colaborador?

@@ -1,0 +1,33 @@
+<% content_for :title, "Biblioteca PD&I" %>
+<% content_for :nav_active, "biblioteca" %>
+<% content_for :crumb, "Biblioteca PD&I" %>
+<% content_for :subtitle, "· referência Lei do Bem e PD&I" %>
+
+<div class="max-w-[1000px] mx-auto px-7 py-6">
+  <%= form_with url: biblioteca_path, method: :get, local: true, class: "flex gap-2 mb-4" do %>
+    <input type="text" name="q" value="<%= params[:q] %>" placeholder="Buscar…" class="tsuru-input flex-1">
+    <select name="category" class="tsuru-select">
+      <option value="">Todas as categorias</option>
+      <% KnowledgeArticle::CATEGORIES.each do |c| %>
+        <option value="<%= c %>" <%= "selected" if params[:category] == c %>><%= KnowledgeArticle::CATEGORY_LABELS[c] %></option>
+      <% end %>
+    </select>
+    <%= submit_tag "Buscar", class: "tsuru-btn-secondary" %>
+  <% end %>
+
+  <% if @articles.empty? %>
+    <div class="bg-white rounded-lg border border-gray-200 p-10 text-center text-[13px] text-gray-500">
+      Nenhum artigo encontrado.
+    </div>
+  <% else %>
+    <div class="grid grid-cols-2 gap-3">
+      <% @articles.each do |a| %>
+        <%= link_to biblioteca_article_path(a), class: "bg-white rounded-lg border border-gray-200 p-4 hover:border-gray-300" do %>
+          <%= pill(KnowledgeArticle::CATEGORY_LABELS[a.category], color: "blue") %>
+          <div class="text-[13.5px] font-medium text-gray-900 mt-2"><%= a.title %></div>
+          <div class="text-[12px] text-gray-500 mt-1 line-clamp-2"><%= truncate(strip_tags(a.body), length: 140) %></div>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

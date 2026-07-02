@@ -5,6 +5,10 @@ class Demand < ApplicationRecord
   has_many :comments, dependent: :destroy
   has_many :transitions, class_name: "DemandTransition", dependent: :restrict_with_exception
   has_one  :lei_do_bem_record, dependent: :destroy
+  has_many :defense_dossiers, dependent: :destroy
+  has_many :ai_reports, dependent: :destroy
+  belongs_to :sankhya_record, optional: true
+  belongs_to :converted_task, class_name: "ProjectTask", optional: true
   has_many :board_decisions, dependent: :restrict_with_exception
   has_many :tasks, class_name: "ProjectTask", dependent: :destroy
   has_many :sprints, dependent: :destroy
@@ -62,6 +66,7 @@ class Demand < ApplicationRecord
     state :aprovada_supervisor   # Supervisor aprovou; aguarda Análise Interna
     state :em_avaliacao_fi       # Diretoria aprovou; aguarda parecer da FI
     state :projeto               # Projeto de Fato (INOVA BEL oficial)
+    state :convertida            # Bloco K — virou tarefa de um projeto já existente
 
     event :submeter do
       transition rascunho: :submetida
@@ -139,8 +144,16 @@ class Demand < ApplicationRecord
       transition %i[in_execution projeto] => :concluida
     end
 
+    # Bloco K — analista_pdi/admin resolve a sugestão convertendo-a em tarefa de um projeto já existente.
+    # Inclui n1_reprovada/nao_elegivel de propósito (ver Demand#convertivel?).
+    event :converter_em_tarefa do
+      transition %i[rascunho submetida aprovada_supervisor em_triagem n1_aprovada n1_reprovada
+                    n2_em_andamento n2_completa awaiting_requester board_review em_avaliacao_fi
+                    elegivel nao_elegivel] => :convertida, if: :converted_task_id?
+    end
+
     event :arquivar do
-      transition %i[concluida nao_elegivel elegivel projeto in_execution n1_reprovada cancelada] => :arquivada
+      transition %i[concluida nao_elegivel elegivel projeto in_execution n1_reprovada convertida cancelada] => :arquivada
     end
 
     event :cancelar do
@@ -166,6 +179,7 @@ class Demand < ApplicationRecord
       )
 
       Notifications::Dispatcher.call(demand: demand, event: transition.event.to_s)
+      AutomationEngine.fire_demand(transition.to.to_s, demand)
     end
   end
 
@@ -239,6 +253,15 @@ class Demand < ApplicationRecord
 
   def bloqueada?
     %w[n1_reprovada nao_elegivel cancelada arquivada].include?(aasm_state)
+  end
+
+  # Bloco K — pode virar tarefa de um projeto já existente. Inclui de propósito os
+  # estados n1_reprovada/nao_elegivel — são justamente os casos típicos em que a
+  # sugestão não é elegível à Lei do Bem mas resolve como melhoria pontual num projeto.
+  ESTADOS_NAO_CONVERTIVEIS = %w[convertida projeto in_execution concluida cancelada arquivada].freeze
+
+  def convertivel?
+    !ESTADOS_NAO_CONVERTIVEIS.include?(aasm_state)
   end
 
   def to_formpd

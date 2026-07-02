@@ -13,6 +13,7 @@ module Admin
         name:          params.require(:name),
         trigger_event: params.require(:trigger_event),
         demand_id:     params[:demand_id].presence,
+        webhook_url:   params[:webhook_url].presence,
         action:        { "kind" => params.require(:action_kind) },
         enabled:       true
       )
