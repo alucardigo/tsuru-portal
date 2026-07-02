@@ -103,16 +103,12 @@
                   <%= pill(role_label(user.role), color: role_color) %>
                 </td>
                 <td class="px-3 py-2.5">
-                  <% if user.gestor? || user.admin? %>
-                    <%= form_with url: admin_user_path(user), method: :patch, local: true, class: "inline-flex" do |f| %>
-                      <%= f.select "user[area]",
-                            Demand::AREAS,
-                            { include_blank: "— sem área —", selected: user.area },
-                            class: "tsuru-select !h-8 !text-[12px] !py-0 !px-2 min-w-[150px] #{'ring-1 ring-amber-300' if user.gestor? && user.area.blank?}",
-                            onchange: "this.form.requestSubmit()" %>
-                    <% end %>
-                  <% else %>
-                    <span class="text-gray-400">—</span>
+                  <%= form_with url: admin_user_path(user), method: :patch, local: true, class: "inline-flex" do |f| %>
+                    <%= f.select "user[area]",
+                          Area.names,
+                          { include_blank: "— sem área —", selected: user.area },
+                          class: "tsuru-select !h-8 !text-[12px] !py-0 !px-2 min-w-[150px] #{'ring-1 ring-amber-300' if user.gestor? && user.area.blank?}",
+                          onchange: "this.form.requestSubmit()" %>
                   <% end %>
                 </td>
                 <td class="px-3 py-2.5">

@@ -8,9 +8,14 @@
         data: { turbo_frame: "modal" } %>
 <% end %>
 
-<div class="px-10 py-6 max-w-[1600px] mx-auto" data-controller="kanban-drag" data-kanban-drag-move-url-value="<%= move_demand_task_path(@demand, ':id') %>" data-kanban-drag-csrf-value="<%= form_authenticity_token %>">
+<div class="px-10 py-6 max-w-[1600px] mx-auto"
+     data-controller="kanban-drag bulk-select"
+     data-kanban-drag-move-url-value="<%= move_demand_task_path(@demand, ':id') %>"
+     data-kanban-drag-csrf-value="<%= form_authenticity_token %>"
+     data-bulk-select-url-value="<%= bulk_demand_tasks_path(@demand) %>"
+     data-bulk-select-csrf-value="<%= form_authenticity_token %>">
   <%# Metricas %>
-  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
     <% [
       ["Total", @metricas[:total], "gray-900"],
       ["Concluídas", @metricas[:concluidas], "green-600"],
@@ -25,11 +30,41 @@
     <% end %>
   </div>
 
-  <%# 5 colunas %>
-  <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+  <%# Sprint 28 — barra de operações em massa (aparece ao marcar checkboxes) %>
+  <div data-bulk-select-target="bar" class="hidden sticky top-2 z-30 mb-4 bg-gray-900 text-white rounded-lg px-4 py-2 flex items-center gap-3 shadow-lg text-[12.5px]">
+    <span><strong data-bulk-select-target="count">0</strong> selecionada(s)</span>
+    <select data-bulk-select-target="op" data-action="change->bulk-select#opChanged"
+            class="text-gray-900 text-[12px] rounded px-2 py-1">
+      <option value="status">Mudar status</option>
+      <option value="priority">Mudar prioridade</option>
+      <option value="assignee">Mudar responsável</option>
+      <option value="delete">Excluir</option>
+    </select>
+    <select data-bulk-select-target="value" data-op="status" class="text-gray-900 text-[12px] rounded px-2 py-1">
+      <% @statuses.each do |s| %>
+        <option value="<%= s %>"><%= (@status_labels || {})[s] || ProjectTask.new(kanban_status: s).kanban_status_label %></option>
+      <% end %>
+    </select>
+    <select data-bulk-select-target="value" data-op="priority" class="hidden text-gray-900 text-[12px] rounded px-2 py-1">
+      <% ProjectTask::PRIORITIES.each do |p| %>
+        <option value="<%= p %>"><%= ProjectTask.new(priority: p).priority_label %></option>
+      <% end %>
+    </select>
+    <select data-bulk-select-target="value" data-op="assignee" class="hidden text-gray-900 text-[12px] rounded px-2 py-1">
+      <option value="">— sem responsável —</option>
+      <% User.ativos.order(:name).each do |u| %>
+        <option value="<%= u.id %>"><%= u.display_name %></option>
+      <% end %>
+    </select>
+    <button data-action="click->bulk-select#apply" class="bg-indigo-500 hover:bg-indigo-400 rounded px-3 py-1 font-medium">Aplicar</button>
+    <button data-action="click->bulk-select#clear" class="text-gray-300 hover:text-white ml-auto">Limpar seleção</button>
+  </div>
+
+  <%# Colunas — dinâmicas (workflow custom do projeto, se definido) %>
+  <div class="grid gap-4" style="grid-template-columns: repeat(<%= @statuses.size %>, minmax(230px, 1fr)); overflow-x: auto;">
     <% @statuses.each do |status| %>
       <% tasks_da_coluna = (@tasks_by_status[status] || []) %>
-      <% label = ProjectTask.new(kanban_status: status).kanban_status_label %>
+      <% label = (@status_labels || {})[status] || ProjectTask.new(kanban_status: status).kanban_status_label %>
       <div class="bg-gray-50 rounded-xl p-3 border border-gray-200 flex flex-col min-h-[500px]"
            data-kanban-drag-target="column" data-status="<%= status %>">
         <div class="flex items-center justify-between mb-3 px-1">

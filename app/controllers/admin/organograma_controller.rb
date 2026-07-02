@@ -1,20 +1,34 @@
 module Admin
-  # Organograma: hierarquia por área (superior -> equipe) estilo árvore.
+  # Organograma: árvore da empresa por área — gestores no topo de cada área,
+  # equipe direta (supervisor_id) aninhada, demais membros da área agrupados.
   class OrganogramaController < BaseController
     def index
-      gestores = User.where(role: :gestor).ativos
-      @por_area = Demand::AREAS.map do |area|
-        sups = gestores.select { |g| g.area == area }
-        ids  = sups.map(&:id)
-        equipe = ids.any? ? User.where(supervisor_id: ids).ativos.order(:name) : User.none
-        { area: area, supervisores: sups, equipe: equipe, demandas: Demand.where(area_impactada: area).count }
+      ativos = User.ativos
+      @areas = Area.order(:name)
+
+      @por_area = @areas.map do |area|
+        membros = ativos.where(area: area.name).order(:name).to_a
+        sups    = membros.select { |u| u.gestor? || u.admin? }
+        sub_ids = sups.map(&:id)
+        equipe_por_sup = sub_ids.any? ? ativos.where(supervisor_id: sub_ids).order(:name).group_by(&:supervisor_id) : {}
+        alocados = sups + equipe_por_sup.values.flatten
+        outros   = (membros - alocados)
+        {
+          area: area,
+          supervisores: sups,
+          equipe_por_sup: equipe_por_sup,
+          outros: outros,
+          total: (membros | equipe_por_sup.values.flatten).size,
+          demandas: Demand.where(area_impactada: area.name).count
+        }
       end
 
-      @sem_area = gestores.select { |g| g.area.blank? }
-      @diretoria = User.where(role: :board).ativos.order(:name)
-      @admins    = User.where(role: :admin).ativos.order(:name)
-      @analistas = User.where(role: :analista_pdi).ativos.order(:name)
-      @fi        = User.where(role: :fi).ativos.order(:name)
+      @diretoria = ativos.where(role: :board).order(:name)
+      @analistas = ativos.where(role: :analista_pdi).order(:name)
+      @fi        = ativos.where(role: :fi).order(:name)
+      @sem_area  = ativos.where(area: [ nil, "" ])
+                         .where(role: %i[colaborador gestor admin])
+                         .order(:name)
     end
   end
 end

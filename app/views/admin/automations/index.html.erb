@@ -1,0 +1,80 @@
+<% content_for :title, "Automações & IA" %>
+<% content_for :crumb, "Administração" %>
+<% content_for :subtitle, "· regras \"quando X, faça Y\"" %>
+<% content_for :actions do %>
+  <%= link_to admin_llm_providers_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>IA · Provedores<% end %>
+<% end %>
+
+<div class="px-7 py-6 max-w-[1100px] mx-auto">
+  <% unless @llm_ready %>
+    <div class="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 text-[12px] text-amber-800">
+      ⚠️ Nenhum provedor LLM habilitado. A ação "IA comenta a tarefa" só funciona após
+      <%= link_to "configurar um provedor", admin_llm_providers_path, class: "underline font-medium" %>.
+      As demais automações (notificações) funcionam normalmente.
+    </div>
+  <% end %>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+    <div class="lg:col-span-2 space-y-2">
+      <% if @automations.empty? %>
+        <div class="tsuru-card p-10 text-center text-[13px] text-gray-500">Nenhuma automação criada ainda.</div>
+      <% end %>
+      <% @automations.each do |a| %>
+        <div class="bg-white rounded-lg border border-gray-200 p-3.5 flex items-center gap-3 <%= 'opacity-60' unless a.enabled %>">
+          <span class="w-2 h-2 rounded-full shrink-0 <%= a.enabled ? 'bg-emerald-500' : 'bg-gray-300' %>"></span>
+          <div class="flex-1 min-w-0">
+            <div class="text-[13px] font-medium text-gray-900 truncate"><%= a.name %></div>
+            <div class="text-[11.5px] text-gray-500">
+              Quando <strong><%= TaskAutomation::TRIGGER_LABELS[a.trigger_event] || a.trigger_event %></strong>
+              → <%= TaskAutomation::ACTION_LABELS[a.action_kind] || a.action_kind %>
+              <% if a.demand %>· só em <%= a.demand.codigo_display %><% else %>· todos os projetos<% end %>
+            </div>
+          </div>
+          <%= button_to admin_automation_path(a, enabled: !a.enabled), method: :patch,
+                class: "tsuru-btn-ghost !h-7 !text-[11px] !px-2",
+                form: { class: "inline" } do %><%= a.enabled ? "Pausar" : "Ativar" %><% end %>
+          <%= button_to admin_automation_path(a), method: :delete,
+                data: { turbo_confirm: "Remover automação #{a.name}?" },
+                class: "tsuru-btn-ghost !h-7 !text-[11px] !px-2 !text-rose-600",
+                form: { class: "inline" } do %>×<% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-4 h-fit">
+      <h2 class="text-[13px] font-semibold text-gray-900 mb-3">Nova automação</h2>
+      <%= form_with url: admin_automations_path, method: :post, data: { turbo: false }, class: "space-y-3" do %>
+        <div>
+          <label class="tsuru-label">Nome</label>
+          <input name="name" required placeholder="ex: IA analisa conclusões" class="tsuru-input mt-1"/>
+        </div>
+        <div>
+          <label class="tsuru-label">Quando (gatilho)</label>
+          <select name="trigger_event" class="tsuru-select mt-1">
+            <% TaskAutomation::TRIGGERS.each do |t| %>
+              <option value="<%= t %>"><%= TaskAutomation::TRIGGER_LABELS[t] || t %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label class="tsuru-label">Fazer (ação)</label>
+          <select name="action_kind" class="tsuru-select mt-1">
+            <% TaskAutomation::ACTIONS.each do |a| %>
+              <option value="<%= a %>"><%= TaskAutomation::ACTION_LABELS[a] || a %></option>
+            <% end %>
+          </select>
+        </div>
+        <div>
+          <label class="tsuru-label">Restringir a um projeto (opcional)</label>
+          <select name="demand_id" class="tsuru-select mt-1">
+            <option value="">Todos os projetos</option>
+            <% Demand.order(created_at: :desc).limit(30).each do |d| %>
+              <option value="<%= d.id %>"><%= d.codigo_display %> — <%= d.title.truncate(40) %></option>
+            <% end %>
+          </select>
+        </div>
+        <button class="tsuru-btn-primary w-full">Criar automação</button>
+      <% end %>
+    </div>
+  </div>
+</div>

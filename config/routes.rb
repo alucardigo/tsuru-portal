@@ -142,6 +142,16 @@ Rails.application.routes.draw do
     end
     get "metrics", to: "metrics#show", as: :metrics
     resources :tags, only: %i[index create update destroy]
+    resources :areas, only: %i[index create destroy] do
+      member do
+        patch :assign_user
+        patch :remove_user
+      end
+    end
+    resources :llm_providers, only: %i[index create update destroy] do
+      member { post :test }
+    end
+    resources :automations, only: %i[index create update destroy]
     get "auditoria", to: "audits#index", as: :auditoria
     get "organograma", to: "organograma#index", as: :organograma
   end

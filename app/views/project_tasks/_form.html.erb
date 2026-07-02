@@ -109,10 +109,35 @@
           </div>
         </div>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <%= f.label :assignee_id, "Responsável", class: "tsuru-label" %>
+            <%= f.collection_select :assignee_id, User.order(:name), :id, :name,
+                  { include_blank: "— sem responsável —" }, class: "tsuru-select mt-1" %>
+          </div>
+          <div>
+            <label class="tsuru-label">Recorrência</label>
+            <% rec_kind = (task.recurrence || {})["kind"] %>
+            <select name="project_task[recurrence_kind]" class="tsuru-select mt-1">
+              <option value="" <%= "selected" if rec_kind.blank? %>>Sem recorrência</option>
+              <option value="daily"   <%= "selected" if rec_kind == "daily" %>>Diária</option>
+              <option value="weekly"  <%= "selected" if rec_kind == "weekly" %>>Semanal</option>
+              <option value="monthly" <%= "selected" if rec_kind == "monthly" %>>Mensal (30d)</option>
+            </select>
+            <% if task.recurrence.present? %>
+              <p class="text-[10.5px] text-gray-500 mt-1">Próxima ocorrência: <%= task.recurrence["next_at"] %></p>
+            <% end %>
+          </div>
+        </div>
+
         <div>
-          <%= f.label :assignee_id, "Responsável", class: "tsuru-label" %>
-          <%= f.collection_select :assignee_id, User.order(:name), :id, :name,
-                { include_blank: "— sem responsável —" }, class: "tsuru-select mt-1" %>
+          <label class="tsuru-label">Corresponsáveis (colaboram junto com o responsável)</label>
+          <input type="hidden" name="project_task[additional_assignee_ids][]" value="">
+          <%= select_tag "project_task[additional_assignee_ids][]",
+                options_from_collection_for_select(User.ativos.order(:name), :id, :display_name,
+                                                   task.task_assignees.pluck(:user_id)),
+                multiple: true, size: 4, class: "tsuru-select mt-1 !h-auto" %>
+          <p class="text-[10.5px] text-gray-400 mt-1">Segure Ctrl (ou Cmd) para selecionar vários.</p>
         </div>
 
         <% unless task.new_record? %>

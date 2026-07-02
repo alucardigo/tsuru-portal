@@ -37,7 +37,7 @@ class ProjectTask < ApplicationRecord
   has_paper_trail
 
   validates :title,         presence: true, length: { maximum: 200 }
-  validates :kanban_status, inclusion: { in: KANBAN_STATUSES }
+  validate  :kanban_status_allowed
   validates :priority,      inclusion: { in: PRIORITIES }
   validates :estimated_hours, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :spent_hours,     numericality: { greater_than_or_equal_to: 0 }
@@ -152,6 +152,13 @@ class ProjectTask < ApplicationRecord
   end
 
   private
+
+  # Estados válidos = padrão do sistema ∪ workflow custom do demand (Sprint 30)
+  def kanban_status_allowed
+    custom = Array(demand&.task_workflow_states).map { |s| s["key"] }
+    allowed = KANBAN_STATUSES | custom
+    errors.add(:kanban_status, "não é um estado válido deste projeto") unless allowed.include?(kanban_status)
+  end
 
   def touch_assigned_at
     self.assigned_at = Time.current if assignee_id.present?

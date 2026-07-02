@@ -40,6 +40,36 @@ module AutomationEngine
                "Tarefa: \"#{task.title}\"",
                link)
       end
+    when "llm_comment"
+      llm_comment(automation, task)
+    end
+  end
+
+  # IA comenta a tarefa via provedor LLM habilitado. Fire-and-forget em thread
+  # para não bloquear o request; erros viram comentário explicando a falha.
+  def llm_comment(automation, task)
+    provider = LlmProvider.enabled.first
+    return unless provider
+    actor = User.find_by(id: PaperTrail.request.whodunnit.to_i) || task.creator
+    prompt = <<~PROMPT
+      Você é um assistente de gestão de projetos PD&I (Lei do Bem). Analise a tarefa abaixo e escreva um comentário curto em português (máximo 5 linhas) com: (1) leitura do estado atual, (2) sugestão objetiva de próximo passo.
+      Projeto: #{task.demand.title}
+      Tarefa: #{task.title}
+      Descrição: #{task.description.presence || "—"}
+      Status: #{task.kanban_status} · Prioridade: #{task.priority} · Responsável: #{task.assignee&.display_name || "—"}
+    PROMPT
+    Thread.new do
+      Rails.application.executor.wrap do
+        result = Llm::Client.chat(provider, prompt)
+        body = if result.success?
+          "🤖 [#{provider.name} · #{automation.name}]\n#{result.content}"
+        else
+          "🤖 [#{provider.name}] Automação \"#{automation.name}\" falhou: #{result.error}"
+        end
+        task.comments.create!(user: actor, body: body.truncate(3900))
+      end
+    rescue StandardError => e
+      Rails.logger.warn("[AutomationEngine.llm_comment] task=#{task.id} #{e.class}: #{e.message}")
     end
   end
 

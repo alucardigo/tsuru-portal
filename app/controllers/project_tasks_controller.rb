@@ -29,7 +29,9 @@ class ProjectTasksController < ApplicationController
     @task = @demand.tasks.build(task_params)
     @task.creator = current_user
     @task.position = next_position_for(@task.kanban_status)
+    apply_recurrence!(@task)
     if @task.save
+      sync_additional_assignees!(@task)
       redirect_to kanban_demand_tasks_path(@demand), notice: "Tarefa criada."
     else
       render :new, status: :unprocessable_content
@@ -39,7 +41,10 @@ class ProjectTasksController < ApplicationController
   def edit; end
 
   def update
-    if @task.update(task_params)
+    @task.assign_attributes(task_params)
+    apply_recurrence!(@task)
+    if @task.save
+      sync_additional_assignees!(@task)
       redirect_to kanban_demand_tasks_path(@demand), notice: "Tarefa atualizada."
     else
       render :edit, status: :unprocessable_content
@@ -87,7 +92,8 @@ class ProjectTasksController < ApplicationController
 
   # Drag-and-drop: muda status (coluna) e/ou posição da task no kanban
   def move
-    new_status = params[:kanban_status].presence_in(ProjectTask::KANBAN_STATUSES) || @task.kanban_status
+    allowed = @demand.task_workflow_states.presence&.map { |s| s["key"] } || ProjectTask::KANBAN_STATUSES
+    new_status = params[:kanban_status].presence_in(allowed) || @task.kanban_status
     new_position = params[:position].to_i
 
     ProjectTask.transaction do
@@ -144,6 +150,30 @@ class ProjectTasksController < ApplicationController
 
   def next_position_for(status)
     (@demand.tasks.where(kanban_status: status).maximum(:position) || -1) + 1
+  end
+
+  RECURRENCE_INTERVALS = { "daily" => 1, "weekly" => 7, "monthly" => 30 }.freeze
+
+  # Sprint 27 — recurrence_kind (param virtual) vira jsonb {kind, next_at}
+  def apply_recurrence!(task)
+    kind = params.dig(:project_task, :recurrence_kind)
+    return if kind.nil?
+    interval = RECURRENCE_INTERVALS[kind]
+    if interval
+      base = task.due_date || Date.current
+      task.recurrence = { "kind" => kind, "next_at" => (base + interval.days).to_s }
+    else
+      task.recurrence = nil
+    end
+  end
+
+  # Sprint 28 — corresponsáveis (multi-assignee). Param lido fora do permit.
+  def sync_additional_assignees!(task)
+    raw = params.dig(:project_task, :additional_assignee_ids)
+    return if raw.nil?
+    ids = Array(raw).reject(&:blank?).map(&:to_i).uniq - [ task.assignee_id ]
+    task.task_assignees.where.not(user_id: ids).destroy_all
+    ids.each { |i| task.task_assignees.find_or_create_by(user_id: i) }
   end
 
   def build_metricas

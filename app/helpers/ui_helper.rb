@@ -133,8 +133,10 @@ module UiHelper
         { key: "elegibilidade", label: "Elegibilidade",   icon: :shield,  path: admin_demands_path },
         { key: "exportar",    label: "Exportar",          icon: :download, path: admin_demands_path },
         { key: "gantt",       label: "Gantt portfolio",   icon: :chart,    path: gantt_path },
+        { key: "areas",       label: "Áreas",             icon: :folder,   path: admin_areas_path },
         { key: "tags",        label: "Tags / labels",     icon: :flag,     path: admin_tags_path },
-        { key: "roadmap-automations", label: "Automações (em breve)",  icon: :flag,   path: roadmap_automations_path }
+        { key: "automations", label: "Automações & IA",   icon: :flag,     path: admin_automations_path },
+        { key: "llm",         label: "IA · Provedores",   icon: :cog,      path: admin_llm_providers_path }
       ]
     when "board"
       [

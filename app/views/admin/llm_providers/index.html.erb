@@ -1,0 +1,80 @@
+<% content_for :title, "IA · Provedores LLM" %>
+<% content_for :crumb, "Administração" %>
+<% content_for :subtitle, "· conecte GPT, Claude, Gemini ou modelos locais" %>
+<% content_for :actions do %>
+  <%= link_to admin_automations_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>Automações<% end %>
+<% end %>
+
+<div class="px-7 py-6 max-w-[1100px] mx-auto">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+    <%# Lista %>
+    <div class="lg:col-span-2 space-y-3">
+      <% if @providers.empty? %>
+        <div class="tsuru-card p-10 text-center">
+          <div class="text-[13px] text-gray-700 font-medium">Nenhum provedor configurado</div>
+          <p class="text-[12px] text-gray-500 mt-1 max-w-md mx-auto">
+            Cadastre uma API key ao lado. O primeiro provedor habilitado é usado
+            pelas automações com IA (ex.: comentário automático em tarefas).
+          </p>
+        </div>
+      <% end %>
+      <% @providers.each do |p| %>
+        <div class="bg-white rounded-lg border <%= p.enabled ? 'border-gray-200' : 'border-gray-200 opacity-60' %> p-4">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-2 h-2 rounded-full <%= p.enabled ? 'bg-emerald-500' : 'bg-gray-300' %>"></span>
+            <h2 class="text-[13.5px] font-semibold text-gray-900"><%= p.name %></h2>
+            <span class="text-[10.5px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600"><%= p.kind_label %></span>
+            <span class="text-[10.5px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono"><%= p.model %></span>
+          </div>
+          <div class="text-[11.5px] text-gray-500 mb-3 space-y-0.5">
+            <div>API key: <span class="font-mono"><%= p.masked_key %></span></div>
+            <% if p.base_url.present? %><div>Endpoint: <span class="font-mono"><%= p.base_url %></span></div><% end %>
+          </div>
+          <div class="flex items-center gap-2">
+            <%= button_to test_admin_llm_provider_path(p), method: :post,
+                  class: "tsuru-btn-secondary !h-7 !text-[11.5px] !px-2.5",
+                  form: { class: "inline" } do %>⚡ Testar conexão<% end %>
+            <%= button_to admin_llm_provider_path(p), method: :patch,
+                  params: { llm_provider: { enabled: !p.enabled } },
+                  class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2.5",
+                  form: { class: "inline" } do %><%= p.enabled ? "Desabilitar" : "Habilitar" %><% end %>
+            <%= button_to admin_llm_provider_path(p), method: :delete,
+                  data: { turbo_confirm: "Remover provedor #{p.name}?" },
+                  class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2.5 !text-rose-600",
+                  form: { class: "inline" } do %>Remover<% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Form novo provedor %>
+    <div class="bg-white rounded-lg border border-gray-200 p-4 h-fit">
+      <h2 class="text-[13px] font-semibold text-gray-900 mb-3">Novo provedor</h2>
+      <%= form_with model: @provider, url: admin_llm_providers_path, data: { turbo: false }, class: "space-y-3" do |f| %>
+        <div>
+          <%= f.label :name, "Nome", class: "tsuru-label" %>
+          <%= f.text_field :name, required: true, placeholder: "ex: Claude produção", class: "tsuru-input mt-1" %>
+        </div>
+        <div>
+          <%= f.label :kind, "Tipo", class: "tsuru-label" %>
+          <%= f.select :kind, LlmProvider::KIND_LABELS.map { |k, l| [ l, k ] }, {}, class: "tsuru-select mt-1" %>
+        </div>
+        <div>
+          <%= f.label :model, "Modelo", class: "tsuru-label" %>
+          <%= f.text_field :model, placeholder: "vazio = padrão do tipo", class: "tsuru-input mt-1 font-mono !text-[12px]" %>
+          <p class="text-[10.5px] text-gray-400 mt-1">Padrões: <%= LlmProvider::DEFAULT_MODELS.values.join(" · ") %></p>
+        </div>
+        <div>
+          <%= f.label :api_key, "API key", class: "tsuru-label" %>
+          <%= f.password_field :api_key, placeholder: "sk-…", autocomplete: "off", class: "tsuru-input mt-1 font-mono !text-[12px]" %>
+          <p class="text-[10.5px] text-gray-400 mt-1">Armazenada criptografada no banco. Opcional para provedor local.</p>
+        </div>
+        <div>
+          <%= f.label :base_url, "Endpoint (base URL)", class: "tsuru-label" %>
+          <%= f.text_field :base_url, placeholder: "http://localhost:11434 (obrigatório p/ local)", class: "tsuru-input mt-1 font-mono !text-[12px]" %>
+        </div>
+        <%= f.submit "Criar provedor", class: "tsuru-btn-primary w-full" %>
+      <% end %>
+    </div>
+  </div>
+</div>

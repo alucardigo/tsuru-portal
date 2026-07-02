@@ -53,7 +53,7 @@
             <%= f.label :area_impactada, "Área impactada", class: "tsuru-label" %>
             <%= f.select :area_impactada,
                   options_for_select(
-                    [ [ "Selecione…", "" ] ] + Demand::AREAS + [ "Outra" ],
+                    [ [ "Selecione…", "" ] ] + Area.names + [ "Outra" ],
                     demand.area_impactada
                   ),
                   {},

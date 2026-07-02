@@ -1,0 +1,83 @@
+<% content_for :title, "Áreas" %>
+<% content_for :crumb, "Administração" %>
+<% content_for :subtitle, "· #{@areas.size} áreas cadastradas" %>
+<% content_for :actions do %>
+  <%= link_to admin_organograma_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>Organograma<% end %>
+  <%= link_to admin_users_path, class: "tsuru-btn-ghost !h-7 !text-[11.5px] !px-2" do %>Usuários<% end %>
+<% end %>
+
+<div class="px-7 py-6 max-w-[1100px] mx-auto">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+    <%# Lista de áreas com membros %>
+    <div class="lg:col-span-2 space-y-3">
+      <% if @areas.empty? %>
+        <div class="tsuru-card p-10 text-center text-[13px] text-gray-500">Nenhuma área cadastrada.</div>
+      <% end %>
+      <% @areas.each do |area| %>
+        <% membros = area.users.order(:name) %>
+        <div class="bg-white rounded-lg border border-gray-200 p-4">
+          <div class="flex items-center gap-2 mb-3">
+            <h2 class="text-[14px] font-semibold text-gray-900"><%= area.name %></h2>
+            <span class="text-[11px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700"><%= membros.size %> membro(s)</span>
+            <span class="text-[11px] text-gray-400">· <%= Demand.where(area_impactada: area.name).count %> demanda(s)</span>
+            <%= button_to admin_area_path(area), method: :delete,
+                  data: { turbo_confirm: "Remover a área #{area.name}? Usuários vinculados ficarão sem área." },
+                  class: "ml-auto tsuru-btn-ghost !h-7 !text-[11px] !px-2 !text-rose-600",
+                  form: { class: "inline" } do %>Excluir área<% end %>
+          </div>
+
+          <% if membros.any? %>
+            <div class="flex flex-wrap gap-1.5 mb-3">
+              <% membros.each do |u| %>
+                <span class="inline-flex items-center gap-1.5 text-[11.5px] pl-1 pr-1.5 py-0.5 rounded-full bg-gray-50 border border-gray-200">
+                  <span class="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[9px] font-semibold inline-flex items-center justify-center"><%= u.name.to_s[0,2].upcase %></span>
+                  <span class="text-gray-800"><%= u.display_name %></span>
+                  <% if u.gestor? || u.admin? %><span class="text-[9.5px] text-amber-600 font-semibold uppercase">sup</span><% end %>
+                  <%= button_to remove_user_admin_area_path(area, user_id: u.id), method: :patch,
+                        class: "text-gray-400 hover:text-rose-600 leading-none",
+                        form: { class: "inline" } do %>×<% end %>
+                </span>
+              <% end %>
+            </div>
+          <% end %>
+
+          <%= form_with url: assign_user_admin_area_path(area), method: :patch, data: { turbo: false }, class: "flex items-center gap-2" do %>
+            <%= select_tag :user_id,
+                  options_from_collection_for_select(User.ativos.where.not(area: area.name).or(User.ativos.where(area: nil)).order(:name), :id, :display_name),
+                  include_blank: "— adicionar usuário à área —",
+                  class: "tsuru-select !h-8 !text-[12px] flex-1" %>
+            <button class="tsuru-btn-secondary !h-8 !text-[12px]">Adicionar</button>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Criar área + usuários sem área %>
+    <div class="space-y-4">
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <h2 class="text-[13px] font-semibold text-gray-900 mb-3">Nova área</h2>
+        <%= form_with url: admin_areas_path, method: :post, data: { turbo: false }, class: "space-y-3" do %>
+          <input name="name" required placeholder="ex: Jurídico, Marketing…" class="tsuru-input"/>
+          <button class="tsuru-btn-primary w-full">Criar área</button>
+        <% end %>
+      </div>
+
+      <div class="bg-white rounded-lg border border-gray-200 p-4">
+        <h2 class="text-[13px] font-semibold text-gray-900 mb-2">Sem área <span class="text-[11px] text-gray-500 font-normal">· <%= @sem_area.size %></span></h2>
+        <% if @sem_area.empty? %>
+          <div class="text-[12px] text-gray-400 italic">Todos os usuários ativos têm área.</div>
+        <% else %>
+          <div class="space-y-1">
+            <% @sem_area.each do |u| %>
+              <div class="flex items-center gap-2 text-[12px]">
+                <span class="w-5 h-5 rounded-full bg-gray-100 text-gray-600 text-[9px] font-semibold inline-flex items-center justify-center"><%= u.name.to_s[0,2].upcase %></span>
+                <span class="flex-1 truncate text-gray-800"><%= u.display_name %></span>
+                <span class="text-[10px] text-gray-400"><%= role_label(u.role) %></span>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
