@@ -53,7 +53,7 @@ gem "redcarpet"
 gem "premailer-rails"
 
 # Active Storage + processamento de imagens
-gem "image_processing", "~> 1.2"
+gem "image_processing", "~> 2.0"
 
 gem "tzinfo-data", platforms: %i[windows jruby]
 gem "solid_cache"
