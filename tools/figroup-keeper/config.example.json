@@ -1,0 +1,5 @@
+{
+  "tsuruUrl": "http://136.248.107.175",
+  "tsuruApiToken": "<api_token de um usuario admin do Tsuru — /users/edit>",
+  "profileDir": "X:\figroup-keeper\profile"
+}

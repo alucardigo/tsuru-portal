@@ -1,0 +1,13 @@
+{
+  "name": "figroup-keeper",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Guardião de token FI Group (LeidoBem) para manter a integração do Tsuru viva",
+  "scripts": {
+    "login": "node keeper.js login",
+    "refresh": "node keeper.js"
+  },
+  "dependencies": {
+    "playwright": "^1.48.0"
+  }
+}

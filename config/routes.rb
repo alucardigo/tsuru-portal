@@ -147,6 +147,11 @@ Rails.application.routes.draw do
 
         post "reports/demand/:demand_id", to: "reports#create_for_demand", as: :report_for_demand
         post "reports/portfolio",         to: "reports#create_portfolio"
+
+        # Ingestão de token FI Group pelo agente-guardião (headless) — mantém a
+        # integração viva renovando o Bearer sem intervenção humana.
+        post "figroup/refresh_token", to: "figroup#refresh_token"
+        get  "figroup/status",        to: "figroup#status"
       end
     end
   end
