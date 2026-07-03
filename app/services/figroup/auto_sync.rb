@@ -71,10 +71,11 @@ module FiGroup
 
     private
 
-    # Push Tsuru -> FI só quando explicitamente habilitado (endpoint de escrita
-    # da FI ainda não confirmado — ver comentário em #call). Default: desligado.
+    # Push Tsuru -> FI. Ligado por padrão (o PUT /Projects/{id} persiste desde
+    # que o payload omita os campos estruturais — ver FiGroup::Client). Só empurra
+    # projeto com diff real. Desligue com FIGROUP_PUSH_ENABLED=false se necessário.
     def push_enabled?
-      ENV["FIGROUP_PUSH_ENABLED"].to_s == "true"
+      ENV.fetch("FIGROUP_PUSH_ENABLED", "true").to_s != "false"
     end
 
     # Avisa os admins que o token caiu, com throttle de 6h para não spammar.

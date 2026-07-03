@@ -16,8 +16,8 @@ RSpec.describe FiGroup::AutoSync, type: :service do
     FiGroupCredential.create!(token: "jwt", expires_at: 1.hour.from_now, service_ids: { "2026" => "sid" })
   end
 
-  describe "#call com token válido (pull-only por padrão)" do
-    it "registra um FiGroupSyncRun token_ok; push desligado => pushed_count 0" do
+  describe "#call com token válido (push ligado por padrão)" do
+    it "registra um FiGroupSyncRun token_ok e conta pull + push" do
       credencial_valida!
 
       run = nil
@@ -27,30 +27,29 @@ RSpec.describe FiGroup::AutoSync, type: :service do
       expect(run.token_ok).to be(true)
       expect(run.pulled_count).to eq(2)
       expect(run.linked_count).to eq(2)
-      # PUSH desativado por padrão (endpoint de escrita da FI não confirmado):
-      # o ciclo é pull-only, então nada é enviado.
-      expect(run.pushed_count).to eq(0)
+      # Push ligado por padrão: o stub de push_all devolve 1 projeto com diff.
+      expect(run.pushed_count).to eq(1)
       # error_details: coluna JSONB (errors é reservado por ActiveModel).
       expect(Array(run.error_details)).to be_empty
       expect(run.finished_at).to be_present
     end
   end
 
-  describe "#call com FIGROUP_PUSH_ENABLED=true" do
+  describe "#call com FIGROUP_PUSH_ENABLED=false" do
     around do |ex|
       original = ENV["FIGROUP_PUSH_ENABLED"]
-      ENV["FIGROUP_PUSH_ENABLED"] = "true"
+      ENV["FIGROUP_PUSH_ENABLED"] = "false"
       ex.run
       ENV["FIGROUP_PUSH_ENABLED"] = original
     end
 
-    it "conta os projetos empurrados no pushed_count" do
+    it "faz apenas o pull; pushed_count fica 0" do
       credencial_valida!
 
       run = described_class.new.call(trigger: "cron")
 
       expect(run.token_ok).to be(true)
-      expect(run.pushed_count).to eq(1)
+      expect(run.pushed_count).to eq(0)
     end
   end
 

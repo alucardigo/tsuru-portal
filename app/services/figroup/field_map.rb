@@ -78,9 +78,20 @@ module FiGroup
       FIELD_PAIRS.each_key do |fi_field|
         de = original[fi_field]
         para = updated[fi_field]
-        changes[fi_field] = { de: de, para: para } if de != para
+        changes[fi_field] = { de: de, para: para } unless equivalent?(de, para)
       end
       changes
+    end
+
+    # Compara valores tratando travessões unicode (a FI normaliza em-dash "—"
+    # para en-dash "–" ao salvar) e espaços como equivalentes — evita re-empurrar
+    # um campo eternamente só por causa dessa normalização do servidor.
+    def equivalent?(a, b)
+      normalize_compare(a) == normalize_compare(b)
+    end
+
+    def normalize_compare(value)
+      value.to_s.gsub(/[‐-―−]/, "-").gsub(/\s+/, " ").strip
     end
 
     # --- helpers privados (module_function torna-os também callables internos) ---

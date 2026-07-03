@@ -51,10 +51,18 @@ module FiGroup
       get("/Service/GetServiceCategoryExpenditures/#{service_id}")
     end
 
+    # Campos estruturais/read-only que o backend REJEITA se vierem no PUT: se o
+    # payload os incluir (como no GET completo), a API responde 200 mas NÃO
+    # persiste NADA (no-op silencioso). O próprio SPA do LeidoBem os omite.
+    # Descoberto por captura da requisição real de "Salvar" do portal (03/07/2026).
+    NON_WRITABLE_KEYS = %w[id serviceId areaGroupingId justificationId traceability].freeze
+
     # PUT /Projects/{id} (JSON) -> Hash (corpo da resposta).
-    # Envia o objeto inteiro (padrão da API: GET -> altera -> PUT de volta).
+    # Padrão da API: GET -> altera -> PUT de volta, MAS sem os campos estruturais
+    # (NON_WRITABLE_KEYS) — senão o backend descarta a gravação inteira.
     def update_project(project_id, payload)
-      put("/Projects/#{project_id}", payload)
+      body = payload.is_a?(Hash) ? payload.reject { |k, _| NON_WRITABLE_KEYS.include?(k.to_s) } : payload
+      put("/Projects/#{project_id}", body)
     end
 
     private
