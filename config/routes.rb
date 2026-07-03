@@ -103,6 +103,9 @@ Rails.application.routes.draw do
   get "defesa",        to: "pdi/defenses#index",    as: :pdi_defesa
   get "evidencias",    to: "pdi/evidences#index",   as: :pdi_evidencias
 
+  # Painel de atualizações — em andamento vs. standby + feed de atividade recente
+  get "atualizacoes", to: "atualizacoes#index", as: :atualizacoes
+
   # Bloco F — Biblioteca PD&I
   get  "biblioteca",     to: "knowledge_articles#index", as: :biblioteca
   get  "biblioteca/:id", to: "knowledge_articles#show",  as: :biblioteca_article

@@ -106,6 +106,7 @@ module UiHelper
     when "gestor"
       [
         { key: "aprovar",     label: "Para aprovar",      icon: :inbox,   path: gestor_demands_path, badge: gestor_pending_count },
+        { key: "atualizacoes", label: "Atualizações",     icon: :bell,    path: atualizacoes_path },
         { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
         { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "minha-area",  label: "Minha área",        icon: :folder,  path: demands_path },
@@ -116,6 +117,7 @@ module UiHelper
     when "analista_pdi"
       [
         { key: "esteira",      label: "Esteira do comitê", icon: :triage,  path: dashboard_path, badge: pending_count(user) },
+        { key: "atualizacoes", label: "Atualizações",      icon: :bell,    path: atualizacoes_path },
         { key: "minhas-tarefas", label: "Minhas tarefas",  icon: :flag,    path: me_tasks_path },
         { key: "pipeline",     label: "Pipeline Kanban",   icon: :chart,   path: pipeline_path },
         { key: "projetos",     label: "Projetos PD&I",     icon: :folder,  path: demands_path },
@@ -128,6 +130,7 @@ module UiHelper
     when "admin"
       [
         { key: "esteira",     label: "Esteira do comitê", icon: :triage,  path: admin_demands_path },
+        { key: "atualizacoes", label: "Atualizações",     icon: :bell,    path: atualizacoes_path },
         { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
         { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "pipeline",    label: "Pipeline Kanban",   icon: :chart,   path: pipeline_path },
@@ -148,6 +151,7 @@ module UiHelper
     when "board"
       [
         { key: "resumo",     label: "Resumo executivo",  icon: :chart,   path: dashboard_path },
+        { key: "atualizacoes", label: "Atualizações",    icon: :bell,    path: atualizacoes_path },
         { key: "minhas-tarefas", label: "Minhas tarefas", icon: :flag,    path: me_tasks_path },
         { key: "timesheet",      label: "Meu timesheet",  icon: :chart,   path: me_timesheet_path },
         { key: "portfolio",  label: "Portfólio",         icon: :folder,  path: demands_path },

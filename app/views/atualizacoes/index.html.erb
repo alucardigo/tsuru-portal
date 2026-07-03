@@ -1,0 +1,123 @@
+<% content_for :title, "Atualizações" %>
+<% content_for :nav_active, "atualizacoes" %>
+<% content_for :crumb, "Atualizações" %>
+<% content_for :subtitle, "· em andamento vs. standby, e o que mudou recentemente" %>
+
+<div class="max-w-[1180px] mx-auto px-7 py-6">
+  <div class="grid grid-cols-3 gap-3 mb-6">
+    <div class="tsuru-card p-4">
+      <div class="subhead">Em andamento</div>
+      <div class="text-[26px] font-semibold tracking-tight mt-1 text-blue-700"><%= @em_andamento.size %></div>
+      <div class="text-[11px] text-gray-500 mt-0.5">Alguém está trabalhando ativamente</div>
+    </div>
+    <div class="tsuru-card p-4">
+      <div class="subhead">Em standby</div>
+      <div class="text-[26px] font-semibold tracking-tight mt-1 text-amber-700"><%= @em_standby.size %></div>
+      <div class="text-[11px] text-gray-500 mt-0.5">Aguardando autor, Diretoria ou FI</div>
+    </div>
+    <div class="tsuru-card p-4">
+      <div class="subhead">Concluídas recentemente</div>
+      <div class="text-[26px] font-semibold tracking-tight mt-1 text-emerald-700"><%= @concluidas_recentes.size %></div>
+      <div class="text-[11px] text-gray-500 mt-0.5">Últimas 8 finalizadas (qualquer desfecho)</div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-3 gap-5">
+    <%# === COLUNA PRINCIPAL: em andamento + standby === %>
+    <div class="col-span-2 space-y-5">
+      <div>
+        <div class="text-[13.5px] font-semibold text-gray-900 mb-2.5">
+          🟦 Em andamento agora (<%= @em_andamento.size %>)
+        </div>
+        <% if @em_andamento.empty? %>
+          <div class="tsuru-card p-4 text-[12.5px] text-gray-400 italic">Nada em andamento no momento.</div>
+        <% else %>
+          <div class="space-y-1.5">
+            <% @em_andamento.each do |d| %>
+              <%= link_to demand_path(d), class: "tsuru-card p-3 flex items-center justify-between gap-3 hover:border-gray-300 transition-colors" do %>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5 text-[10.5px] text-gray-500">
+                    <span class="font-mono text-gray-700"><%= d.codigo_display %></span>
+                    <span class="text-gray-300">·</span>
+                    <span class="truncate"><%= d.user&.display_name %></span>
+                  </div>
+                  <div class="text-[12.5px] font-medium text-gray-900 truncate"><%= d.title %></div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <%= status_pill(d.aasm_state) %>
+                  <span class="text-[10.5px] text-gray-400"><%= time_ago_in_words(d.updated_at) %> atrás</span>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <div>
+        <div class="text-[13.5px] font-semibold text-gray-900 mb-2.5">
+          🟠 Em standby (<%= @em_standby.size %>)
+        </div>
+        <% if @em_standby.empty? %>
+          <div class="tsuru-card p-4 text-[12.5px] text-gray-400 italic">Nada parado esperando alguém agora.</div>
+        <% else %>
+          <div class="space-y-1.5">
+            <% @em_standby.each do |d| %>
+              <%= link_to demand_path(d), class: "tsuru-card p-3 flex items-center justify-between gap-3 border-amber-200 hover:border-amber-300 transition-colors" do %>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5 text-[10.5px] text-gray-500">
+                    <span class="font-mono text-gray-700"><%= d.codigo_display %></span>
+                    <span class="text-gray-300">·</span>
+                    <span class="truncate"><%= d.user&.display_name %></span>
+                  </div>
+                  <div class="text-[12.5px] font-medium text-gray-900 truncate"><%= d.title %></div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <%= status_pill(d.aasm_state) %>
+                  <span class="text-[10.5px] text-amber-600 font-medium">parado há <%= time_ago_in_words(d.updated_at) %></span>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <% if @concluidas_recentes.any? %>
+        <div>
+          <div class="text-[13.5px] font-semibold text-gray-900 mb-2.5">✅ Concluídas recentemente</div>
+          <div class="flex flex-wrap gap-1.5">
+            <% @concluidas_recentes.each do |d| %>
+              <%= link_to d.codigo_display, demand_path(d),
+                  class: "text-[11.5px] px-2 py-1 rounded-full bg-gray-50 border border-gray-200 text-gray-600 hover:border-gray-300" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# === COLUNA LATERAL: feed de atividade recente === %>
+    <div class="space-y-3">
+      <div class="text-[13.5px] font-semibold text-gray-900">Atividade recente</div>
+      <% if @atividades.empty? %>
+        <div class="tsuru-card p-4 text-[12.5px] text-gray-400 italic">Sem atividade registrada ainda.</div>
+      <% else %>
+        <div class="tsuru-card divide-y divide-gray-100">
+          <% @atividades.each do |ev| %>
+            <%= link_to demand_path(ev[:demand]), class: "flex items-start gap-2 p-3 hover:bg-gray-50 transition-colors" do %>
+              <span class="text-[13px] mt-0.5">
+                <%= { transition: "🔀", comment: "💬", task: "📋" }[ev[:kind]] %>
+              </span>
+              <div class="min-w-0 flex-1">
+                <div class="text-[11.5px] text-gray-500">
+                  <span class="font-medium text-gray-700"><%= ev[:actor]&.display_name || "Sistema" %></span>
+                  · <%= ev[:demand].codigo_display %>
+                </div>
+                <div class="text-[12px] text-gray-800 truncate"><%= ev[:detail] %></div>
+                <div class="text-[10px] text-gray-400 mt-0.5"><%= time_ago_in_words(ev[:at]) %> atrás</div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

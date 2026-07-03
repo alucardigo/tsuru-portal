@@ -13,7 +13,7 @@ class Comment < ApplicationRecord
   # Retorna lista de Users mencionados via @email_local ou @nome.sobrenome
   def mentioned_users
     tokens = body.to_s.scan(/@([a-zA-Z0-9._-]{2,40})/).flatten
-    return [] if tokens.empty?
+    return User.none if tokens.empty?
     User.where(
       "lower(split_part(email, '@', 1)) IN (?) OR replace(lower(name), ' ', '.') IN (?)",
       tokens.map(&:downcase), tokens.map(&:downcase)
