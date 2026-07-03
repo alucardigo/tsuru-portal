@@ -1,6 +1,10 @@
 module Sankhya
   class Client
-    TOKEN_URL = "https://login.sankhya.com.br/oauth/token"
+    # Fluxo OAuth 2.0 Client Credentials do Gateway Sankhya (novo; o antigo
+    # login.sankhya.com.br/oauth/token foi descontinuado e responde 403).
+    # Precisa: client_id + client_secret (Área do Desenvolvedor) + X-Token
+    # (tela "Configurações Gateway" do Sankhya Om). Ver developer.sankhya.com.br.
+    AUTH_URL = "https://api.sankhya.com.br/authenticate"
     CIRCUIT_NAME = "sankhya-api"
 
     def initialize
@@ -17,7 +21,8 @@ module Sankhya
     end
 
     def token
-      response = @http.post(TOKEN_URL) do |req|
+      response = @http.post(AUTH_URL) do |req|
+        req.headers["X-Token"] = credentials(:x_token)
         req.headers["Content-Type"] = "application/x-www-form-urlencoded"
         req.body = URI.encode_www_form(
           grant_type: "client_credentials",
@@ -25,7 +30,8 @@ module Sankhya
           client_secret: credentials(:client_secret)
         )
       end
-      JSON.parse(response.body)["access_token"]
+      body = JSON.parse(response.body)
+      body["access_token"] || body["bearerToken"]
     end
 
     def healthy?

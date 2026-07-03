@@ -59,7 +59,11 @@ module Sankhya
         request_payload: payload
       )
 
+      # O service.sbr exige serviceName na query e outputType=json (senão volta XML).
+      service_name = payload[:serviceName] || payload["serviceName"]
       response = @http.post("mge/service.sbr") do |req|
+        req.params["serviceName"] = service_name
+        req.params["outputType"]  = "json"
         req.headers["Authorization"]    = "Bearer #{token}"
         req.headers["Content-Type"]     = "application/json"
         req.headers["X-Correlation-Id"] = correlation_id
