@@ -1,0 +1,148 @@
+<% content_for :title, "FI Group" %>
+<% content_for :nav_active, "figroup" %>
+<% content_for :crumb, "Administração" %>
+<% content_for :subtitle, "· integração com o portal LeidoBem (FI Group)" %>
+
+<div class="px-7 py-6 max-w-[1100px] mx-auto space-y-5">
+
+  <%# ============ 1. STATUS DO TOKEN ============ %>
+  <div class="tsuru-card">
+    <div class="tsuru-card-head flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="w-4 h-4 flex items-center justify-center text-gray-400"><%= icon(:link, size: 15) %></span>
+        <h2 class="text-[13px] font-semibold text-gray-900">Credencial FI Group</h2>
+      </div>
+      <% active = @credential&.active? %>
+      <span class="inline-flex items-center gap-1.5 text-[11.5px] font-medium">
+        <span class="w-2 h-2 rounded-full <%= active ? 'bg-emerald-500' : 'bg-rose-500' %>"></span>
+        <span class="<%= active ? 'text-emerald-700' : 'text-rose-600' %>">
+          <% if active %>
+            token ativo · expira <%= @credential.expires_at.strftime("%d/%m %H:%M") %>
+            (<%= distance_of_time_in_words(Time.current, @credential.expires_at) %>)
+          <% elsif @credential %>
+            token expirado em <%= @credential.expires_at&.strftime("%d/%m %H:%M") %> — recapture
+          <% else %>
+            sem credencial ativa
+          <% end %>
+        </span>
+      </span>
+    </div>
+
+    <div class="tsuru-card-body space-y-3">
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-[12px] text-blue-800 leading-relaxed">
+        Faça login em <span class="font-mono">connect.fi-group.com</span> (usuário/senha + 2FA), abra o
+        <span class="font-medium">DevTools → Network</span>, clique em qualquer chamada <span class="font-mono">/api/*</span>
+        e copie o valor do header <span class="font-mono font-medium">Authorization</span> (o JWT após "Bearer ").
+        Cole abaixo. O token vale ~1h; recapture quando expirar.
+      </div>
+
+      <%= form_with url: admin_figroup_token_path, method: :post, local: true, class: "space-y-3" do %>
+        <div>
+          <label class="tsuru-label">Token (header Authorization Bearer)</label>
+          <p class="tsuru-hint">Pode colar com ou sem o prefixo "Bearer " — ele é removido automaticamente.</p>
+          <textarea name="token" rows="4" required
+                    placeholder="eyJhbGciOiJSUzI1Ni.................."
+                    class="tsuru-input !h-auto py-2 font-mono !text-[11px] leading-snug"></textarea>
+        </div>
+        <div class="flex items-end gap-3">
+          <div class="w-40">
+            <label class="tsuru-label">Validade (minutos)</label>
+            <input type="number" name="expires_in_minutes" value="55" min="1" max="120" class="tsuru-input mt-1">
+          </div>
+          <%= submit_tag "Salvar token", class: "tsuru-btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ============ 2 + 4. AÇÕES DE SINCRONIZAÇÃO ============ %>
+  <div class="flex items-center justify-between gap-3 flex-wrap">
+    <div>
+      <div class="subhead">Projetos LeidoBem</div>
+      <p class="text-[12px] text-gray-500 mt-0.5">
+        <%= @projects.size %> projeto(s) em cache ·
+        <%= @projects.count(&:linked?) %> vinculado(s) a demandas do Tsuru
+      </p>
+    </div>
+    <div class="flex items-center gap-2">
+      <%= button_to admin_figroup_pull_path, method: :post,
+            class: "tsuru-btn-primary", form: { class: "inline" } do %>
+        <%= icon(:download, size: 14) %> Sincronizar do FI Group
+      <% end %>
+      <% if @projects.any?(&:linked?) %>
+        <%= button_to admin_figroup_push_all_path, method: :post,
+              data: { turbo_confirm: "Enviar TODOS os projetos vinculados de volta ao FI Group (PUT)?" },
+              class: "tsuru-btn-secondary", form: { class: "inline" } do %>
+          <%= icon(:upload, size: 14) %> Enviar todos vinculados
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ============ 3. TABELA DE PROJETOS ============ %>
+  <div class="tsuru-card overflow-hidden">
+    <% if @projects.empty? %>
+      <div class="tsuru-card-body text-center text-[13px] text-gray-500 py-10">
+        Nenhum projeto sincronizado ainda. Capture o token acima e clique em
+        <span class="font-medium">"Sincronizar do FI Group"</span>.
+      </div>
+    <% else %>
+      <div class="overflow-x-auto">
+        <table class="w-full text-[12.5px]">
+          <thead>
+            <tr class="text-left text-gray-500 border-b border-gray-100">
+              <th class="px-4 py-2.5 font-medium">Código</th>
+              <th class="px-4 py-2.5 font-medium">Projeto</th>
+              <th class="px-4 py-2.5 font-medium">Elegibilidade FI</th>
+              <th class="px-4 py-2.5 font-medium">Vínculo Tsuru</th>
+              <th class="px-4 py-2.5 font-medium text-right">Ação</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <% @projects.each do |fp| %>
+              <tr class="hover:bg-gray-50/60">
+                <td class="px-4 py-2.5 font-mono text-[11.5px] text-gray-700 whitespace-nowrap">
+                  <%= fp.code_project.presence || "—" %>
+                </td>
+                <td class="px-4 py-2.5 text-gray-900 max-w-[320px]">
+                  <div class="truncate" title="<%= fp.name %>"><%= fp.name.presence || "—" %></div>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <%= status_pill(fp.eligibility_label.to_s.parameterize.underscore.presence || "rascunho", klass: "!text-[10.5px]") %>
+                  <span class="text-gray-600 ml-1"><%= fp.eligibility_label || "—" %></span>
+                </td>
+                <td class="px-4 py-2.5 whitespace-nowrap">
+                  <% if fp.linked? %>
+                    <span class="inline-flex items-center gap-1.5 text-emerald-700">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                      <% demand = fp.demand %>
+                      <%= link_to (demand&.codigo.presence || "Demanda ##{fp.demand_id}"),
+                            demand ? demand_path(demand) : "#",
+                            class: "hover:underline" %>
+                    </span>
+                  <% else %>
+                    <span class="inline-flex items-center gap-1.5 text-gray-400">
+                      <span class="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
+                      não vinculada
+                    </span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                  <% if fp.linked? %>
+                    <%= button_to admin_figroup_push_path(fp), method: :post,
+                          class: "tsuru-btn-ghost !h-7 !text-[11px] !px-2", form: { class: "inline" } do %>
+                      <%= icon(:upload, size: 13) %> Enviar para FI Group
+                    <% end %>
+                  <% else %>
+                    <span class="text-[11px] text-gray-300">—</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+
+</div>

@@ -146,7 +146,8 @@ module UiHelper
         { key: "automations", label: "Automações & IA",   icon: :flag,     path: admin_automations_path },
         { key: "llm",         label: "IA · Provedores",   icon: :cog,      path: admin_llm_providers_path },
         { key: "biblioteca",  label: "Biblioteca PD&I",   icon: :book,     path: admin_knowledge_articles_path },
-        { key: "sankhya",     label: "Integração Sankhya", icon: :link,    path: admin_sankhya_mappings_path }
+        { key: "sankhya",     label: "Integração Sankhya", icon: :link,    path: admin_sankhya_mappings_path },
+        { key: "figroup",     label: "FI Group (Lei do Bem)", icon: :link, path: admin_figroup_path }
       ]
     when "board"
       [

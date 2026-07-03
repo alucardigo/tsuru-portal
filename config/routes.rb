@@ -220,6 +220,13 @@ Rails.application.routes.draw do
     end
     get "auditoria", to: "audits#index", as: :auditoria
     get "organograma", to: "organograma#index", as: :organograma
+
+    # Integração FI Group (portal LeidoBem) — pull/push de projetos Lei do Bem
+    get  "figroup",          to: "figroup#index",        as: :figroup
+    post "figroup/token",    to: "figroup#create_token", as: :figroup_token
+    post "figroup/pull",     to: "figroup#pull",         as: :figroup_pull
+    post "figroup/push_all", to: "figroup#push_all",     as: :figroup_push_all
+    post "figroup/push/:id", to: "figroup#push",         as: :figroup_push
   end
 
   resources :notifications, only: %i[index] do

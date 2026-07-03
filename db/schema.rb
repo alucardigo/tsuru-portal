@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_02_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -173,6 +173,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_170000) do
     t.index ["categoria"], name: "index_expenses_on_categoria"
     t.index ["data_competencia"], name: "index_expenses_on_data_competencia"
     t.index ["lei_do_bem_record_id"], name: "index_expenses_on_lei_do_bem_record_id"
+  end
+
+  create_table "figroup_credentials", force: :cascade do |t|
+    t.string "base_url", default: "https://app.leidobem.com/api/services"
+    t.bigint "captured_by_id"
+    t.string "company_id"
+    t.datetime "created_at", null: false
+    t.datetime "expires_at"
+    t.jsonb "service_ids"
+    t.text "token"
+    t.datetime "updated_at", null: false
+    t.index ["captured_by_id"], name: "index_figroup_credentials_on_captured_by_id"
+  end
+
+  create_table "figroup_projects", force: :cascade do |t|
+    t.text "client_response"
+    t.string "code_project"
+    t.datetime "created_at", null: false
+    t.bigint "demand_id"
+    t.integer "eligibility"
+    t.text "explanation_fi"
+    t.string "fi_project_id"
+    t.integer "fiscal_year"
+    t.datetime "last_pulled_at"
+    t.datetime "last_pushed_at"
+    t.string "name"
+    t.text "position_fi"
+    t.jsonb "raw", default: {}
+    t.string "service_id"
+    t.datetime "updated_at", null: false
+    t.index ["demand_id"], name: "index_figroup_projects_on_demand_id"
+    t.index ["fi_project_id"], name: "index_figroup_projects_on_fi_project_id", unique: true
   end
 
   create_table "knowledge_articles", force: :cascade do |t|
@@ -530,6 +562,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_170000) do
   add_foreign_key "demands", "sankhya_records"
   add_foreign_key "demands", "users"
   add_foreign_key "expenses", "lei_do_bem_records"
+  add_foreign_key "figroup_credentials", "users", column: "captured_by_id"
+  add_foreign_key "figroup_projects", "demands"
   add_foreign_key "knowledge_articles", "users", column: "created_by_id"
   add_foreign_key "lei_do_bem_records", "demands"
   add_foreign_key "notifications", "demands"
