@@ -13,6 +13,32 @@ module Admin
     def index
       @credential = FiGroupCredential.current
       @projects = FiGroupProject.order(:code_project)
+      @figroup_setting = FiGroupSetting.instance
+      @last_sync_run   = FiGroupSyncRun.recent(1).first
+      @sync_runs       = FiGroupSyncRun.recent(15).to_a
+    end
+
+    # Roda um ciclo de sincronização na hora (mesma rotina do cron).
+    def sync_now
+      run = FiGroup::AutoSync.new.call(trigger: "manual")
+      if run&.token_ok
+        redirect_to admin_figroup_path,
+          notice: "Portais sincronizados: #{run.pulled_count} projeto(s) puxado(s) do FI Group, #{run.linked_count} vinculado(s)."
+      else
+        redirect_to admin_figroup_path,
+          alert: "Não foi possível sincronizar (token expirado?). Recapture o token do portal FI abaixo."
+      end
+    rescue FiGroup::AuthError
+      redirect_to admin_figroup_path,
+        alert: "Token FI Group expirado ou ausente — recapture o header Authorization no portal."
+    end
+
+    # Liga/desliga o ciclo automático (cron) sem mexer no cron do servidor.
+    def toggle_auto_sync
+      s = FiGroupSetting.instance
+      s.update!(auto_sync_enabled: !s.auto_sync_enabled)
+      redirect_to admin_figroup_path,
+        notice: "Sincronização automática #{s.auto_sync_enabled ? 'ligada' : 'desligada'}."
     end
 
     def create_token

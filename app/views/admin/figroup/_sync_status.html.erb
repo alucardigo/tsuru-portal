@@ -1,0 +1,79 @@
+<%# Card de sincronização automática — conversa contínua entre os dois portais.
+    Vars locais: setting (FiGroupSetting), last_run (FiGroupSyncRun ou nil). %>
+<div class="tsuru-card">
+  <div class="tsuru-card-head flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <span class="w-4 h-4 flex items-center justify-center text-gray-400"><%= icon(:cog, size: 15) %></span>
+      <h2 class="text-[13px] font-semibold text-gray-900">Sincronização automática</h2>
+    </div>
+    <% if setting.auto_sync_enabled %>
+      <span class="inline-flex items-center gap-1.5 text-[11.5px] font-medium">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span class="text-emerald-700">ligada</span>
+      </span>
+    <% else %>
+      <span class="inline-flex items-center gap-1.5 text-[11.5px] font-medium">
+        <span class="w-2 h-2 rounded-full bg-gray-300"></span>
+        <span class="text-gray-500">desligada</span>
+      </span>
+    <% end %>
+  </div>
+
+  <div class="tsuru-card-body space-y-3">
+    <%# Última sincronização %>
+    <div class="text-[12.5px] text-gray-700">
+      <% if last_run.nil? %>
+        <span class="text-gray-500">Nenhuma sincronização registrada ainda.</span>
+      <% else %>
+        <div class="flex items-center flex-wrap gap-x-4 gap-y-1.5">
+          <span class="inline-flex items-center gap-1.5 text-gray-500">
+            <%= icon(:calendar, size: 13) %>
+            <span>Última: <span class="text-gray-800 font-medium"><%= last_run.started_at&.strftime("%d/%m %H:%M") %></span></span>
+          </span>
+          <span class="inline-flex items-center gap-1.5">
+            <% if last_run.token_ok %>
+              <span class="text-emerald-600"><%= icon(:check, size: 13) %></span>
+              <span class="text-emerald-700">token válido</span>
+            <% else %>
+              <span class="text-rose-600"><%= icon(:x, size: 13) %></span>
+              <span class="text-rose-600">token expirado</span>
+            <% end %>
+          </span>
+          <span class="text-gray-600">
+            <span class="font-medium text-gray-800"><%= last_run.pulled_count %></span> puxados ·
+            <span class="font-medium text-gray-800"><%= last_run.linked_count %></span> vinculados ·
+            <span class="font-medium text-gray-800"><%= last_run.pushed_count %></span> enviados
+          </span>
+          <% if last_run.error_details.present? %>
+            <span class="inline-flex items-center gap-1.5 text-rose-600" title="<%= last_run.error_details.join(' | ') %>">
+              <%= icon(:bell, size: 13) %>
+              <%= last_run.error_details.size %> erro(s)
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Ações %>
+    <div class="flex items-center gap-2 flex-wrap">
+      <%= button_to admin_figroup_sync_now_path, method: :post,
+            class: "tsuru-btn-primary", form: { class: "inline" } do %>
+        <%= icon(:arrow, size: 14) %> Sincronizar agora
+      <% end %>
+      <%= button_to admin_figroup_toggle_auto_sync_path, method: :post,
+            class: "tsuru-btn-ghost", form: { class: "inline" } do %>
+        <% if setting.auto_sync_enabled %>
+          Desligar sync automático
+        <% else %>
+          Ligar sync automático
+        <% end %>
+      <% end %>
+    </div>
+
+    <%# Nota explicativa %>
+    <p class="text-[11.5px] text-gray-500 leading-relaxed">
+      O servidor sincroniza os dois portais a cada 10 minutos enquanto o token estiver válido.
+      Ao expirar, avisamos aqui e por notificação.
+    </p>
+  </div>
+</div>

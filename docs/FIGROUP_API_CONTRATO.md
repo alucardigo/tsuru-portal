@@ -2,6 +2,12 @@
 
 Fonte única da verdade para a integração `FiGroup::*` no Tsuru. Capturado via sessão autenticada real (conta cliente da Bellube). Todos os endpoints retornaram 200 nos testes.
 
+> ## ⚠️ ATUALIZAÇÃO 03/07/2026 (pós-implementação — corrige suposições acima)
+>
+> **1. `PUT /Projects/{id}` é READ-ONLY para nós (200 mas NÃO persiste).** Teste controlado: escrevi um sentinela em `clientResponse` (campo vazio) e um append em `objective`, dei `PUT` (200 OK) e reli via `GET` — **nenhum dos dois persistiu** (revertido, zero dano). O endpoint devolve o objeto e responde 200, mas descarta as alterações de conteúdo — provavelmente porque a conta autenticada é de **consultora FI** (JWT `role: Member`, `area: Customers`), read + parecer, sem permissão de escrita de conteúdo pela API; ou o save real do SPA usa outro endpoint (lazy-loaded, não capturado). **Consequência**: a direção **Tsuru→FI (push) está DESATIVADA** no `AutoSync` (guard `FIGROUP_PUSH_ENABLED`, default off). O ciclo automático é **pull-only**. Reative só depois de confirmar um endpoint de escrita que de fato persista.
+>
+> **2. O token FICA no `sessionStorage`** (corrige o item de Autenticação abaixo): chave base64 `app.ldm.figroup` = base64-JSON `{access_token: "<JWT>", ...}`. E a **renovação é silenciosa**: enquanto a sessão do IdentityServer (`connect.fi-group.com`) estiver viva, recarregar o portal / clicar "Atualizar token" emite um novo access_token **sem 2FA** (SSO silencioso). Caminho para auto-refresh não-assistido no futuro: capturar o cookie de sessão do IDS (httpOnly, lido via Playwright `context.cookies()`) e replicar o `/connect/authorize?prompt=none` server-side. Hoje a recaptura ainda é manual (colar o token na tela `/admin/figroup`).
+
 ## Autenticação
 
 - **Header**: `Authorization: Bearer <JWT>` — e só isso. **Confirmado**: chamada em contexto novo, sem cookie, só com o Bearer → 200; sem token → 401. Portanto o Rails chama a API server-side direto (Faraday), sem browser.

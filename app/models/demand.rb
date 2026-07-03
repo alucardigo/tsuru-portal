@@ -1,5 +1,6 @@
 class Demand < ApplicationRecord
   has_paper_trail
+  include FiGroupSyncable
 
   belongs_to :user
   has_many :comments, dependent: :destroy

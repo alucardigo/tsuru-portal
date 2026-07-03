@@ -1,0 +1,67 @@
+<%# Histórico das últimas execuções do auto-sync.
+    Var local: runs (Array<FiGroupSyncRun>). %>
+<div class="tsuru-card overflow-hidden">
+  <div class="tsuru-card-head flex items-center gap-2">
+    <span class="w-4 h-4 flex items-center justify-center text-gray-400"><%= icon(:calendar, size: 15) %></span>
+    <h2 class="text-[13px] font-semibold text-gray-900">Histórico de sincronizações</h2>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-[12.5px]">
+      <thead>
+        <tr class="text-left text-gray-500 border-b border-gray-100">
+          <th class="px-4 py-2.5 font-medium">Quando</th>
+          <th class="px-4 py-2.5 font-medium">Gatilho</th>
+          <th class="px-4 py-2.5 font-medium">Token</th>
+          <th class="px-4 py-2.5 font-medium text-right">Puxados</th>
+          <th class="px-4 py-2.5 font-medium text-right">Vinculados</th>
+          <th class="px-4 py-2.5 font-medium text-right">Enviados</th>
+          <th class="px-4 py-2.5 font-medium text-right">Erros</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        <% if runs.blank? %>
+          <tr>
+            <td colspan="7" class="px-4 py-8 text-center text-[13px] text-gray-500">
+              Sem histórico de sincronização ainda.
+            </td>
+          </tr>
+        <% else %>
+          <% runs.each do |run| %>
+            <tr class="hover:bg-gray-50/60">
+              <td class="px-4 py-2.5 whitespace-nowrap text-gray-800">
+                <%= run.started_at&.strftime("%d/%m %H:%M") %>
+              </td>
+              <td class="px-4 py-2.5 whitespace-nowrap text-gray-600">
+                <%= run.trigger %>
+              </td>
+              <td class="px-4 py-2.5 whitespace-nowrap">
+                <% if run.token_ok %>
+                  <span class="inline-flex items-center gap-1 text-emerald-700">
+                    <%= icon(:check, size: 13) %> ok
+                  </span>
+                <% else %>
+                  <span class="inline-flex items-center gap-1 text-rose-600">
+                    <%= icon(:x, size: 13) %> expirado
+                  </span>
+                <% end %>
+              </td>
+              <td class="px-4 py-2.5 text-right font-mono text-[11.5px] text-gray-700"><%= run.pulled_count %></td>
+              <td class="px-4 py-2.5 text-right font-mono text-[11.5px] text-gray-700"><%= run.linked_count %></td>
+              <td class="px-4 py-2.5 text-right font-mono text-[11.5px] text-gray-700"><%= run.pushed_count %></td>
+              <td class="px-4 py-2.5 text-right whitespace-nowrap">
+                <% if run.error_details.present? %>
+                  <span class="text-rose-600 font-medium" title="<%= run.error_details.join(' | ') %>">
+                    <%= run.error_details.size %>
+                  </span>
+                <% else %>
+                  <span class="text-gray-300">—</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

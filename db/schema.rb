@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_03_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -200,11 +200,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_100000) do
     t.datetime "last_pushed_at"
     t.string "name"
     t.text "position_fi"
+    t.boolean "push_pending", default: false, null: false
     t.jsonb "raw", default: {}
     t.string "service_id"
     t.datetime "updated_at", null: false
     t.index ["demand_id"], name: "index_figroup_projects_on_demand_id"
     t.index ["fi_project_id"], name: "index_figroup_projects_on_fi_project_id", unique: true
+    t.index ["push_pending"], name: "index_figroup_projects_on_push_pending"
+  end
+
+  create_table "figroup_settings", force: :cascade do |t|
+    t.boolean "auto_sync_enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "last_expiry_notified_at"
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "figroup_sync_runs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "error_details", default: []
+    t.datetime "finished_at"
+    t.integer "linked_count", default: 0
+    t.integer "pulled_count", default: 0
+    t.integer "pushed_count", default: 0
+    t.datetime "started_at"
+    t.boolean "token_ok", default: false
+    t.string "trigger", default: "cron"
+    t.datetime "updated_at", null: false
+    t.index ["started_at"], name: "index_figroup_sync_runs_on_started_at"
   end
 
   create_table "knowledge_articles", force: :cascade do |t|

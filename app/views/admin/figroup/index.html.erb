@@ -55,6 +55,8 @@
     </div>
   </div>
 
+  <%= render "sync_status", setting: @figroup_setting, last_run: @last_sync_run %>
+
   <%# ============ 2 + 4. AÇÕES DE SINCRONIZAÇÃO ============ %>
   <div class="flex items-center justify-between gap-3 flex-wrap">
     <div>
@@ -144,5 +146,7 @@
       </div>
     <% end %>
   </div>
+
+  <%= render "sync_history", runs: @sync_runs %>
 
 </div>

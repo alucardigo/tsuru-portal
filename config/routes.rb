@@ -227,6 +227,8 @@ Rails.application.routes.draw do
     post "figroup/pull",     to: "figroup#pull",         as: :figroup_pull
     post "figroup/push_all", to: "figroup#push_all",     as: :figroup_push_all
     post "figroup/push/:id", to: "figroup#push",         as: :figroup_push
+    post "figroup/sync_now",         to: "figroup#sync_now",         as: :figroup_sync_now
+    post "figroup/toggle_auto_sync", to: "figroup#toggle_auto_sync", as: :figroup_toggle_auto_sync
   end
 
   resources :notifications, only: %i[index] do
