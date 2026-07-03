@@ -60,16 +60,19 @@ O ganho mais relevante do período não foi o previsto originalmente (reconcilia
 ### 3.1.1. Incertezas/riscos do baseline (já mapeadas em N2)
 
 **BARREIRA BASE-1 — Auditabilidade sem perda de flexibilidade na máquina de estados**
+
 - Status final no período: ✅ Resolvida.
 - Magnitude da incerteza no início: não havia certeza de que seria possível ter uma máquina de estados com 17 posições que aceitasse desvios de fluxo (revisão, cancelamento, arquivamento em qualquer ponto) sem abrir brecha para reescrita de histórico por bug de aplicação.
 - Trajetória de superação: implementação de `DemandTransition` como registro somente-inserção, reforçado por sobrescrita de `readonly?` no nível da aplicação. Testado com tentativa deliberada de destruição do registro.
 
 **BARREIRA BASE-2 — Reconciliação de identidade Sankhya × Microsoft sem chave de correlação direta**
+
 - Status final no período: ✅ Resolvida.
 - Magnitude da incerteza no início: o Sankhya usa e-mails de "rota" reatribuídos entre pessoas ao longo do tempo (uma mesma caixa teve 4 titulares diferentes em 3 anos); não havia garantia de conseguir separar identidade de mailbox sem introduzir falsos positivos.
 - Trajetória de superação: adoção do Microsoft Entra ID como fonte de verdade da identidade atual, cruzado com o Sankhya como fonte de cargo/área/atividade; validado contra 408 registros brutos do Sankhya × 186 do Entra ID, com apenas 1 falso positivo detectado manualmente (substring "sat" capturando "Satlher" por engano) e corrigido para match exato de nome.
 
 **BARREIRA BASE-3 — Geração de PDF com texto livre de usuário**
+
 - Status final no período: ✅ Resolvida.
 - Magnitude da incerteza no início: a fonte padrão da biblioteca de geração de PDF (Prawn) é Windows-1252; não era conhecido de antemão que caracteres fora desse charset (travessão, aspas curvas, símbolos matemáticos) quebrariam a geração em produção sem erro reproduzível em ambiente de desenvolvimento.
 - Trajetória de superação: reprodução do erro em produção com dado real (não sintético), isolamento por bisseção de qual chamada de renderização especificamente falhava, e implementação de camada de sanitização category-aware antes de qualquer geração de texto/tabela.
@@ -77,6 +80,7 @@ O ganho mais relevante do período não foi o previsto originalmente (reconcilia
 ### 3.1.2. Incertezas que emergiram durante a execução (não previstas no início)
 
 **BARREIRA NOVA-1 — Login em sistema periférico não é sinal confiável de status de emprego**
+
 - Momento de surgimento: durante a execução da rotina de limpeza/inativação de usuários, já com a ferramenta em produção e em uso real pela empresa.
 - Causa-raiz identificada após investigação: a heurística inicial assumiu que ausência de login no Sankhya por 90+ dias correlacionava com desligamento. A investigação revelou que colaboradores podem estar plenamente empregados sem nunca (ou raramente) acessar aquele sistema específico — o dado de "último acesso" mede uso de um sistema, não vínculo empregatício.
 - Magnitude: crítica — a heurística incorreta teria produzido 16 desligamentos indevidos em um universo de 22 decisões (73% de erro), com impacto direto em pessoas reais.
@@ -92,11 +96,13 @@ Esta barreira emergente é evidência forte de risco tecnológico real: mesmo co
 ### 3.2.1. Hipóteses formuladas e resultados
 
 **HIPÓTESE H1 (referente à BARREIRA BASE-2 — reconciliação de identidade)**
+
 - Formulação: "é possível identificar contas de sistema/spam/duplicatas usando correspondência por substring do nome contra padrões conhecidos (SAC, SAT, Não Responda, etc.)".
 - Experimento: aplicação de filtro por substring sobre os 186 registros do Microsoft Entra ID.
 - Resultado: ⚠️ Parcialmente confirmada — o filtro por substring gerou 1 falso positivo (nome real "Satlher" capturado pelo padrão "SAT"). Corrigida para exigir correspondência exata de token de nome, não substring livre.
 
 **HIPÓTESE H2 (referente à BARREIRA NOVA-1 — inativação incorreta)**
+
 - Formulação: "ausência de login no Sankhya por 90+ dias é um proxy válido para desligamento".
 - Experimento: aplicação da heurística sobre a base real de 22 candidatos, seguida de checagem cruzada manual contra `TFPFUN.DTDEM`.
 - Resultado: ❌ Refutada — apenas 6 de 22 (27%) tinham de fato demissão registrada. A hipótese foi descartada como critério único e substituída por consulta direta à fonte de RH.
@@ -104,12 +110,14 @@ Esta barreira emergente é evidência forte de risco tecnológico real: mesmo co
 ### 3.2.2. Barreiras resolvidas vs. não resolvidas
 
 **Resolvidas no período:**
+
 - BARREIRA BASE-1 (auditabilidade da máquina de estados) — resolvida via registro imutável reforçado em nível de aplicação. Evidência: **[ANEXAR]** teste automatizado de tentativa de destruição/alteração + trecho de código do `readonly?`.
 - BARREIRA BASE-2 (reconciliação de identidade) — resolvida via Entra ID como fonte de verdade + match exato de nome. Evidência: **[ANEXAR]** planilha/log da reconciliação (408 × 186 registros, 0 duplicidades finais).
 - BARREIRA BASE-3 (encoding do PDF) — resolvida via sanitização category-aware. Evidência: **[ANEXAR]** PDF gerado com sucesso contendo caracteres que antes quebravam a geração.
 - BARREIRA NOVA-1 (inativação incorreta por proxy de login) — resolvida via reconciliação contra `TFPFUN.DTDEM`. Evidência: **[ANEXAR]** print/log do script de correção mostrando as 16 reativações e os 6 desligamentos confirmados.
 
 **Não resolvidas / débito assumido conscientemente:**
+
 - Processamento assíncrono de jobs (recorrência de tarefas, e-mails adiados) não tem execução automatizada em produção ainda — código pronto, falta apenas o processo de infraestrutura. Não é uma barreira de incerteza técnica, é item de trabalho planejado e não priorizado.
 
 ### 3.2.3. Testes / simulações aplicados
@@ -189,8 +197,9 @@ Não aplicável neste dossiê — projeto de ano único (2026), sem histórico d
 
 ## Assinaturas
 
-Consultor: ______________________________
-Líder técnico: ______________________________
-Responsável fiscal: ______________________________
-Diretor: ______________________________
-Data: ____/____/______
+| Papel | Assinatura | Data |
+|---|---|---|
+| Consultor | | |
+| Líder técnico | | |
+| Responsável fiscal | | |
+| Diretor | | |

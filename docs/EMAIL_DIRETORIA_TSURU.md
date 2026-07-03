@@ -27,8 +27,8 @@ Durante o desenvolvimento, identificamos e corrigimos um problema real: a primei
 
 **Anexos deste e-mail**
 
-1. `DOCUMENTACAO_TECNICA.md` — documentação técnica completa da ferramenta (arquitetura, funcionalidades, stack, estado atual e débitos conhecidos).
-2. `LEI_DO_BEM_DOSSIE_N3_TSURU.md` — dossiê de defesa técnica (N3) do próprio projeto Tsuru para fins de Lei do Bem, com os pontos que ainda precisam de anexo de evidência (financeiro e capturas de tela) sinalizados no documento.
+1. **Tsuru_Documentacao_Tecnica.pdf** — documentação técnica completa da ferramenta (arquitetura, funcionalidades, stack, estado atual e débitos conhecidos).
+2. **Tsuru_Lei_do_Bem_Dossie_N3.pdf** — dossiê de defesa técnica (N3) do próprio projeto Tsuru para fins de Lei do Bem, com os pontos que ainda precisam de anexo de evidência (financeiro e capturas de tela) sinalizados no documento.
 
 **Próximos passos sugeridos**
 
