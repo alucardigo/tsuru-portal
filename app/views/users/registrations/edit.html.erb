@@ -1,54 +1,130 @@
-<h2>Edit <%= resource_name.to_s.humanize %></h2>
+<% content_for :title, "Meu perfil" %>
+<% content_for :nav_active, "configuracoes" %>
+<% content_for :crumb, "Configurações" %>
+<% content_for :subtitle, "· conta, segurança e integrações" %>
 
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
-  <%= render "users/shared/error_messages", resource: resource %>
+<div class="px-7 py-6 max-w-[820px] mx-auto space-y-5">
 
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
-  </div>
-
-  <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
-    <div>Currently waiting confirmation for: <%= resource.unconfirmed_email %></div>
+  <%# ================= erros ================= %>
+  <% if resource.errors.any? %>
+    <div class="tsuru-card border-rose-200 bg-rose-50/40">
+      <div class="p-4 text-[12.5px] text-rose-700">
+        <p class="font-semibold mb-1"><%= icon(:alert, size: 14) %> Não foi possível salvar:</p>
+        <ul class="list-disc pl-5 space-y-0.5">
+          <% resource.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
   <% end %>
 
-  <div class="field">
-    <p><%= f.label :password %> <i>(leave blank if you don't want to change it)</i></p>
-    <p><%= f.password_field :password, autocomplete: "new-password" %></p>
-    <% if @minimum_password_length %>
-      <p><em><%= @minimum_password_length %> characters minimum</em></p>
-    <% end %>
-  </div>
+  <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
 
-  <div class="field">
-    <p><%= f.label :password_confirmation %></p>
-    <p><%= f.password_field :password_confirmation, autocomplete: "new-password" %></p>
-  </div>
+    <%# ================= conta ================= %>
+    <div class="tsuru-card mb-5">
+      <div class="tsuru-card-head flex items-center gap-2">
+        <span class="w-4 h-4 flex items-center justify-center text-gray-400"><%= icon(:user, size: 15) %></span>
+        <h2 class="text-[13px] font-semibold text-gray-900">Conta</h2>
+      </div>
+      <div class="p-5 space-y-4">
+        <div>
+          <label class="tsuru-label">E-mail</label>
+          <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "tsuru-input mt-1" %>
+          <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
+            <p class="text-[11.5px] text-amber-600 mt-1">Aguardando confirmação de <strong><%= resource.unconfirmed_email %></strong>.</p>
+          <% end %>
+        </div>
+      </div>
+    </div>
 
-  <div class="field">
-    <p><%= f.label :current_password %> <i>(we need your current password to confirm your changes)</i></p>
-    <p><%= f.password_field :current_password, autocomplete: "current-password" %></p>
-  </div>
+    <%# ================= segurança ================= %>
+    <div class="tsuru-card mb-5">
+      <div class="tsuru-card-head flex items-center gap-2">
+        <span class="w-4 h-4 flex items-center justify-center text-gray-400"><%= icon(:lock, size: 15) %></span>
+        <h2 class="text-[13px] font-semibold text-gray-900">Segurança</h2>
+      </div>
+      <div class="p-5 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="tsuru-label">Nova senha</label>
+            <%= f.password_field :password, autocomplete: "new-password", class: "tsuru-input mt-1", placeholder: "deixe em branco para não alterar" %>
+            <p class="text-[11px] text-gray-500 mt-1">
+              <% if @minimum_password_length %>Mínimo de <%= @minimum_password_length %> caracteres.<% end %>
+            </p>
+          </div>
+          <div>
+            <label class="tsuru-label">Confirmar nova senha</label>
+            <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "tsuru-input mt-1" %>
+          </div>
+        </div>
 
-  <div class="actions">
-    <%= f.submit "Update" %>
-  </div>
-<% end %>
-
-<h3>Integrações — Power Automate / API</h3>
-<div style="max-width:480px">
-  <p>Token de API para automações externas (Power Automate, Zapier, n8n) chamarem o Tsuru via HTTP.</p>
-  <% if current_user.api_token.present? %>
-    <p><code><%= current_user.api_token %></code></p>
-  <% else %>
-    <p><em>Nenhum token gerado ainda.</em></p>
+        <div class="pt-3 border-t border-gray-100">
+          <label class="tsuru-label">Senha atual <span class="text-rose-500">*</span></label>
+          <%= f.password_field :current_password, autocomplete: "current-password", class: "tsuru-input mt-1 max-w-[320px]" %>
+          <p class="text-[11px] text-gray-500 mt-1">Necessária para confirmar qualquer alteração de e-mail ou senha.</p>
+        </div>
+      </div>
+      <div class="px-5 py-3.5 bg-gray-50/60 border-t border-gray-100 flex justify-end">
+        <%= f.submit "Salvar alterações", class: "tsuru-btn-primary" %>
+      </div>
+    </div>
   <% end %>
-  <%= button_to "Gerar novo token", regenerate_api_token_path, method: :post,
-        data: { turbo_confirm: current_user.api_token.present? ? "Isso invalida o token atual. Continuar?" : nil } %>
+
+  <%# ================= token de API ================= %>
+  <div class="tsuru-card">
+    <div class="tsuru-card-head flex items-center gap-2">
+      <span class="w-4 h-4 flex items-center justify-center text-gray-400"><%= icon(:link, size: 15) %></span>
+      <h2 class="text-[13px] font-semibold text-gray-900">Token de API · integrações</h2>
+    </div>
+    <div class="p-5 space-y-3">
+      <p class="text-[12.5px] text-gray-500 leading-relaxed">
+        Usado por automações externas (Power Automate, Zapier, n8n) e pelo guardião do FI Group para
+        chamar o Tsuru via HTTP. Trate como uma senha — quem tiver este token age como você.
+      </p>
+
+      <% if current_user.api_token.present? %>
+        <div class="flex items-stretch gap-2">
+          <code id="api-token"
+                class="flex-1 font-mono text-[12px] text-gray-800 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 select-all break-all"><%= current_user.api_token %></code>
+          <button type="button"
+                  onclick="navigator.clipboard.writeText(document.getElementById('api-token').textContent).then(()=>{this.textContent='Copiado ✓';setTimeout(()=>this.textContent='Copiar',1500);})"
+                  class="tsuru-btn-ghost whitespace-nowrap">Copiar</button>
+        </div>
+      <% else %>
+        <p class="text-[12.5px] text-gray-400 italic">Nenhum token gerado ainda.</p>
+      <% end %>
+
+      <div class="flex items-center gap-3 pt-1">
+        <%= button_to (current_user.api_token.present? ? "Gerar novo token" : "Gerar token"),
+              regenerate_api_token_path, method: :post,
+              class: "tsuru-btn-ghost",
+              form: { data: { turbo_confirm: current_user.api_token.present? ? "Isso invalida o token atual — integrações que o usam vão parar até serem atualizadas. Continuar?" : nil } } %>
+        <% if current_user.api_token.present? %>
+          <span class="text-[11px] text-gray-400">Regenerar invalida o token anterior.</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# ================= zona de perigo ================= %>
+  <div class="tsuru-card border-rose-100">
+    <div class="tsuru-card-head flex items-center gap-2">
+      <span class="w-4 h-4 flex items-center justify-center text-rose-400"><%= icon(:alert, size: 15) %></span>
+      <h2 class="text-[13px] font-semibold text-rose-700">Zona de perigo</h2>
+    </div>
+    <div class="p-5 flex items-center justify-between gap-4">
+      <div>
+        <p class="text-[12.5px] font-medium text-gray-800">Cancelar minha conta</p>
+        <p class="text-[11.5px] text-gray-500">Remove seu acesso ao Tsuru. Esta ação não pode ser desfeita.</p>
+      </div>
+      <%= button_to "Cancelar conta", registration_path(resource_name), method: :delete,
+            class: "tsuru-btn-ghost text-rose-600 border-rose-200 hover:bg-rose-50 whitespace-nowrap",
+            form: { data: { turbo_confirm: "Tem certeza que deseja cancelar sua conta? Esta ação é irreversível." } } %>
+    </div>
+  </div>
+
+  <div>
+    <%= link_to "← Voltar", :back, class: "text-[12px] text-gray-500 hover:text-gray-700" %>
+  </div>
 </div>
-
-<h3>Cancel my account</h3>
-
-<div>Unhappy? <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?", turbo_confirm: "Are you sure?" }, method: :delete %></div>
-
-<%= link_to "Back", :back %>
