@@ -15,13 +15,15 @@ RSpec.describe Sankhya::Client, type: :service do
         .with(:sankhya, :client_id).and_return("test-client-id")
       allow(Rails.application.credentials).to receive(:dig)
         .with(:sankhya, :client_secret).and_return("test-secret")
+      allow(Rails.application.credentials).to receive(:dig)
+        .with(:sankhya, :x_token).and_return("test-x-token")
     end
 
     it "faz requisição ao endpoint de token", :vcr do
-      stub_request(:post, /login\.sankhya\.com\.br/)
+      stub_request(:post, "https://api.sankhya.com.br/authenticate")
         .to_return(
           status: 200,
-          body: { access_token: "fake-token-123", expires_in: 3600, token_type: "Bearer" }.to_json,
+          body: { access_token: "fake-token-123", expires_in: 300, token_type: "Bearer" }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
       expect(client.token).to eq("fake-token-123")
@@ -36,9 +38,15 @@ RSpec.describe Sankhya::Client, type: :service do
 
   describe "#healthy?" do
     it "retorna booleano" do
-      stub_request(:post, /login\.sankhya\.com\.br/).to_return(
+      allow(Rails.application.credentials).to receive(:dig)
+        .with(:sankhya, :client_id).and_return("test-client-id")
+      allow(Rails.application.credentials).to receive(:dig)
+        .with(:sankhya, :client_secret).and_return("test-secret")
+      allow(Rails.application.credentials).to receive(:dig)
+        .with(:sankhya, :x_token).and_return("test-x-token")
+      stub_request(:post, "https://api.sankhya.com.br/authenticate").to_return(
         status: 200,
-        body: { access_token: "t", expires_in: 3600, token_type: "Bearer" }.to_json,
+        body: { access_token: "t", expires_in: 300, token_type: "Bearer" }.to_json,
         headers: { "Content-Type" => "application/json" }
       )
       expect(client.healthy?).to be(true).or be(false)

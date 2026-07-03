@@ -176,16 +176,28 @@ artigos.each do |attrs|
   puts "  - #{attrs[:title]}"
 end
 
-# Bloco I — mapeamentos Sankhya de exemplo (desabilitados; ajustar entidade/campos reais em /admin/sankhya)
+# Bloco I — mapeamentos Sankhya. Entidades/campos CONFIRMADOS por consulta real
+# ao gateway em 03/07/2026 (não são nomes de tabela física — a API de negócio do
+# Sankhya usa nomes de "entidade" tipo Funcionario/Parceiro/CabecalhoNota, não
+# TFPFUN/TGFPAR). Ver Sankhya::Service#consultar e docs/... para o contrato.
 sankhya_mappings_seed = [
-  { kind: "colaborador",  entidade_sankhya: "TGFPAR", campo_codigo: "CODPARC", campo_nome: "NOMEPARC", campos_extra: "CODEMP,EMAIL", criterio: "this.CLASSIFICACAO = 'COLABORADOR'" },
-  { kind: "parceiro_pj",  entidade_sankhya: "TGFPAR", campo_codigo: "CODPARC", campo_nome: "NOMEPARC", campos_extra: "CGC_CPF,EMAIL", criterio: "this.CLASSIFICACAO = 'PJ'" },
-  { kind: "projeto",      entidade_sankhya: "AD_PROJETOS", campo_codigo: "CODPROJETO", campo_nome: "DESCRICAO", campos_extra: "CODCENCUS" },
-  { kind: "nota_servico", entidade_sankhya: "CabecalhoNota", campo_codigo: "NUNOTA", campo_nome: "NOMEPARC", campos_extra: "NUMNOTA,DTNEG,VLRNOTA,CODPARC", criterio: "this.TIPMOV = 'S'" }
+  { kind: "colaborador",  entidade_sankhya: "Funcionario", campo_codigo: "CODFUNC", campo_nome: "NOMEFUNC", campos_extra: "EMAIL,DTADM,DTDEM,SITUACAO", criterio: nil, enabled: true },
+  { kind: "parceiro_pj",  entidade_sankhya: "Parceiro", campo_codigo: "CODPARC", campo_nome: "NOMEPARC", campos_extra: "CGC_CPF,TIPPESSOA,FORNECEDOR", criterio: "this.TIPPESSOA = 'J'", enabled: true },
+  # nota_servico: TIPMOV='V' (venda) confirmado funcionar COM this.CODPARC = <id>,
+  # mas sozinho (sem parceiro) retorna vazio -- a entidade CabecalhoNota parece
+  # exigir um filtro adicional (provavelmente por período; TO_DATE() não é aceito
+  # pela linguagem de expressão do Sankhya) para não vir vazia. Desabilitado até
+  # descobrir a sintaxe de filtro de data correta.
+  { kind: "nota_servico", entidade_sankhya: "CabecalhoNota", campo_codigo: "NUNOTA", campo_nome: "NOMEPARC", campos_extra: "NUMNOTA,DTNEG,VLRNOTA,CODPARC,TIPMOV", criterio: "this.TIPMOV = 'V'", enabled: false },
+  # projeto: nenhuma variação testada de nome de entidade (CentroCusto, AD_PROJETOS,
+  # TSICCUS, Projeto, etc.) retornou dados nesta instância. Precisa confirmação do
+  # nome real com o administrador/DBA Sankhya antes de habilitar.
+  { kind: "projeto", entidade_sankhya: "AD_PROJETOS", campo_codigo: "CODPROJETO", campo_nome: "DESCRICAO", campos_extra: "CODCENCUS", criterio: nil, enabled: false }
 ]
-puts "\nCriando mapeamentos Sankhya de exemplo (desabilitados)..."
+puts "\nCriando/atualizando mapeamentos Sankhya..."
 sankhya_mappings_seed.each do |attrs|
-  next if SankhyaMapping.exists?(kind: attrs[:kind])
-  SankhyaMapping.create!(attrs.merge(enabled: false))
-  puts "  - #{SankhyaMapping::KIND_LABELS[attrs[:kind]]}"
+  mapping = SankhyaMapping.find_or_initialize_by(kind: attrs[:kind])
+  mapping.assign_attributes(attrs)
+  mapping.save!
+  puts "  - #{SankhyaMapping::KIND_LABELS[attrs[:kind]]} (#{attrs[:enabled] ? 'ativo' : 'pendente'})"
 end

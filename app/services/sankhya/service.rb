@@ -10,11 +10,13 @@ module Sankhya
       end
     end
 
+    NOTAS_FISCAIS_CAMPOS = %w[NUNOTA NUMNOTA DTNEG VLRNOTA CODPARC NOMEPARC].freeze
+
     def notas_fiscais(codparc:)
       response = gateway_post(notas_fiscais_payload(codparc), operation: "notas_fiscais")
       rows = JSON.parse(response.body).dig("responseBody", "entities", "entity") || []
       rows = [ rows ] unless rows.is_a?(Array)
-      rows
+      rows.map { |row| remap_row(row, NOTAS_FISCAIS_CAMPOS) }
     end
 
     def registrar_adiantamento(codprojeto:, valor:, descricao:)
@@ -29,6 +31,7 @@ module Sankhya
     # Usado pelo SankhyaMapping configurável para sincronizar colaboradores/PJ/projetos/notas
     # sem precisar de um método dedicado por entidade.
     def consultar(entidade:, campos:, criterio: nil)
+      campos = Array(campos)
       payload = {
         serviceName: "CRUDServiceProvider.loadRecords",
         requestBody: {
@@ -36,7 +39,7 @@ module Sankhya
             rootEntity: entidade,
             includePresentationFields: "S",
             offsetPage: "0",
-            entity: { fieldset: { list: Array(campos).join(",") } }
+            entity: { fieldset: { list: campos.join(",") } }
           }
         }
       }
@@ -44,10 +47,21 @@ module Sankhya
 
       response = gateway_post(payload, operation: "consultar_#{entidade}")
       rows = JSON.parse(response.body).dig("responseBody", "entities", "entity") || []
-      rows.is_a?(Array) ? rows : [ rows ]
+      rows = [ rows ] unless rows.is_a?(Array)
+      rows.map { |row| remap_row(row, campos) }
     end
 
     private
+
+    # O gateway devolve cada linha com chaves posicionais f0,f1,f2... (na ordem
+    # do fieldset enviado), cada valor embrulhado em {"$" => valor}. Remapeia
+    # para {nome_do_campo => valor} — sem isso, row["CODPARC"] nunca existe.
+    def remap_row(row, campos)
+      campos.each_with_index.each_with_object({}) do |(campo, idx), acc|
+        raw = row["f#{idx}"]
+        acc[campo] = raw.is_a?(Hash) ? raw["$"] : raw
+      end
+    end
 
     def gateway_post(payload, operation:)
       correlation_id = SecureRandom.uuid

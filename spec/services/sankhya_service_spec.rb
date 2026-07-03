@@ -6,17 +6,22 @@ RSpec.describe SankhyaService, type: :service do
   let(:service) { described_class.new(client: mock_client) }
 
   describe "#notas_fiscais" do
+    # Formato REAL do gateway (confirmado em produção 03/07/2026): chaves
+    # posicionais f0,f1,f2... na ordem do fieldset enviado (ver
+    # Sankhya::Service::NOTAS_FISCAIS_CAMPOS), valor embrulhado em {"$" => valor}.
     let(:sankhya_nf_response) do
       {
         "responseBody" => {
           "entities" => {
             "entity" => [
-              { "f" => [
-                { "$" => "1001", "_" => "NUNOTA" },
-                { "$" => "42", "_" => "NUMNOTA" },
-                { "$" => "15/05/2025", "_" => "DTNEG" },
-                { "$" => "12500.00", "_" => "VLRNOTA" }
-              ] }
+              {
+                "f0" => { "$" => "1001" },
+                "f1" => { "$" => "42" },
+                "f2" => { "$" => "15/05/2025" },
+                "f3" => { "$" => "12500.00" },
+                "f4" => { "$" => "6" },
+                "f5" => { "$" => "BEL DISTRIBUIDOR DE LUBRIFICANTES LTDA" }
+              }
             ]
           }
         }
@@ -30,10 +35,13 @@ RSpec.describe SankhyaService, type: :service do
                    headers: { "Content-Type" => "application/json" })
     end
 
-    it "retorna array de registros de notas fiscais" do
+    it "remapeia as linhas posicionais para o nome real do campo" do
       result = service.notas_fiscais(codparc: 123)
       expect(result).to be_an(Array)
-      expect(result).not_to be_empty
+      expect(result.first).to eq(
+        "NUNOTA" => "1001", "NUMNOTA" => "42", "DTNEG" => "15/05/2025",
+        "VLRNOTA" => "12500.00", "CODPARC" => "6", "NOMEPARC" => "BEL DISTRIBUIDOR DE LUBRIFICANTES LTDA"
+      )
     end
 
     it "envia o codparc na query" do
