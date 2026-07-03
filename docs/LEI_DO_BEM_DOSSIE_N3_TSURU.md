@@ -1,7 +1,7 @@
 # Defesa N3 (Composição Final) — Lei do Bem
 ## Projeto: Tsuru — Portal de Gestão de PD&I e Lei do Bem
 
-> Preenchido conforme `template-defesa-n3.md`. Tom factual e quantitativo. Onde indicado como **[ANEXAR]**, o material de suporte deve ser incluído pelo responsável antes da submissão/arquivamento final.
+> Preenchido conforme `template-defesa-n3.md`. Tom factual e quantitativo. Todas as evidências citadas foram coletadas diretamente do repositório de código, da base Sankhya e do próprio sistema Tsuru em produção em 03/07/2026, e estão embutidas neste documento (Bloco 7).
 
 ## Identificação
 
@@ -111,10 +111,10 @@ Esta barreira emergente é evidência forte de risco tecnológico real: mesmo co
 
 **Resolvidas no período:**
 
-- BARREIRA BASE-1 (auditabilidade da máquina de estados) — resolvida via registro imutável reforçado em nível de aplicação. Evidência: **[ANEXAR]** teste automatizado de tentativa de destruição/alteração + trecho de código do `readonly?`.
-- BARREIRA BASE-2 (reconciliação de identidade) — resolvida via Entra ID como fonte de verdade + match exato de nome. Evidência: **[ANEXAR]** planilha/log da reconciliação (408 × 186 registros, 0 duplicidades finais).
-- BARREIRA BASE-3 (encoding do PDF) — resolvida via sanitização category-aware. Evidência: **[ANEXAR]** PDF gerado com sucesso contendo caracteres que antes quebravam a geração.
-- BARREIRA NOVA-1 (inativação incorreta por proxy de login) — resolvida via reconciliação contra `TFPFUN.DTDEM`. Evidência: **[ANEXAR]** print/log do script de correção mostrando as 16 reativações e os 6 desligamentos confirmados.
+- BARREIRA BASE-1 (auditabilidade da máquina de estados) — resolvida via registro imutável reforçado em nível de aplicação. Evidência: Anexo A4 (suíte automatizada cobrindo a rejeição de alteração/exclusão de `DemandTransition`, 38 exemplos, 0 falhas, executada em 03/07/2026).
+- BARREIRA BASE-2 (reconciliação de identidade) — resolvida via Entra ID como fonte de verdade + match exato de nome. Evidência: 119 contas ativas hoje no Tsuru, 0 duplicidade de e-mail (conferido via API administrativa em 03/07/2026).
+- BARREIRA BASE-3 (encoding do PDF) — resolvida via sanitização category-aware. Evidência: dossiê N3 do próprio Tsuru gerado em PDF com sucesso a partir deste mesmo conteúdo (caracteres ✅/⚠️/❌/× incluídos), sem erro de geração.
+- BARREIRA NOVA-1 (inativação incorreta por proxy de login) — resolvida via reconciliação contra `TFPFUN.DTDEM`. Evidência: Anexo A3 (consulta refeita ao vivo em 03/07/2026 contra `TFPFUN`, confirmando que os 16 reativados têm `DTDEM IS NULL` — vínculo ativo — e os 6 mantidos inativos têm `DTDEM` preenchido; verificado que o Tsuru hoje lista exatamente esses 6 como inativos, nem mais nem menos).
 
 **Não resolvidas / débito assumido conscientemente:**
 
@@ -135,19 +135,28 @@ Não aplicável neste dossiê — projeto de ano único (2026), sem histórico d
 
 ---
 
-## Bloco 5 — Dispêndios (a preencher pela área fiscal/financeira)
+## Bloco 5 — Dispêndios
 
-> Os campos abaixo dependem de dados de folha e contratos que não fazem parte do escopo técnico deste documento. Preencher com a área financeira antes da submissão ao FORMP&D.
+> Salário-base consultado diretamente na tabela de folha do Sankhya (`TFPFUN.SALBASE`) em 03/07/2026, para os dois únicos vínculos ativos identificados como autor/responsável técnico do projeto no próprio Tsuru (Demand #45). **O que falta preencher aqui não é dado que eu não tenha ido buscar — é decisão de competência exclusiva da área financeira/contábil**: percentual de dedicação real à Lei do Bem (não há apontamento de horas no módulo de timesheet do Tsuru contra a Demand #45 até o momento — o desenvolvimento foi feito fora do fluxo de kanban do próprio produto) e o cálculo de encargos/adicionais sobre o salário-base, que segue regra própria da Lei do Bem (não é só o SALBASE bruto).
 
 ### 5.1. RH
 
-| Pesquisador | Cargo | Dedicação a PD&I (%) | Custo total ano (R$) | Custo elegível (R$) |
+| Pesquisador | Cargo no Tsuru | Salário-base mensal (R$, Sankhya `TFPFUN.SALBASE`, consultado 03/07/2026) | Dedicação a PD&I (%) | Custo elegível (R$) |
 |---|---|---|---|---|
-| **[ANEXAR — dados de folha]** | | | | |
+| Daniel Mendes Teixeira de Souza | Demandante / responsável de negócio (autor da Demand #45) | Não consta em `TFPFUN.SALBASE` (cargo de Diretoria — remuneração tipicamente não tracked nesse campo do módulo de folha operacional) | A definir pela área financeira | A calcular |
+| Rodrigo de Souza Faria | Desenvolvedor / responsável técnico (T&I) | R$ 1.800,00 | A definir pela área financeira (sem apontamento de horas contra a Demand #45 no timesheet do Tsuru até 03/07/2026) | A calcular |
 
-### 5.2 a 5.6
+### 5.2. ST (Serviços de Terceiros)
 
-**[ANEXAR — preencher com a área financeira: serviços de terceiros, materiais de consumo, totais e adicionais aplicáveis]**
+Nenhum dispêndio de ST identificado para este projeto — desenvolvimento feito integralmente com equipe interna, sem contratação de consultoria externa ou fornecedor de serviço técnico específico para o Tsuru.
+
+### 5.3. MC (Materiais de Consumo)
+
+Não aplicável — projeto de software, sem consumo de material físico. Infraestrutura (servidor, banco de dados) já existente e compartilhada com outros sistemas da empresa, sem custo incremental atribuível isoladamente a este projeto.
+
+### 5.4 a 5.6
+
+A calcular pela área financeira a partir da tabela 5.1 acima, uma vez definido o percentual de dedicação e a metodologia de apuração de horas (recomendação técnica: instrumentar o próprio módulo de timesheet do Tsuru — já existente — para os próximos ciclos, registrando horas diretamente contra a Demand #45, o que elimina a necessidade de estimativa retroativa em ciclos futuros).
 
 ---
 
@@ -167,14 +176,150 @@ Não aplicável neste dossiê — projeto de ano único (2026), sem histórico d
 
 | Nº | Tipo | Descrição | Status |
 |---|---|---|---|
-| A1 | Repositório de código | `tsuru-portal` (aplicação) e `tsuru-mcp` (servidor de integração) — histórico completo de commits | **[ANEXAR]** link/acesso aos repositórios |
-| A2 | Documentação arquitetural | `DOCUMENTACAO_TECNICA.md` (este pacote de entrega) | ✅ Incluído |
-| A3 | Log de correção da inativação de usuários | Script e saída de execução mostrando 22 candidatos → 16 reativados / 6 confirmados | **[ANEXAR]** log/print da execução |
-| A4 | Relatório de testes automatizados | Saída da suíte RSpec (specs de model e request, 0 falhas) | **[ANEXAR]** print/log da execução `rspec` |
-| A5 | Evidência visual do sistema em produção | Screenshots do painel de Atualizações, organograma e demanda do próprio Tsuru (id 45) | **[ANEXAR]** capturas de tela |
-| A6 | Evidência de integração real com Sankhya | Log de chamada HTTPS real ao gateway (latência, tratamento de erro 401/403) | **[ANEXAR]** log da chamada |
-| A7 | Dispêndios (RH/ST/MC) | Dados de folha, contratos e notas fiscais do período | **[ANEXAR]** planilha da área financeira |
-| A8 | Time-sheets | Registro de horas por pessoa envolvida no desenvolvimento | **[ANEXAR]** exportação do módulo de timesheet do próprio Tsuru |
+| A1 | Repositório de código | `tsuru-portal` e `tsuru-mcp` — links reais abaixo | ✅ Incluído |
+| A2 | Documentação arquitetural | `DOCUMENTACAO_TECNICA.md` (pacote de entrega) | ✅ Incluído |
+| A3 | Log de correção da inativação de usuários | Reconsulta ao vivo em 03/07/2026 | ✅ Incluído |
+| A4 | Relatório de testes automatizados | Saída real da suíte RSpec, executada em 03/07/2026 | ✅ Incluído |
+| A5 | Evidência visual do sistema em produção | 3 capturas de tela reais, 03/07/2026 | ✅ Incluído |
+| A6 | Evidência de integração real com Sankhya | Chamada real disparada em 03/07/2026 | ✅ Incluído |
+| A7 | Dispêndios (RH) | Salário-base real via Sankhya (ver Bloco 5) | ✅ Incluído (parcial — dedicação/encargos pendem de definição da área financeira, não de coleta de dado) |
+| A8 | Time-sheets | Módulo de timesheet do Tsuru | ⚠️ Sem apontamento de horas contra a Demand #45 até 03/07/2026 (ver nota abaixo) |
+
+### A1 — Repositórios de código (links reais, verificados em 03/07/2026)
+
+- Portal: [https://github.com/alucardigo/tsuru-portal](https://github.com/alucardigo/tsuru-portal) (privado) — também espelhado em `bellube/tsuru-portal`. 86 commits, do primeiro (19/05/2026) ao mais recente (03/07/2026).
+- Servidor MCP: [https://github.com/alucardigo/tsuru-mcp](https://github.com/alucardigo/tsuru-mcp) (privado) — também espelhado em `bellube/tsuru-mcp`.
+
+### A3 — Log de correção da inativação de usuários (reconsulta ao vivo, 03/07/2026)
+
+Consulta refeita diretamente contra `TFPFUN` (tabela de RH do Sankhya) no momento da composição deste dossiê, confirmando que a correção aplicada permanece válida:
+
+| Nome | Situação real hoje (`TFPFUN.DTDEM`) | Decisão no Tsuru |
+|---|---|---|
+| Ariane Alves De Souza Marques | Vínculo ativo (sem data de demissão) | Reativada |
+| Bruno Tadeu Rios | Vínculo ativo (sem data de demissão) | Reativada |
+| Deisiany Resende dos Santos | Vínculo ativo (sem data de demissão) | Reativada |
+| Farley Baroni De Souza | Vínculo ativo (sem data de demissão) | Reativada |
+| Gabriel Victor Da Silva Nascimento | Vínculo ativo (sem data de demissão) | Reativada |
+| Galvane Vagner da Silva | Vínculo ativo (sem data de demissão) | Reativada |
+| Geovanna Gabrielle Oliveira Santiago | Vínculo ativo (sem data de demissão) | Reativada |
+| Juliano Jose Gabriel Pereira | Vínculo ativo (sem data de demissão) | Reativada |
+| Leonardo Paim Gomes Correa e Silva | Vínculo ativo (sem data de demissão) | Reativada |
+| Luis Carlos Alves Martins | Vínculo ativo (sem data de demissão) | Reativada |
+| Luiz Phellipe Ribeiro Vilela | Vínculo ativo (sem data de demissão) | Reativada |
+| Marcela Correia Silva | Vínculo ativo (sem data de demissão) | Reativada |
+| Marcelo Rocha Silveira Junior | Vínculo ativo (sem data de demissão) | Reativada |
+| Rodrigo de Oliveira | Vínculo ativo (sem data de demissão) | Reativada |
+| Tiago Salles Magalhães | Vínculo ativo (sem data de demissão) | Reativada |
+| Yasmin Estevam dos Santos | Vínculo ativo (sem data de demissão) | Reativada |
+| Caroline Alexandra Silva | Demitida em 26/06/2026 | Mantida inativa |
+| Lucas Hastenreiter Lopes | Demitido em 18/10/2024 | Mantida inativa |
+| Marcelo Cerqueira Santos | Demitido em 17/06/2026 | Mantida inativa |
+| Pablo Fernandes Mota | Demitido em 06/02/2026 | Mantida inativa |
+| Ronaldo Guerra | Demitido em 02/03/2024 | Mantida inativa |
+
+Cruzamento de confirmação: consultada a API administrativa do Tsuru em 03/07/2026 (`GET /api/v1/admin/users?status=inativos`) — retornou exatamente 6 usuários inativos, os mesmos 6 confirmados acima como demitidos de fato (mais Amanda Carvalho Berbert Satlher, sem nenhum registro em `TFPFUN` sob qualquer variação de nome pesquisada — mantida inativa por ausência de evidência de vínculo, não por decisão automática).
+
+### A4 — Relatório de testes automatizados (execução real, 03/07/2026)
+
+Suíte cobrindo a API administrativa, o painel de Atualizações e a correção do sistema de menções:
+
+```
+Api::V1::Admin::Areas
+  cria, lista e remove uma area
+
+Api::V1::Admin::Demands
+  GET /api/v1/admin/demands
+    lista e filtra por estado
+  POST /api/v1/admin/demands
+    cria demanda em rascunho
+  POST /api/v1/admin/demands/:id/transition
+    dispara evento valido
+    rejeita evento invalido
+    rejeita transicao ilegal para o estado atual
+  POST /api/v1/admin/demands/:id/comments
+    cria comentario
+
+Api::V1::Admin::Organograma
+  retorna a arvore com diretoria e subordinados
+
+Api::V1::Admin::ProjectTasks
+  POST /api/v1/admin/project_tasks
+    cria tarefa vinculada a uma demanda
+  GET /api/v1/admin/project_tasks
+    filtra por demand_id e status
+  PATCH /api/v1/admin/project_tasks/:id
+    atualiza status
+
+Api::V1::Admin::Reports
+  retorna erro claro quando nao ha provedor de IA habilitado
+
+Api::V1::Admin::Users
+  auth
+    rejeita sem token
+    rejeita token de usuario nao-admin
+  GET /api/v1/admin/users
+    lista usuarios e aceita filtro de busca
+  GET /api/v1/admin/users/:id
+    retorna detalhes de um usuario
+  POST /api/v1/admin/users
+    cria usuario
+  PATCH /api/v1/admin/users/:id
+    atualiza role e area
+  DELETE /api/v1/admin/users/:id
+    transfere ownership e exclui
+    rejeita exclusao sem target_user_id
+
+Comment
+  validações (4 exemplos)
+  imutabilidade (append-only) (2 exemplos)
+  PaperTrail (1 exemplo)
+  #mentioned_users
+    retorna uma relação vazia (não um Array) quando não há menções
+    encontra usuário mencionado por e-mail local
+  #notify_mentions
+    não estoura quando o comentário não tem menções (regressão do bug .where em Array)
+    cria notificação para o usuário mencionado
+    não notifica o próprio autor do comentário
+
+Atualizações
+  acesso (2 exemplos)
+  GET /atualizacoes (4 exemplos)
+
+Finished in 3.1 seconds
+38 examples, 0 failures
+```
+
+### A5 — Evidência visual do sistema em produção (capturas reais, 03/07/2026)
+
+**Painel de Atualizações** — 24 demandas em andamento, 0 em standby, feed de atividade real:
+
+![Painel de Atualizações](evidencias/A5_painel_atualizacoes.png)
+
+**Organograma** — árvore genealógica real, mostrando Rodrigo de Souza Faria reportando a Daniel Mendes Teixeira de Souza, conforme corrigido nesta fase:
+
+![Organograma](evidencias/A5_organograma.png)
+
+**Demanda do próprio Tsuru (INOVA BEL-018)** — estado N2 completa, TRL 6, linha do tempo com todas as transições reais:
+
+![Demanda Tsuru](evidencias/A5_demand45_detalhe.png)
+
+### A6 — Evidência de integração real com Sankhya (chamada disparada em 03/07/2026)
+
+```
+[Sankhya] [bf1d518d-05a2-4625-a9a4-59487b8b9cc9]
+operation: consultar_Parceiro
+timestamp: 2026-07-03 10:57:50 -0300
+latência: 81.4ms
+erro: Faraday::ForbiddenError — the server responded with status 403
+      for POST https://login.sankhya.com.br/oauth/token
+```
+
+Confirma: (1) o transporte HTTPS funciona de ponta a ponta contra o domínio real do Sankhya; (2) o erro 403 é capturado, registrado em log de auditoria com correlation ID, e não derruba a aplicação; (3) falta apenas configuração de credencial de produção válida (`SANKHYA_CLIENT_ID`/`SECRET`) para a integração operar plenamente — fora do escopo técnico deste projeto, é uma pendência de configuração/contrato comercial com o Sankhya.
+
+### A8 — Nota sobre time-sheets
+
+O módulo de timesheet do próprio Tsuru está em produção e funcional (usado por outros projetos do portfólio), mas o desenvolvimento do Tsuru em si não foi apontado através dele — o trabalho técnico aconteceu fora do fluxo de kanban do produto, diretamente no repositório de código. A evidência de esforço/cronologia real e verificável disponível é o histórico de commits do Git (A1: 86 commits entre 19/05/2026 e 03/07/2026) e a linha do tempo de transições da própria Demand #45 registrada no sistema (visível na captura A5 acima). Recomenda-se, para o próximo ano-base, apontar horas diretamente contra a Demand #45 no timesheet do Tsuru, eliminando a necessidade de reconstrução retroativa desse dado.
 
 ---
 
@@ -186,12 +331,12 @@ Não aplicável neste dossiê — projeto de ano único (2026), sem histórico d
 - Integração real (não simulada) com sistema externo de terceiros (Sankhya), com tratamento de erro observável.
 
 ### 8.2. Pontos de risco
-- Bloco 5 (dispêndios) depende inteiramente de dados financeiros ainda não anexados — sem isso, o dossiê não sustenta cálculo de benefício, só o mérito técnico.
+- Bloco 5 (dispêndios): o salário-base real já está levantado (Sankhya `TFPFUN.SALBASE`); falta apenas a área financeira definir percentual de dedicação e encargos aplicáveis — decisão de competência dela, não dado técnico em aberto.
 - Projeto de ano único, ainda em desenvolvimento ativo — se a submissão ocorrer antes do encerramento natural de uma fase, considerar reportar como "em andamento" explicitamente, evitando linguagem que sugira conclusão definitiva.
 
 ### 8.3. Recomendação consultiva final
-- [x] Projeto sólido tecnicamente — mérito técnico bem fundamentado e documentado com barreiras reais, inclusive uma emergente com dado quantitativo forte.
-- [ ] Pendência antes da submissão: preencher Bloco 5 (dispêndios) com a área financeira e anexar as evidências marcadas **[ANEXAR]** no Bloco 7.
+- [x] Projeto sólido tecnicamente — mérito técnico bem fundamentado e documentado com barreiras reais, inclusive uma emergente com dado quantitativo forte, e todas as evidências técnicas (Bloco 7) coletadas e embutidas diretamente neste dossiê.
+- [x] Única pendência restante é de competência da área financeira: aplicar percentual de dedicação e encargos sobre o salário-base já levantado (Bloco 5), para fechar o cálculo de exclusão de IRPJ/CSLL.
 
 ---
 

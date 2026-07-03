@@ -163,7 +163,7 @@ User ──┬── Demand (projeto/sugestão PD&I) ──┬── DemandTrans
 
 ## 7. Repositórios
 
-- **Portal**: `tsuru-portal` (privado) — código-fonte completo da aplicação Rails.
-- **Servidor MCP**: `tsuru-mcp` (privado) — servidor de integração para agentes de IA.
+- **Portal**: [github.com/alucardigo/tsuru-portal](https://github.com/alucardigo/tsuru-portal) (privado, espelhado em `bellube/tsuru-portal`) — código-fonte completo da aplicação Rails. 86 commits, de 19/05/2026 a 03/07/2026.
+- **Servidor MCP**: [github.com/alucardigo/tsuru-mcp](https://github.com/alucardigo/tsuru-mcp) (privado, espelhado em `bellube/tsuru-mcp`) — servidor de integração para agentes de IA.
 
 Ambos versionados em duas contas GitHub (pessoal e corporativa Bellube), mantidos sincronizados.
