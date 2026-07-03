@@ -41,6 +41,23 @@ module Admin
         notice: "Sincronização automática #{s.auto_sync_enabled ? 'ligada' : 'desligada'}."
     end
 
+    # GET /admin/figroup/capture — página de destino do bookmarklet. Lê o token do
+    # #fragmento da URL (client-side, não vai pros logs) e o envia via POST
+    # same-origin (capture_save). Só renderiza a view.
+    def capture
+      render :capture
+    end
+
+    # POST /admin/figroup/capture — grava o token capturado na credencial.
+    def capture_save
+      result = FiGroup::TokenIngest.call(params[:token], captured_by: current_user)
+      if result.ok
+        render json: { ok: true, expires_at: result.credential.expires_at }
+      else
+        render json: { ok: false, error: result.error }, status: :unprocessable_entity
+      end
+    end
+
     def create_token
       FiGroupCredential.create!(
         token: params[:token].to_s.strip.sub(/\ABearer\s+/i, ""),

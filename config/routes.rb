@@ -234,6 +234,8 @@ Rails.application.routes.draw do
     post "figroup/push/:id", to: "figroup#push",         as: :figroup_push
     post "figroup/sync_now",         to: "figroup#sync_now",         as: :figroup_sync_now
     post "figroup/toggle_auto_sync", to: "figroup#toggle_auto_sync", as: :figroup_toggle_auto_sync
+    get  "figroup/capture",          to: "figroup#capture",          as: :figroup_capture
+    post "figroup/capture",          to: "figroup#capture_save",     as: :figroup_capture_save
   end
 
   resources :notifications, only: %i[index] do

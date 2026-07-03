@@ -1,0 +1,37 @@
+<% capture_url = "#{request.base_url}#{admin_figroup_capture_path}" %>
+<% bookmarklet = "javascript:(function(){try{var r=sessionStorage.getItem('YXBwLmxkbS5maWdyb3Vw');if(!r){alert('Faca login no portal da FI primeiro.');return;}var t=JSON.parse(decodeURIComponent(escape(atob(r)))).access_token;if(!t){alert('Token nao encontrado - recarregue a pagina da FI.');return;}location.href='#{capture_url}#'+t;}catch(e){alert('Erro ao capturar: '+e.message);}})();" %>
+
+<div class="tsuru-card">
+  <div class="tsuru-card-head flex items-center gap-2">
+    <span class="w-4 h-4 flex items-center justify-center text-gray-400"><%= icon(:link, size: 15) %></span>
+    <h2 class="text-[13px] font-semibold text-gray-900">Conectar / renovar o token — 1 clique</h2>
+  </div>
+  <div class="p-5 space-y-4">
+    <p class="text-[12.5px] text-gray-500 leading-relaxed">
+      Jeito mais fácil de manter a conexão viva, sem terminal. Configuração única:
+    </p>
+    <ol class="text-[12.5px] text-gray-700 space-y-3 list-decimal pl-5">
+      <li>
+        <strong>Arraste</strong> este botão para a sua barra de favoritos (uma vez só):
+        <div class="mt-1.5">
+          <a href="<%= bookmarklet %>"
+             onclick="event.preventDefault(); alert('Não clique aqui — ARRASTE este botão para a barra de favoritos do navegador.');"
+             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[12px] font-medium cursor-move select-none shadow-sm">
+            🔑 Capturar token FI
+          </a>
+        </div>
+      </li>
+      <li>
+        Abra o portal da FI e faça login:
+        <div class="mt-1.5">
+          <a href="https://app.leidobem.com/ldb/bypass" target="_blank" rel="noopener"
+             class="tsuru-btn-ghost inline-flex items-center gap-1.5">Abrir portal da FI ↗</a>
+        </div>
+      </li>
+      <li>Já logado na FI, clique no favorito <strong>🔑 Capturar token FI</strong> — ele volta pra cá com o token renovado.</li>
+    </ol>
+    <p class="text-[11px] text-gray-400 leading-relaxed">
+      Depois de configurado, é só repetir o passo 3 quando o token expirar (o Tsuru te avisa). O token viaja no #fragmento da URL — nunca aparece nos logs do servidor.
+    </p>
+  </div>
+</div>

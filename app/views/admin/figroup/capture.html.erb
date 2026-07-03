@@ -1,0 +1,59 @@
+<% content_for :title, "Capturando token FI" %>
+<% content_for :nav_active, "figroup" %>
+<% content_for :crumb, "FI Group" %>
+<% content_for :subtitle, "· conexão" %>
+
+<div class="px-7 py-12 max-w-[520px] mx-auto">
+  <div class="tsuru-card p-8 text-center">
+    <div id="cap-spin" class="mx-auto mb-4 w-8 h-8 rounded-full border-2 border-gray-200 border-t-emerald-500 animate-spin"></div>
+    <h2 id="cap-title" class="text-[15px] font-semibold text-gray-900">Capturando token da FI…</h2>
+    <p id="cap-msg" class="text-[12.5px] text-gray-500 mt-2">Só um instante.</p>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var token = location.hash ? location.hash.slice(1) : "";
+    var spin = document.getElementById("cap-spin");
+    var title = document.getElementById("cap-title");
+    var msg = document.getElementById("cap-msg");
+    var back = "<%= admin_figroup_path %>";
+
+    function stop() { if (spin) spin.style.display = "none"; }
+
+    if (!token) {
+      stop();
+      title.textContent = "Nenhum token recebido";
+      msg.innerHTML = 'Abra o portal da FI, faça login e clique no botão <strong>Capturar token FI</strong>. ' +
+                      '<a href="' + back + '" class="text-emerald-600 underline">Voltar</a>';
+      return;
+    }
+
+    // Remove o token da barra de endereço (fica só no histórico local, nunca no servidor).
+    try { history.replaceState(null, "", location.pathname); } catch (e) {}
+
+    fetch("<%= admin_figroup_capture_save_path %>", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRF-Token": "<%= form_authenticity_token %>" },
+      body: JSON.stringify({ token: token })
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        stop();
+        if (res.ok && res.d.ok) {
+          title.textContent = "✓ Token capturado";
+          msg.textContent = "Integração renovada. Redirecionando…";
+          setTimeout(function () { location.href = back; }, 1200);
+        } else {
+          title.textContent = "Não foi possível capturar";
+          msg.innerHTML = ((res.d && res.d.error) || "Erro desconhecido.") +
+                          ' <a href="' + back + '" class="text-emerald-600 underline">Voltar</a>';
+        }
+      })
+      .catch(function (e) {
+        stop();
+        title.textContent = "Erro";
+        msg.textContent = e.message;
+      });
+  })();
+</script>
